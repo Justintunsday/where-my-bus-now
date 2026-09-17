@@ -1,4 +1,4 @@
-# Where My Bus Now (WMBN) · 1.8.0
+# Where My Bus Now (WMBN) · 1.9.0
 
 ![Build](https://github.com/Justintunsday/where-my-bus-now/actions/workflows/build.yml/badge.svg)
 
@@ -27,17 +27,6 @@ official base data when configured. This is not an official app.
   timeline of stops, tap a stop to expand inline arrivals, and navigate to
   any stop with a valid coordinate
 - Stop departure boards with aligned tabular ETA columns
-- **Home Screen & Lock Screen widget** for pinned favorites: small/medium
-  home widgets and circular/rectangular/inline lock screen families, with
-  live countdowns for the next arrival (pin favorites from the Favorites
-  page; up to three pins)
-- **SideStore-compatible Route & stop widget**: always-available fields select
-  the city, route, direction and optional stop without a dynamic entity picker.
-  Hong Kong additionally requires a KMB, Citybus, green minibus or NLB operator;
-  the widget carries its city/operator/route direction and station in a
-  self-contained ID, and calls the selected official API directly without App
-  Group sharing or location. GMB routes with duplicate numbers require their
-  HKI/KLN/NT region prefix.
 - Nearby stops with distance, favorites for whole routes and stops, recents
 - ETA display modes (clock time / minutes / both), scheduled-trip markers
 - Traditional Chinese, Simplified Chinese and English
@@ -76,15 +65,6 @@ official base data when configured. This is not an official app.
   protocols/routers, AMapClient/AMapTransitProvider, hosted CheLaile client,
   DataStore, ETA services, bookmarks, location
 - `HKBusETA/Views` — search, route, ETA, nearby, favorites, settings
-- `HKBusETAWidgets` — WidgetKit extension (home + lock screen families)
-  - `RouteCountdownWidget`: existing App Group-backed favorites snapshot
-  - `SideStoreTransitWidget`: independently configured city/route/stop target;
-    the extension calls `/search`, `/lines/detail` and `/lines/realtime`
-    directly and falls back from the primary hosted API to Vercel. Hong Kong
-    targets use extension-owned Foundation models and direct KMB, Citybus, GMB
-    and NLB open-data endpoints; the operator is part of the target namespace.
-  - `Shared/WidgetSnapshot.swift` remains compiled into both targets for the
-    App Group favorites configuration
 - `docs/brand-spec.md` — Warm Minimal design system
 
 ## Build
@@ -108,13 +88,6 @@ app, an unsigned device archive and an IPA on every push.
   and headways come from [HK Bus Crawling@2021](https://github.com/hkbus/hk-bus-crawling)
   (`https://data.hkbus.app/routeFareList.min.json`, ~8 MB, downloaded once on
   first launch, cached locally and checked for updates daily)
-- Hong Kong SideStore widget ETA data: KMB (`data.etabus.gov.hk`), Citybus
-  (`rt.data.gov.hk/v1/transport/citybus-nwfb`), GMB (`data.etagmb.gov.hk`) and
-  NLB (`rt.data.gov.hk/v2/transport/nlb`) official open-data APIs. The
-  extension resolves routes/stops itself; it does not import the app database
-  or read the App Group. A blank stop selects the first stop in the selected
-  direction, successful empty ETA responses are shown as no data, and request
-  failures are shown as unavailable.
 - Mainland data: [chelaile-api-server](https://github.com/Justintunsday/chelaile-api-server)
   (see its [API documentation](https://github.com/Justintunsday/chelaile-api-server/blob/main/docs/API.md)).
   The app uses `https://ts-api.tundrey.com/v1` as the primary instance and
@@ -134,9 +107,6 @@ app, an unsigned device archive and an IPA on every push.
 - Mainland realtime ETA: supplied by the hosted CheLaile API, which adapts the
   unofficial CheLaile upstream and may break at any time. AMap is never
   described or used as realtime.
-- SideStore widget refresh: the extension refreshes its configured target at
-  most every 15 minutes. When the API or ETA is unavailable it keeps the target
-  identity visible and shows a stable no-data state.
 - Operator glyphs: from [hk-independent-bus-eta](https://github.com/hkbus/hk-independent-bus-eta)
   `public/img` (GPL-3.0)
 

@@ -673,27 +673,6 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前地区" } }
       }
     },
-    "widget.pin" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pin to widget" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "加到小工具" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加到小组件" } }
-      }
-    },
-    "widget.shortLabel" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Widget" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "小工具" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小组件" } }
-      }
-    },
-    "widget.unpin" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove from widget" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "移除小工具" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除小组件" } }
-      }
-    },
     "settings.language" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } },
@@ -720,83 +699,6 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Version" } },
         "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "版本" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "版本" } }
-      }
-    },
-    "settings.widget" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Widget" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "小工具" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小组件" } }
-      }
-    },
-    "settings.widget.appGroup" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "App Group sharing" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "App Group 共享" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "App Group 共享" } }
-      }
-    },
-    "settings.widget.appGroup.active" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Working" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "已生效" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已生效" } }
-      }
-    },
-    "settings.widget.appGroup.unavailable" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unavailable" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "不可用" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "不可用" } }
-      }
-    },
-    "settings.widget.checkAppGroup" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Check again" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "重新檢查" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重新检查" } }
-      }
-    },
-    "settings.widget.extensionAccess" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Widget last connected" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "小工具最近連接" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小组件最近连接" } }
-      }
-    },
-    "settings.widget.extensionWaiting" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting for widget" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "等待小工具" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待小组件" } }
-      }
-    },
-    "settings.widget.appGroup.help" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "The first result tests app read/write access. The connection time confirms that the widget extension also reached the shared container. Some free sideloading certificates do not support App Groups." } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "第一項檢查 App 讀寫權限；連接時間確認小工具擴展也曾存取共享容器。部分免費側載憑證不支援 App Groups。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "第一项检查 App 读写权限；连接时间确认小组件扩展也曾访问共享容器。部分免费侧载证书不支持 App Groups。" } }
-      }
-    },
-    "settings.widget.sideStore.help" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "App Group is unavailable. Add the SideStore “Route & stop” widget and search with a city prefix, such as “Foshan 352” or “Shanghai 71 People's Square”; it works without favorites sharing." } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "App Group 不可用。請加入 SideStore「線路與車站」小工具，以城市開頭搜尋，例如「佛山 352」或「上海 71 人民廣場」；無需收藏共享也能使用。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "App Group 不可用。请加入 SideStore“线路与车站”小组件，以城市开头搜索，例如“佛山 352”或“上海 71 人民广场”；无需收藏共享也能使用。" } }
-      }
-    },
-    "settings.widget.sideStore.hk" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hong Kong works directly from the widget extension: select Hong Kong, then choose KMB, Citybus, Green Minibus or NLB. Route number and direction are required; an empty stop uses the first stop in that direction. Operator names are part of the target, so same-number routes are never mixed." } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "香港小工具會由擴展直接連接官方 API：選擇香港後，再選九巴、城巴、專線小巴或嶼巴。路線和方向必填；站名留空會使用該方向首站。營辦商會寫入目標，因此同號路線不會混用。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "香港小组件会由扩展直接连接官方 API：选择香港后，再选择九巴、城巴、专线小巴或屿巴。路线和方向必填；站名留空会使用该方向首站。营办商会写入目标，因此同号路线不会混用。" } }
-      }
-    },
-    "settings.widget.sideStore.title" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "SideStore configuration" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "SideStore 配置" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SideStore 配置" } }
       }
     },
     "status.checkingUpdate" : {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.0 (build 19)
+
+- Removed all Home Screen and Lock Screen widgets, including the SideStore
+  widget extension, App Group sharing, widget pins, related settings and tests.
+  In-app search, arrivals, favorites and nearby stops are unchanged.
+
 ## 1.8.0 (build 18)
 
 - Added a SideStore-compatible Hong Kong city configuration with static

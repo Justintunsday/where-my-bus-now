@@ -6,51 +6,9 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		DEADBEEF000000000000010B /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF000000000000010A /* WidgetSnapshot.swift */; };
-		DEADBEEF000000000000010C /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF000000000000010A /* WidgetSnapshot.swift */; };
-		DEADBEEF000000000000010E /* HKBusETAWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000102 /* HKBusETAWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-/* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		DEADBEEF0000000000000110 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEADBEEF000000000000000A /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = DEADBEEF0000000000000101;
-			remoteInfo = HKBusETAWidgets;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		DEADBEEF000000000000010D /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				DEADBEEF000000000000010E /* HKBusETAWidgets.appex in Embed Foundation Extensions */,
-			);
-			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		DEADBEEF0000000000000001 /* HKBusETA.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HKBusETA.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		DEADBEEF0000000000000102 /* HKBusETAWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = HKBusETAWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		DEADBEEF000000000000010A /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DEADBEEF0000000000000114 /* Exceptions for "HKBusETAWidgets" folder in "HKBusETAWidgets" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = DEADBEEF0000000000000101 /* HKBusETAWidgets */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DEADBEEF0000000000000002 /* HKBusETA */ = {
@@ -58,25 +16,10 @@
 			path = HKBusETA;
 			sourceTree = "<group>";
 		};
-		DEADBEEF0000000000000103 /* HKBusETAWidgets */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				DEADBEEF0000000000000114 /* Exceptions for "HKBusETAWidgets" folder in "HKBusETAWidgets" target */,
-			);
-			path = HKBusETAWidgets;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		DEADBEEF0000000000000003 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		DEADBEEF0000000000000105 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -90,8 +33,6 @@
 			isa = PBXGroup;
 			children = (
 				DEADBEEF0000000000000002 /* HKBusETA */,
-				DEADBEEF0000000000000103 /* HKBusETAWidgets */,
-				DEADBEEF0000000000000111 /* Shared */,
 				DEADBEEF0000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -100,17 +41,8 @@
 			isa = PBXGroup;
 			children = (
 				DEADBEEF0000000000000001 /* HKBusETA.app */,
-				DEADBEEF0000000000000102 /* HKBusETAWidgets.appex */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		DEADBEEF0000000000000111 /* Shared */ = {
-			isa = PBXGroup;
-			children = (
-				DEADBEEF000000000000010A /* WidgetSnapshot.swift */,
-			);
-			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -123,12 +55,10 @@
 				DEADBEEF0000000000000008 /* Sources */,
 				DEADBEEF0000000000000003 /* Frameworks */,
 				DEADBEEF0000000000000009 /* Resources */,
-				DEADBEEF000000000000010D /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				DEADBEEF000000000000010F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				DEADBEEF0000000000000002 /* HKBusETA */,
@@ -139,28 +69,6 @@
 			productName = HKBusETA;
 			productReference = DEADBEEF0000000000000001 /* HKBusETA.app */;
 			productType = "com.apple.product-type.application";
-		};
-		DEADBEEF0000000000000101 /* HKBusETAWidgets */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = DEADBEEF0000000000000107 /* Build configuration list for PBXNativeTarget "HKBusETAWidgets" */;
-			buildPhases = (
-				DEADBEEF0000000000000104 /* Sources */,
-				DEADBEEF0000000000000105 /* Frameworks */,
-				DEADBEEF0000000000000106 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				DEADBEEF0000000000000103 /* HKBusETAWidgets */,
-			);
-			name = HKBusETAWidgets;
-			packageProductDependencies = (
-			);
-			productName = HKBusETAWidgets;
-			productReference = DEADBEEF0000000000000102 /* HKBusETAWidgets.appex */;
-			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -173,9 +81,6 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					DEADBEEF0000000000000006 = {
-						CreatedOnToolsVersion = 16.0;
-					};
-					DEADBEEF0000000000000101 = {
 						CreatedOnToolsVersion = 16.0;
 					};
 				};
@@ -197,20 +102,12 @@
 			projectRoot = "";
 			targets = (
 				DEADBEEF0000000000000006 /* HKBusETA */,
-				DEADBEEF0000000000000101 /* HKBusETAWidgets */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		DEADBEEF0000000000000009 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		DEADBEEF0000000000000106 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -224,27 +121,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DEADBEEF000000000000010B /* WidgetSnapshot.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		DEADBEEF0000000000000104 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				DEADBEEF000000000000010C /* WidgetSnapshot.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		DEADBEEF000000000000010F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = DEADBEEF0000000000000101 /* HKBusETAWidgets */;
-			targetProxy = DEADBEEF0000000000000110 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		DEADBEEF000000000000000C /* Debug */ = {
@@ -372,8 +252,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CODE_SIGN_ENTITLEMENTS = HKBusETA/HKBusETA.entitlements;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -395,7 +274,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.8.0;
+				MARKETING_VERSION = 1.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -412,8 +291,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CODE_SIGN_ENTITLEMENTS = HKBusETA/HKBusETA.entitlements;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -435,69 +313,11 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.8.0;
+				MARKETING_VERSION = 1.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		DEADBEEF0000000000000108 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = HKBusETAWidgets/HKBusETAWidgets.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = HKBusETAWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = WMBN;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.8.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui.widgets;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		DEADBEEF0000000000000109 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = HKBusETAWidgets/HKBusETAWidgets.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = HKBusETAWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = WMBN;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.8.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui.widgets;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -521,15 +341,6 @@
 			buildConfigurations = (
 				DEADBEEF000000000000000C /* Debug */,
 				DEADBEEF000000000000000D /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		DEADBEEF0000000000000107 /* Build configuration list for PBXNativeTarget "HKBusETAWidgets" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				DEADBEEF0000000000000108 /* Debug */,
-				DEADBEEF0000000000000109 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

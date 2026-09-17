@@ -3,8 +3,6 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppState.self) private var app
     @State private var isRefreshing = false
-    @State private var appGroupIsOperational: Bool?
-    @State private var widgetLastAccess: Date?
 
     var body: some View {
         NavigationStack {
@@ -20,23 +18,6 @@ struct SettingsView: View {
                         }
                     } label: {
                         Text(L10n.t("settings.region"))
-                    }
-                    LabeledContent(L10n.t("settings.widget.extensionAccess")) {
-                        if let widgetLastAccess {
-                            Label(
-                                widgetLastAccess.formatted(date: .omitted, time: .shortened),
-                                systemImage: "checkmark.circle.fill"
-                            )
-                            .font(DesignTokens.captionMedium)
-                            .foregroundStyle(DesignTokens.success)
-                        } else {
-                            Label(
-                                L10n.t("settings.widget.extensionWaiting"),
-                                systemImage: "clock"
-                            )
-                            .font(DesignTokens.captionMedium)
-                            .foregroundStyle(DesignTokens.warning)
-                        }
                     }
                     LabeledContent(L10n.t("settings.region.current"), value: app.region.name)
                     if app.region.isQueryMode {
@@ -113,63 +94,6 @@ struct SettingsView: View {
                     .disabled(app.data.isDownloading || isRefreshing)
                 }
 
-                Section(L10n.t("settings.widget")) {
-                    LabeledContent(L10n.t("settings.widget.appGroup")) {
-                        if let appGroupIsOperational {
-                            Label(
-                                L10n.t(appGroupIsOperational
-                                    ? "settings.widget.appGroup.active"
-                                    : "settings.widget.appGroup.unavailable"),
-                                systemImage: appGroupIsOperational
-                                    ? "checkmark.circle.fill"
-                                    : "exclamationmark.triangle.fill"
-                            )
-                            .font(DesignTokens.captionMedium)
-                            .foregroundStyle(
-                                appGroupIsOperational
-                                    ? DesignTokens.success
-                                    : DesignTokens.warning
-                            )
-                        } else {
-                            ProgressView()
-                        }
-                    }
-                    Button {
-                        checkAppGroup()
-                    } label: {
-                        Label(L10n.t("settings.widget.checkAppGroup"), systemImage: "arrow.clockwise")
-                    }
-                    Text(L10n.t("settings.widget.appGroup.help"))
-                        .font(DesignTokens.caption)
-                        .foregroundStyle(DesignTokens.textSecondary)
-                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                        Label(
-                            L10n.t("settings.widget.sideStore.title"),
-                            systemImage: "antenna.radiowaves.left.and.right"
-                        )
-                        .font(DesignTokens.bodyMedium)
-                        .foregroundStyle(DesignTokens.accent)
-                        Text(L10n.t("settings.widget.sideStore.hk"))
-                            .font(DesignTokens.caption)
-                            .foregroundStyle(DesignTokens.textSecondary)
-                    }
-                    .padding(.vertical, DesignTokens.Spacing.xs)
-                    if appGroupIsOperational == false {
-                        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                            Label(
-                                L10n.t("settings.widget.sideStore.title"),
-                                systemImage: "rectangle.stack.badge.plus"
-                            )
-                            .font(DesignTokens.bodyMedium)
-                            .foregroundStyle(DesignTokens.accent)
-                            Text(L10n.t("settings.widget.sideStore.help"))
-                                .font(DesignTokens.caption)
-                                .foregroundStyle(DesignTokens.textSecondary)
-                        }
-                        .padding(.vertical, DesignTokens.Spacing.xs)
-                    }
-                }
-
                 Section(L10n.t("settings.about")) {
                     LabeledContent(L10n.t("settings.version"), value: appVersion)
                     Link(destination: URL(string: "https://hkbus.app")!) {
@@ -189,7 +113,6 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(L10n.t("settings.title"))
-            .onAppear(perform: checkAppGroup)
         }
     }
 
@@ -197,15 +120,5 @@ struct SettingsView: View {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(version) (\(build))"
-    }
-
-    private func checkAppGroup() {
-        appGroupIsOperational = WidgetSharedStore.appGroupIsOperational()
-        widgetLastAccess = WidgetSharedStore.widgetLastAccess
-        WidgetSnapshotUpdater.reload()
-        Task {
-            try? await Task.sleep(for: .seconds(1))
-            widgetLastAccess = WidgetSharedStore.widgetLastAccess
-        }
     }
 }

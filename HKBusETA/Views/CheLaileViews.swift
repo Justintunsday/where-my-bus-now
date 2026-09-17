@@ -302,17 +302,6 @@ struct MainlandStopBoardView: View {
                 resolvedLocation = location
             }
             errorMessage = nil
-            if let soonest = result.rows.first(where: { !$0.minutes.isEmpty }) {
-                let dates = soonest.minutes.prefix(3).map {
-                    Date().addingTimeInterval(TimeInterval($0 * 60))
-                }
-                WidgetSnapshotUpdater.updateStop(
-                    regionID: app.region.id,
-                    stopID: stopID,
-                    arrivalLabel: soonest.lineName,
-                    etas: Array(dates)
-                )
-            }
         } catch is CancellationError {
             return
         } catch {

@@ -108,14 +108,6 @@ struct StopEtaView: View {
         items = result
         lastUpdated = Date()
         isLoading = false
-        let upcoming = result.flatMap { $0.upcoming }.compactMap(\.date).sorted()
-        let label = result.first(where: { !$0.upcoming.isEmpty })?.entry.route
-        WidgetSnapshotUpdater.updateStop(
-            regionID: app.region.id,
-            stopID: stopId,
-            arrivalLabel: label,
-            etas: Array(upcoming.prefix(3))
-        )
     }
 }
 

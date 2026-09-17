@@ -347,16 +347,6 @@ struct RouteEtaView: View {
             etas = result
             etaError = nil
             lastUpdated = Date()
-            let stops = entry.canonicalStops
-            if seq >= 0, seq < stops.count {
-                WidgetSnapshotUpdater.updateRoute(
-                    regionID: app.region.id,
-                    routeKey: routeKey,
-                    stopID: stops[seq],
-                    seq: seq,
-                    etas: result
-                )
-            }
         } catch is CancellationError {
             return
         } catch {
