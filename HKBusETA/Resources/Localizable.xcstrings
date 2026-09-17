@@ -785,6 +785,13 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "App Group 不可用。请加入 SideStore“线路与车站”小组件，以城市开头搜索，例如“佛山 352”或“上海 71 人民广场”；无需收藏共享也能使用。" } }
       }
     },
+    "settings.widget.sideStore.hk" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hong Kong works directly from the widget extension: select Hong Kong, then choose KMB, Citybus, Green Minibus or NLB. Route number and direction are required; an empty stop uses the first stop in that direction. Operator names are part of the target, so same-number routes are never mixed." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "香港小工具會由擴展直接連接官方 API：選擇香港後，再選九巴、城巴、專線小巴或嶼巴。路線和方向必填；站名留空會使用該方向首站。營辦商會寫入目標，因此同號路線不會混用。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "香港小组件会由扩展直接连接官方 API：选择香港后，再选择九巴、城巴、专线小巴或屿巴。路线和方向必填；站名留空会使用该方向首站。营办商会写入目标，因此同号路线不会混用。" } }
+      }
+    },
     "settings.widget.sideStore.title" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "SideStore configuration" } },

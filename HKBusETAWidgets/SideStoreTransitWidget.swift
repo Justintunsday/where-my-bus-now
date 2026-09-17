@@ -20,8 +20,9 @@ struct WidgetTransitTargetEntity: AppEntity, Hashable, Sendable {
     }
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(
-            title: "\(record.cityName) [\(record.cityID)] · \(record.lineName)",
+        let operatorText = WidgetTransitOperatorCatalog.displayName(record.operatorID)
+        return DisplayRepresentation(
+            title: "\(record.cityName) [\(record.cityID)]\(operatorText.map { " · \($0)" } ?? "") · \(record.lineName)",
             subtitle: "\(record.directionText) · \(record.stopName)"
         )
     }
@@ -45,6 +46,7 @@ struct WidgetTransitTargetQuery: EntityStringQuery, Sendable {
 }
 
 enum WidgetTransitCityOption: String, AppEnum, Sendable {
+    case hongKong = "hk"
     case shenzhen = "014"
     case guangzhou = "040"
     case shanghai = "034"
@@ -60,6 +62,7 @@ enum WidgetTransitCityOption: String, AppEnum, Sendable {
 
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "城市 / City"
     static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
+        .hongKong: DisplayRepresentation(title: "香港", subtitle: "香港营办商 API / Hong Kong operators"),
         .shenzhen: DisplayRepresentation(title: "深圳", subtitle: "城市 ID 014 / City ID 014"),
         .guangzhou: DisplayRepresentation(title: "广州", subtitle: "城市 ID 040 / City ID 040"),
         .shanghai: DisplayRepresentation(title: "上海", subtitle: "城市 ID 034 / City ID 034"),
@@ -79,6 +82,23 @@ enum WidgetTransitCityOption: String, AppEnum, Sendable {
     }
 }
 
+enum WidgetTransitOperatorOption: String, AppEnum, Sendable {
+    case kmb
+    case citybus = "ctb"
+    case greenMinibus = "gmb"
+    case nlb
+
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "香港营办商 / Hong Kong operator"
+    static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
+        .kmb: DisplayRepresentation(title: "九巴 / KMB", subtitle: "九龙巴士 / Kowloon Motor Bus"),
+        .citybus: DisplayRepresentation(title: "城巴 / Citybus", subtitle: "Citybus Limited"),
+        .greenMinibus: DisplayRepresentation(title: "专线小巴 / GMB", subtitle: "绿色专线小巴 / Green Minibus"),
+        .nlb: DisplayRepresentation(title: "屿巴 / NLB", subtitle: "新大屿山巴士 / New Lantao Bus"),
+    ]
+
+    var id: String { rawValue }
+}
+
 enum WidgetTransitDirectionOption: String, AppEnum, Sendable {
     case outbound = "0"
     case inbound = "1"
@@ -95,11 +115,14 @@ enum WidgetTransitDirectionOption: String, AppEnum, Sendable {
 struct SelectSideStoreTransitTargetIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "线路与车站 / Route & stop"
     static var description = IntentDescription(
-        "依次选择城市并填写线路、方向和可选站名。 / Choose a city, then enter the route, direction and optional stop."
+        "依次选择城市；香港再选择营办商，然后填写线路、方向和可选站名。 / Choose a city; for Hong Kong, choose an operator, then enter the route, direction and optional stop."
     )
 
     @Parameter(title: "城市 / City")
     var city: WidgetTransitCityOption?
+
+    @Parameter(title: "香港营办商（香港必填） / Operator (required for HK)")
+    var transitOperator: WidgetTransitOperatorOption?
 
     @Parameter(title: "线路（必填） / Route (required)")
     var route: String?
@@ -111,7 +134,7 @@ struct SelectSideStoreTransitTargetIntent: WidgetConfigurationIntent {
     var stop: String?
 
     static var parameterSummary: some ParameterSummary {
-        Summary("\(\.$city) · \(\.$route) · \(\.$direction) · \(\.$stop)")
+        Summary("\(\.$city) · \(\.$transitOperator) · \(\.$route) · \(\.$direction) · \(\.$stop)")
     }
 }
 
@@ -194,6 +217,7 @@ struct SideStoreTransitProvider: AppIntentTimelineProvider {
         else { return nil }
         return await WidgetTransitTargetResolver().target(
             for: city.city,
+            operatorID: configuration.transitOperator?.id,
             route: route,
             direction: configuration.direction?.apiValue ?? WidgetTransitManualDirection.outbound,
             stop: configuration.stop
@@ -219,7 +243,7 @@ struct SideStoreTransitWidget: Widget {
             SideStoreTransitWidgetView(entry: entry)
         }
         .configurationDisplayName("线路与车站 / Route & stop")
-        .description("选择城市并填写线路、方向和可选站名，不依赖动态搜索或 App Group。 / Choose a city and enter a route, direction and optional stop without dynamic search or App Group.")
+        .description("选择城市并填写线路、方向和可选站名；香港需选择营办商，不依赖动态搜索或 App Group。 / Choose a city, route, direction and optional stop; Hong Kong also needs an operator, without dynamic search or App Group.")
         .supportedFamilies([
             .systemSmall,
             .systemMedium,
@@ -258,7 +282,7 @@ struct SideStoreTransitWidgetView: View {
             case .accessoryRectangular:
                 HStack {
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("\(target.cityName) · \(target.lineName)").font(.caption2).lineLimit(1)
+                        Text("\(targetContextText(target)) · \(target.lineName)").font(.caption2).lineLimit(1)
                         Text(target.stopName).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                         TransitStatusText(entry: entry, compact: true)
                     }
@@ -288,7 +312,7 @@ struct SideStoreTransitWidgetView: View {
 
     private func small(_ target: WidgetTransitTargetRecord) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("\(target.cityName) [\(target.cityID)]")
+            Text(targetContextText(target))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -310,7 +334,7 @@ struct SideStoreTransitWidgetView: View {
     private func medium(_ target: WidgetTransitTargetRecord) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack {
-                Text("\(target.cityName) [\(target.cityID)]")
+                Text(targetContextText(target))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 4)
@@ -361,6 +385,14 @@ struct SideStoreTransitWidgetView: View {
         case .unavailable: return WidgetL10n.t("暫時無法更新", "Unable to update")
         }
     }
+}
+
+private func targetContextText(_ target: WidgetTransitTargetRecord) -> String {
+    let city = "\(target.cityName) [\(target.cityID)]"
+    guard let operatorName = WidgetTransitOperatorCatalog.displayName(target.operatorID) else {
+        return city
+    }
+    return "\(city) · \(operatorName)"
 }
 
 private struct TransitCountdown: View {

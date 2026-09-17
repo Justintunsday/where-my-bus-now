@@ -13,6 +13,7 @@ struct WidgetTransitCity: Hashable, Sendable {
 
 enum WidgetTransitCityCatalog {
     static let all: [WidgetTransitCity] = [
+        WidgetTransitCity(id: "hk", name: "香港", aliases: ["香港", "香港特別行政區", "香港特别行政区", "hong kong", "hk"]),
         WidgetTransitCity(id: "014", name: "深圳", aliases: ["深圳", "深圳市", "shenzhen"]),
         WidgetTransitCity(id: "040", name: "广州", aliases: ["广州", "广州市", "廣州", "廣州市", "guangzhou"]),
         WidgetTransitCity(id: "034", name: "上海", aliases: ["上海", "上海市", "shanghai"]),
@@ -40,6 +41,48 @@ enum WidgetTransitCityCatalog {
             let remainder = String(value.dropFirst(alias.count))
                 .trimmingCharacters(in: separators)
             return (city, remainder)
+        }
+        return nil
+    }
+}
+
+/// Static operator namespace used by the Hong Kong manual widget fields.
+///
+/// These IDs are also sent to the resolver and encoded in the target. A route
+/// number is never resolved across operators, because KMB and Citybus (for
+/// example) can both operate the same number.
+enum WidgetTransitOperatorCatalog {
+    static let hongKongIDs = ["kmb", "ctb", "gmb", "nlb"]
+
+    private static let names: [String: (zh: String, en: String, aliases: [String])] = [
+        "kmb": ("九巴", "KMB", ["九巴", "kmb", "kowloon motor bus"]),
+        "ctb": ("城巴", "Citybus", ["城巴", "citybus", "ctb"]),
+        "gmb": ("專線小巴", "Green Minibus", ["專線小巴", "专线小巴", "綠色小巴", "绿色小巴", "gmb", "minibus"]),
+        "nlb": ("嶼巴", "NLB", ["嶼巴", "屿巴", "nlb", "new lantao bus"]),
+    ]
+
+    static func displayName(_ id: String?) -> String? {
+        guard let id, let name = names[id] else { return nil }
+        return "\(name.zh) / \(name.en)"
+    }
+
+    static func aliases(for id: String) -> [String] {
+        names[id]?.aliases ?? []
+    }
+
+    static func operatorID(matchingPrefix input: String) -> (id: String, remainder: String)? {
+        let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        let candidates = names.flatMap { id, value in
+            value.aliases.map { (id, $0) }
+        }.sorted { $0.1.count > $1.1.count }
+
+        for (id, alias) in candidates {
+            guard value.lowercased().hasPrefix(alias.lowercased()) else { continue }
+            var separators = CharacterSet.whitespacesAndNewlines
+            separators.formUnion(.punctuationCharacters)
+            let remainder = String(value.dropFirst(alias.count))
+                .trimmingCharacters(in: separators)
+            return (id, remainder)
         }
         return nil
     }
@@ -93,6 +136,13 @@ struct WidgetTransitTargetRecord: Codable, Hashable, Sendable, Identifiable {
     let stopSequence: Int
     let latitude: Double
     let longitude: Double
+    /// Hong Kong's operator namespace. Nil preserves the v1 mainland target
+    /// format and keeps already-configured mainland widgets decodable.
+    let operatorID: String?
+    /// Provider-specific direction path, such as `outbound` or GMB route seq.
+    let providerDirection: String?
+    /// KMB service type. Other providers leave this nil.
+    let serviceType: String?
 
     var id: String { WidgetTransitTargetID.encode(self) }
 
@@ -109,7 +159,10 @@ struct WidgetTransitTargetRecord: Codable, Hashable, Sendable, Identifiable {
         stationID: String,
         stopSequence: Int,
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        operatorID: String? = nil,
+        providerDirection: String? = nil,
+        serviceType: String? = nil
     ) {
         self.cityID = cityID
         self.cityName = cityName
@@ -124,12 +177,30 @@ struct WidgetTransitTargetRecord: Codable, Hashable, Sendable, Identifiable {
         self.stopSequence = stopSequence
         self.latitude = latitude
         self.longitude = longitude
+        self.operatorID = operatorID
+        self.providerDirection = providerDirection
+        self.serviceType = serviceType
     }
 
     var directionText: String {
+        // Keep the original mainland label for v1 target IDs. Hong Kong
+        // targets carry operator-owned endpoints and get the richer label.
+        guard operatorID != nil else {
+            return "方向 \(direction) / Direction \(direction)"
+        }
         let endpoints = [origin, destination].filter { !$0.isEmpty }
-        guard !endpoints.isEmpty else { return "方向 \(direction) / Direction \(direction)" }
-        return "方向 \(direction) / Direction \(direction) · \(endpoints.joined(separator: " → "))"
+        let label: String
+        if operatorID == WidgetHongKongOperatorID.nlb.rawValue {
+            // NLB's route list has no bound field. Its direction is the
+            // deterministic endpoint variant selected by the resolver.
+            label = "方向 \(direction + 1) / Direction \(direction + 1)"
+        } else {
+            label = direction == WidgetTransitManualDirection.outbound
+                ? "往目的地 / Outbound"
+                : "往起點 / Inbound"
+        }
+        guard !endpoints.isEmpty else { return label }
+        return "\(label) · \(endpoints.joined(separator: " → "))"
     }
 
     init?(id: String) {

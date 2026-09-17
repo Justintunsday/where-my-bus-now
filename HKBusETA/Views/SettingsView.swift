@@ -142,6 +142,18 @@ struct SettingsView: View {
                     Text(L10n.t("settings.widget.appGroup.help"))
                         .font(DesignTokens.caption)
                         .foregroundStyle(DesignTokens.textSecondary)
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                        Label(
+                            L10n.t("settings.widget.sideStore.title"),
+                            systemImage: "antenna.radiowaves.left.and.right"
+                        )
+                        .font(DesignTokens.bodyMedium)
+                        .foregroundStyle(DesignTokens.accent)
+                        Text(L10n.t("settings.widget.sideStore.hk"))
+                            .font(DesignTokens.caption)
+                            .foregroundStyle(DesignTokens.textSecondary)
+                    }
+                    .padding(.vertical, DesignTokens.Spacing.xs)
                     if appGroupIsOperational == false {
                         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                             Label(

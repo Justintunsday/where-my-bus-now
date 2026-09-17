@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.8.0 (build 18)
+
+- Added a SideStore-compatible Hong Kong city configuration with static
+  operator choices for KMB, Citybus, green minibus and NLB. The operator is
+  part of the target namespace, so same-number routes cannot cross providers.
+- Added extension-owned, Foundation-only route/stop/ETA clients for all four
+  official Hong Kong open-data APIs. GMB requires an HKI/KLN/NT prefix when a
+  route number is duplicated; NLB direction mapping is derived from the
+  official route-name endpoints rather than route ID ordering.
+- Added offline fixtures covering all Hong Kong providers, GMB millisecond
+  timestamps, successful no-data versus API-error widget states, and a
+  non-blocking CI reachability probe for the official endpoints.
+
 ## 1.7.1 (build 17)
 
 - Replaced the SideStore widget's unsupported dynamic target picker with

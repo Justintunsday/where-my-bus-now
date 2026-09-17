@@ -413,9 +413,14 @@ private extension KeyedDecodingContainer {
 
 struct WidgetTransitTargetResolver: Sendable {
     let client: WidgetTransitAPIClient
+    let hongKongClient: WidgetHongKongAPIClient
 
-    init(client: WidgetTransitAPIClient = WidgetTransitAPIClient()) {
+    init(
+        client: WidgetTransitAPIClient = WidgetTransitAPIClient(),
+        hongKongClient: WidgetHongKongAPIClient = WidgetHongKongAPIClient()
+    ) {
         self.client = client
+        self.hongKongClient = hongKongClient
     }
 
     func targets(for input: String) async -> [WidgetTransitTargetRecord] {
@@ -433,12 +438,40 @@ struct WidgetTransitTargetResolver: Sendable {
         direction: Int,
         stop: String?
     ) async -> WidgetTransitTargetRecord? {
+        await target(
+            for: city,
+            operatorID: nil,
+            route: route,
+            direction: direction,
+            stop: stop
+        )
+    }
+
+    /// Resolves the manual fields. Hong Kong requires an explicit operator so
+    /// a route number shared by KMB and Citybus cannot cross namespaces.
+    func target(
+        for city: WidgetTransitCity,
+        operatorID: String?,
+        route: String,
+        direction: Int,
+        stop: String?
+    ) async -> WidgetTransitTargetRecord? {
         let route = clean(route)
         let stop = clean(stop)
         guard let route,
               direction == WidgetTransitManualDirection.outbound
                 || direction == WidgetTransitManualDirection.inbound
         else { return nil }
+
+        if city.id == "hk" {
+            guard let operatorID else { return nil }
+            return await WidgetHongKongTargetResolver(client: hongKongClient).target(
+                operatorID: operatorID,
+                route: route,
+                direction: direction,
+                stop: stop
+            )
+        }
 
         var keywordParts = [route]
         if let stop {
@@ -467,6 +500,9 @@ struct WidgetTransitTargetResolver: Sendable {
     }
 
     private func targets(for query: WidgetTransitParsedQuery) async -> [WidgetTransitTargetRecord] {
+        if query.city.id == "hk" {
+            return await WidgetHongKongTargetResolver(client: hongKongClient).targets(for: query.keyword)
+        }
         guard var response = try? await client.search(cityID: query.city.id, keyword: query.keyword) else {
             return []
         }
@@ -563,6 +599,9 @@ struct WidgetTransitTargetResolver: Sendable {
     }
 
     func etaDates(for target: WidgetTransitTargetRecord) async -> (dates: [Date], unavailable: Bool) {
+        if target.cityID == "hk" {
+            return await WidgetHongKongTargetResolver(client: hongKongClient).etaDates(for: target)
+        }
         guard let response = try? await client.realtime(for: target) else {
             return ([], true)
         }

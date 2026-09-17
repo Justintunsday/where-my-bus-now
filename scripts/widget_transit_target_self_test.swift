@@ -14,6 +14,72 @@ private struct FixtureTransport: WidgetTransitAPITransport, @unchecked Sendable 
         let path = request.url?.path ?? ""
         let query = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems ?? []
         let values = Dictionary(uniqueKeysWithValues: query.map { ($0.name, $0.value ?? "") })
+        if host == "data.etabus.gov.hk" {
+            if path.hasSuffix("/route") {
+                return response(#"{"data":[{"route":"1A","bound":"O","service_type":"1","orig_en":"Star Ferry","dest_en":"Sau Mau Ping"},{"route":"1A","bound":"I","service_type":"1","orig_en":"Sau Mau Ping","dest_en":"Star Ferry"}]}"#)
+            }
+            if path.hasSuffix("/stop") {
+                return response(#"{"data":[{"stop":"KMB-1","name_en":"KMB Stop","lat":22.3001,"long":114.1701},{"stop":"KMB-2","name_en":"KMB Stop 2","lat":22.3002,"long":114.1702}]}"#)
+            }
+            if path.hasSuffix("/route-stop/1A/outbound/1") {
+                return response(#"{"data":[{"seq":1,"stop":"KMB-1"},{"seq":2,"stop":"KMB-2"}]}"#)
+            }
+            if path.hasSuffix("/route-stop/1A/inbound/1") {
+                return response(#"{"data":[{"seq":1,"stop":"KMB-2"},{"seq":2,"stop":"KMB-1"}]}"#)
+            }
+            if path.contains("/eta/") {
+                return response(#"{"data":[{"dir":"O","seq":1,"eta":"2099-09-17T19:25:00+08:00"}]}"#)
+            }
+        }
+        if host == "rt.data.gov.hk" && path.contains("/citybus-nwfb/") {
+            if path.hasSuffix("/route/CTB/1A") {
+                return response(#"{"data":{"co":"CTB","route":"1A","orig_en":"Central","dest_en":"Wan Chai"}}"#)
+            }
+            if path.hasSuffix("/route-stop/CTB/1A/outbound") {
+                return response(#"{"data":[{"dir":"O","seq":1,"stop":"CTB-1"}]}"#)
+            }
+            if path.hasSuffix("/stop") {
+                return response(#"{"data":[{"stop":"CTB-1","name_en":"CTB Stop","lat":22.3003,"long":114.1703}]}"#)
+            }
+            if path.contains("/eta/CTB/error/1A") {
+                return WidgetTransitAPITransportResponse(data: Data(), statusCode: 503)
+            }
+            if path.contains("/eta/CTB/") {
+                return response(#"{"data":[]}"#)
+            }
+        }
+        if host == "data.etagmb.gov.hk" {
+            if path == "/route" {
+                return response(#"{"data":{"routes":{"HKI":["1"],"KLN":["1"]}}}"#)
+            }
+            if path == "/route/HKI/1" {
+                return response(#"{"data":[{"route_id":"2001","route_code":"1","directions":[{"route_seq":1,"orig_en":"Central","dest_en":"The Peak"},{"route_seq":2,"orig_en":"The Peak","dest_en":"Central"}]}]}"#)
+            }
+            if path == "/route-stop/2001/1" {
+                return response(#"{"data":{"route_stops":[{"stop_seq":1,"stop_id":"GMB-1","name_en":"GMB Stop"}]}}"#)
+            }
+            if path == "/stop/GMB-1" {
+                return response(#"{"data":{"coordinates":{"wgs84":{"latitude":22.3004,"longitude":114.1704}}}}"#)
+            }
+            if path == "/eta/route-stop/2001/1/1" {
+                return response(#"{"data":{"enabled":true,"eta":[{"timestamp":"2099-09-17T19:25:00.000+08:00","diff":10}]}}"#)
+            }
+        }
+        if host == "rt.data.gov.hk" && path.contains("/nlb/") {
+            if path.hasSuffix("/route.php") {
+                return response(#"{"routes":[{"routeId":"20","routeNo":"1","routeName_e":"Mui Wo > Tai O"},{"routeId":"2","routeNo":"1","routeName_e":"Tai O > Mui Wo"}]}"#)
+            }
+            if path.hasSuffix("/stop.php") && values["action"] == "list" {
+                let routeID = values["routeId"] ?? ""
+                let body = routeID == "2"
+                    ? #"{"stops":[{"stopId":"NLB-2","stopName_e":"Tai O","latitude":22.3006,"longitude":114.1706}]}"#
+                    : #"{"stops":[{"stopId":"NLB-20","stopName_e":"Mui Wo","latitude":22.3005,"longitude":114.1705}]}"#
+                return response(body)
+            }
+            if path.hasSuffix("/stop.php") && values["action"] == "estimatedArrivals" {
+                return response(#"{"estimatedArrivals":[{"estimatedArrivalTime":"2099-09-17 19:25:00"}]}"#)
+            }
+        }
         if path.hasSuffix("/search") {
             let body = values["city_id"] == "019" ? foshanSearchJSON : shanghaiSearchJSON
             return WidgetTransitAPITransportResponse(data: Data(body.utf8), statusCode: 200)
@@ -35,6 +101,10 @@ private struct FixtureTransport: WidgetTransitAPITransport, @unchecked Sendable 
             )
         }
         preconditionFailure("Unexpected widget API path: \(path)")
+    }
+
+    private func response(_ body: String) -> WidgetTransitAPITransportResponse {
+        WidgetTransitAPITransportResponse(data: Data(body.utf8), statusCode: 200)
     }
 
     private var foshanSearchJSON: String {
@@ -148,6 +218,84 @@ struct WidgetTransitTargetSelfTest {
             parameters: [("city_id", "034"), ("line_id", "line-0")]
         )
         precondition(url.absoluteString.contains("city_id=034"))
+
+        precondition(WidgetTransitOperatorCatalog.hongKongIDs == ["kmb", "ctb", "gmb", "nlb"])
+        let hongKong = WidgetTransitCityCatalog.all.first { $0.id == "hk" }!
+        let hongKongClient = WidgetHongKongAPIClient(transport: FixtureTransport())
+        let hongKongResolver = WidgetTransitTargetResolver(
+            client: client,
+            hongKongClient: hongKongClient
+        )
+
+        let kmb = await hongKongResolver.target(
+            for: hongKong,
+            operatorID: "kmb",
+            route: "1A",
+            direction: WidgetTransitManualDirection.outbound,
+            stop: nil
+        )
+        precondition(
+            kmb?.cityID == "hk" && kmb?.operatorID == "kmb" && kmb?.stopName == "KMB Stop",
+            "KMB must resolve through its own route and stop namespace"
+        )
+        let kmbETA = await hongKongResolver.etaDates(for: kmb!)
+        precondition(kmbETA.unavailable == false && kmbETA.dates.count == 1)
+
+        let citybus = await hongKongResolver.target(
+            for: hongKong,
+            operatorID: "ctb",
+            route: "1A",
+            direction: WidgetTransitManualDirection.outbound,
+            stop: nil
+        )
+        precondition(
+            citybus?.operatorID == "ctb" && citybus?.stopName == "CTB Stop",
+            "the same route number must not mix KMB and Citybus"
+        )
+        let citybusNoData = await hongKongResolver.etaDates(for: citybus!)
+        precondition(citybusNoData.unavailable == false && citybusNoData.dates.isEmpty)
+
+        let errorTarget = WidgetTransitTargetRecord(
+            cityID: "hk", cityName: "香港", lineID: "1A", lineName: "1A",
+            direction: WidgetTransitManualDirection.outbound,
+            origin: "Central", destination: "Wan Chai", stopID: "error", stopName: "Error",
+            stationID: "error", stopSequence: 1, latitude: 22.3, longitude: 114.17,
+            operatorID: "ctb", providerDirection: "O"
+        )
+        let citybusError = await hongKongResolver.etaDates(for: errorTarget)
+        precondition(citybusError.unavailable == true && citybusError.dates.isEmpty)
+
+        let ambiguousGMB = await hongKongResolver.target(
+            for: hongKong,
+            operatorID: "gmb",
+            route: "1",
+            direction: WidgetTransitManualDirection.outbound,
+            stop: nil
+        )
+        precondition(ambiguousGMB == nil, "an unqualified duplicate GMB route must be rejected")
+        let gmb = await hongKongResolver.target(
+            for: hongKong,
+            operatorID: "gmb",
+            route: "HKI 1",
+            direction: WidgetTransitManualDirection.outbound,
+            stop: nil
+        )
+        precondition(gmb?.operatorID == "gmb" && gmb?.lineID == "2001" && gmb?.providerDirection == "1")
+        let gmbETA = await hongKongResolver.etaDates(for: gmb!)
+        precondition(gmbETA.unavailable == false && gmbETA.dates.count == 1)
+
+        let nlb = await hongKongResolver.target(
+            for: hongKong,
+            operatorID: "nlb",
+            route: "1",
+            direction: WidgetTransitManualDirection.inbound,
+            stop: nil
+        )
+        precondition(
+            nlb?.operatorID == "nlb" && nlb?.lineID == "2" && nlb?.origin == "Tai O",
+            "NLB direction must come from routeName_e endpoints, not routeId order"
+        )
+
         print("SIDESTORE WIDGET TARGET SELF-TEST OK")
     }
 }

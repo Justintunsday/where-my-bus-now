@@ -84,14 +84,23 @@ jobs:
             -o "$RUNNER_TEMP/widget_snapshot_self_test"
           "$RUNNER_TEMP/widget_snapshot_self_test"
 
-      - name: SideStore widget target self-test
+      - name: SideStore widget target and Hong Kong API self-test
         run: |
           xcrun swiftc -parse-as-library -O \
             HKBusETAWidgets/WidgetTransitTarget.swift \
             HKBusETAWidgets/WidgetTransitAPI.swift \
+            HKBusETAWidgets/HongKongWidgetAPI.swift \
             scripts/widget_transit_target_self_test.swift \
             -o "$RUNNER_TEMP/widget_transit_target_self_test"
           "$RUNNER_TEMP/widget_transit_target_self_test"
+
+      - name: Hong Kong official API reachability (allowed to fail)
+        continue-on-error: true
+        run: |
+          curl -fsS --max-time 20 "https://data.etabus.gov.hk/v1/transport/kmb/route-stop/1A/outbound/1" > /dev/null
+          curl -fsS --max-time 20 "https://rt.data.gov.hk/v1/transport/citybus-nwfb/route/CTB/11" > /dev/null
+          curl -fsS --max-time 20 "https://data.etagmb.gov.hk/route" > /dev/null
+          curl -fsS --max-time 20 "https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list" > /dev/null
 
       - name: Hosted CheLaile API reachability (allowed to fail)
         continue-on-error: true
