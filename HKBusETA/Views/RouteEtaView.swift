@@ -30,7 +30,8 @@ struct ArrivalScreen: View {
 
     private var followingArrivals: [Eta] {
         var upcoming = session.etas.filter { ($0.date ?? .distantFuture) > Date() }
-        if session.activityState.isFresh(at: Date()), let next = upcoming.firstIndex(where: { $0.date != nil }) {
+        if session.activityState.isFresh(at: Date()), let arrival = session.activityState.arrival,
+           let next = upcoming.firstIndex(where: { $0.date == arrival }) {
             upcoming.remove(at: next)
         }
         return upcoming

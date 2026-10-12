@@ -126,7 +126,11 @@ final class ArrivalSession {
                 result = await data.provider.fetchEtas(entry: entry, seq: target.stopSequence, db: db, language: language)
             }
             guard !Task.isCancelled else { return }
-            if etas != result { etas = result }
+            let rows = result.map { item in
+                BusArrivalState.reportedStatus(item.remark.name(language)) == nil ? item
+                    : Eta(eta: "", remark: item.remark, dest: item.dest, co: item.co)
+            }
+            if etas != rows { etas = rows }
             let receivedAt = Date()
             lastSuccessfulState = makeState(result, at: receivedAt)
             updatedAt = receivedAt
@@ -149,22 +153,20 @@ final class ArrivalSession {
 
     private func makeState(_ result: [Eta], at date: Date) -> BusArrivalState {
         let sorted = result.filter {
-            ($0.date ?? .distantPast) > date && explicitStatus($0.remark.name(language)) == nil
+            ($0.date ?? .distantPast) > date && BusArrivalState.reportedStatus($0.remark.name(language)) == nil
         }.sorted { $0.date! < $1.date! }
         let first = sorted.first
         let message = first?.remark.name(language) ?? result.first?.remark.name(language) ?? ""
-        let explicit = first == nil ? result.compactMap { explicitStatus($0.remark.name(language)) }.first : nil
-        return .snapshot(arrivals: sorted.compactMap { $0.date?.timeIntervalSince1970 }, updatedAt: date,
+        let explicit = first == nil ? result.compactMap { BusArrivalState.reportedStatus($0.remark.name(language)) }.first : nil
+        var state = BusArrivalState.snapshot(arrivals: sorted.compactMap { $0.date?.timeIntervalSince1970 }, updatedAt: date,
                          scheduled: first?.isScheduled ?? false, message: message, explicitStatus: explicit,
                          previous: lastSuccessfulState)
-    }
-
-    private func explicitStatus(_ message: String) -> BusArrivalStatus? {
-        if message.localizedCaseInsensitiveContains("cancel") || message.contains("取消") { return .cancelled }
-        if message.localizedCaseInsensitiveContains("departed") || message.contains("已開出") || message.contains("已离站") { return .departed }
-        if message.localizedCaseInsensitiveContains("arrived") || message.contains("已到站") { return .arrived }
-        if message.localizedCaseInsensitiveContains("unavailable") || message.contains("暫停") || message.contains("暂时") { return .unavailable }
-        return nil
+        if first != nil, let old = lastSuccessfulState?.arrivalEpoch,
+           result.contains(where: { item in
+               guard let date = item.date, let status = BusArrivalState.reportedStatus(item.remark.name(language)) else { return false }
+               return [.cancelled, .arrived, .departed].contains(status) && abs(date.timeIntervalSince1970 - old) < 15
+           }) { state.change = .nextBus }
+        return state
     }
 
     #if DEBUG

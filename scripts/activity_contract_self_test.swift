@@ -46,6 +46,12 @@ import Foundation
         precondition(offline.arrivalEpoch == departures.arrivalEpoch && offline.secondArrivalEpoch == departures.secondArrivalEpoch)
         precondition(offline.updatedAt == now && !offline.isFresh(at: now.addingTimeInterval(45)), "Failed request preserves the actual last response timestamp")
         precondition(BusArrivalState.snapshot(arrivals: [], updatedAt: now).status == .noService)
+        precondition(BusArrivalState.reportedStatus("Departed from terminal") == nil)
+        precondition(BusArrivalState.reportedStatus("已開出") == nil, "Departing the origin is not leaving the boarding stop")
+        precondition(BusArrivalState.reportedStatus("Service cancelled") == .cancelled)
+        precondition(BusArrivalState.reportedStatus("班次已離站") == .departed)
+        precondition(BusArrivalState.failed(previous: departures, at: now, network: false,
+            message: String(repeating: "error", count: 1000)).message.count <= 160)
         for status in [BusArrivalStatus.cancelled, .arrived, .departed, .noService, .ended] {
             let terminal = BusArrivalState.snapshot(arrivals: [], updatedAt: now, explicitStatus: status)
             precondition(terminal.isTerminal && !terminal.isFresh(at: now))

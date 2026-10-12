@@ -87,6 +87,18 @@ struct BusArrivalState: Codable, Hashable, Sendable {
     var secondArrival: Date? { secondArrivalEpoch.map(Date.init(timeIntervalSince1970:)) }
     var isTerminal: Bool { [.cancelled, .noService, .arrived, .departed, .ended].contains(status) }
 
+    /// Only unambiguous stop/service statements. “Departed from terminal” and
+    /// “已開出” can mean an NLB bus is on its way; they must not end this trip.
+    static func reportedStatus(_ message: String) -> BusArrivalStatus? {
+        switch message.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "cancelled", "canceled", "service cancelled", "service canceled", "班次取消", "已取消", "取消": .cancelled
+        case "arrived at stop", "bus arrived", "已到站", "班次已到站": .arrived
+        case "departed from this stop", "bus departed", "班次已離站", "班次已离站": .departed
+        case "eta unavailable", "temporarily unavailable", "暫無實時預測", "暂无实时预测", "服務暫停", "服务暂停", "暫停服務", "暂停服务": .unavailable
+        default: nil
+        }
+    }
+
     func isFresh(at date: Date) -> Bool {
         date.timeIntervalSince1970 < validUntilEpoch && (status == .live || status == .scheduled)
     }
