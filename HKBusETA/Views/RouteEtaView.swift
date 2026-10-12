@@ -28,6 +28,8 @@ struct ArrivalScreen: View {
         MainlandRealtimePolicy.allowsRequest(modeHint: target.mode.flatMap(MainlandTransitMode.init(rawValue:)))
     }
 
+    private var hasFreshPrediction: Bool { session.error == nil && session.activityState.isFresh(at: Date()) }
+
     private var followingArrivals: [Eta] {
         var upcoming = session.etas.filter { ($0.date ?? .distantFuture) > Date() }
         if session.activityState.isFresh(at: Date()), let arrival = session.activityState.arrival,
@@ -47,10 +49,10 @@ struct ArrivalScreen: View {
                 } else { ArrivalHero(state: session.activityState) }
             }
             if !followingArrivals.isEmpty {
-                Section(L10n.t(session.error == nil ? "arrival.upcoming" : "arrival.cached")) {
+                Section(L10n.t(hasFreshPrediction ? "arrival.upcoming" : "arrival.cached")) {
                     ForEach(ArrivalSlot.make(followingArrivals)) { slot in
                         ETALineView(eta: slot.eta, language: L10n.language,
-                            format: app.settings.etaFormat, annotateScheduled: app.settings.annotateScheduled,
+                            format: hasFreshPrediction ? app.settings.etaFormat : .exact, annotateScheduled: app.settings.annotateScheduled,
                             highlight: false, showCompany: entry.co.count > 1).padding(.vertical, 8)
                     }
                 }

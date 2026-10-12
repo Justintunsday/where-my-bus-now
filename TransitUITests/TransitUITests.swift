@@ -69,6 +69,9 @@ import XCTest
         let dismissed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.buttons["tracking.done"])
         wait(for: [dismissed], timeout: 10)
         XCTAssertFalse(app.descendants(matching: .any)["tracking.error"].exists)
+        XCUIDevice.shared.press(.home)
+        screenshot("activity-system-compact")
+        app.activate()
         open.tap()
         let end = app.buttons["tracking.end"]
         XCTAssertTrue(end.waitForExistence(timeout: 5))
