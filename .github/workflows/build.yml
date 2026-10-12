@@ -5,14 +5,37 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      preview_only:
+        description: 'Build a test IPA first (compile only; skip simulator validation)'
+        type: boolean
+        default: false
 
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  preview:
+    name: Preview IPA (compile only)
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.preview_only }}
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - run: xcodebuild -version
+      - name: Archive and package test IPA
+        run: bash scripts/build_unsigned_ipa.sh
+      - uses: actions/upload-artifact@v5
+        with:
+          name: HKBusETA-unsigned-ipa
+          path: ${{ runner.temp }}/HKBusETA-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
+
   compatibility:
     name: iOS 17 compatibility (Xcode 16.4)
+    if: ${{ !inputs.preview_only }}
     runs-on: macos-15
     timeout-minutes: 40
     env:
@@ -41,6 +64,7 @@ jobs:
 
   build:
     name: Build iOS app
+    if: ${{ !inputs.preview_only }}
     runs-on: macos-26
     timeout-minutes: 45
 
