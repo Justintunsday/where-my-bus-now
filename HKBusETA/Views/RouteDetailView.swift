@@ -72,6 +72,7 @@ struct RouteDetailView: View {
                     ForEach(points) { point in
                         StopTimelineRow(entry: entry, point: point, isLast: point.seq == points.last?.seq,
                             isSelected: selectedSeq == point.seq, isExpanded: selectedSeq == point.seq) {
+                                mapSelection = nil
                                 withAnimation(TransitMotion.selection(reduced: reduceMotion)) {
                                     selectedSeq = selectedSeq == point.seq ? nil : point.seq
                                 }
