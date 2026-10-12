@@ -8,7 +8,7 @@ enum TransitMotion {
 
 struct FavoriteRouteButton: View {
     @Environment(AppState.self) private var app
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceMotion) private var reduceMotion
     let routeKey: String
     let entry: RouteEntry
     private var isFavorite: Bool { app.bookmarks.isFavoriteRoute(routeKey) }
@@ -62,7 +62,7 @@ struct RouteIdentityHeader: View {
 /// Value-only view: timeline ticks invalidate this small subtree, not the route or map.
 struct ArrivalHero: View {
     let state: BusArrivalState
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .largeTitle) private var numeralSize: CGFloat = 64
 
     var body: some View {
@@ -127,7 +127,7 @@ struct FreshnessLabel: View {
 }
 
 struct TransitPrimaryStyle: ViewModifier {
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.transitReduceTransparency) private var reduceTransparency
     @ViewBuilder func body(content: Content) -> some View {
         #if compiler(>=6.2)
         if #available(iOS 26.0, *), !reduceTransparency {

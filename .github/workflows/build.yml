@@ -134,6 +134,23 @@ jobs:
           path: ${{ runner.temp }}/bus-screenshots
           if-no-files-found: warn
 
+      - name: Native navigation UI tests
+        run: |
+          device=$(cat "$RUNNER_TEMP/bus-simulator-id")
+          xcodebuild test -project HKBusETA.xcodeproj -scheme HKBusETA \
+            -configuration Debug -destination "platform=iOS Simulator,id=$device" \
+            -derivedDataPath "$RUNNER_TEMP/BusDerived" \
+            -resultBundlePath "$RUNNER_TEMP/TransitUITests.xcresult" \
+            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload UI test results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: Native-transit-ui-tests
+          path: ${{ runner.temp }}/TransitUITests.xcresult
+          if-no-files-found: warn
+
       - name: Archive for iOS device (unsigned)
         run: |
           for attempt in 1 2 3; do

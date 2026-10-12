@@ -85,7 +85,7 @@ struct HomeView: View {
 private struct BoardingTripRow: View {
     @Environment(AppState.self) private var app
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceMotion) private var reduceMotion
     let target: BusTrackingTarget
     @State private var expanded = false
     @Namespace private var identity
@@ -108,6 +108,7 @@ private struct BoardingTripRow: View {
                 .frame(minHeight: 44).contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("boarding.toggle")
             .accessibilityValue(L10n.t(expanded ? "common.expanded" : "common.collapsed"))
             if expanded {
                 HStack {
@@ -131,6 +132,7 @@ private struct BoardingTripRow: View {
                 Label(L10n.t("route.fullEta"), systemImage: "arrow.up.right")
                     .font(.subheadline.weight(.semibold)).frame(minHeight: 44)
             }
+            .accessibilityIdentifier("boarding.open")
         }
         .padding(.vertical, 8)
         .sensoryFeedback(.selection, trigger: expanded)

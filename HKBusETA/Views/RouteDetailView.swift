@@ -3,7 +3,7 @@ import SwiftUI
 struct RouteDetailView: View {
     @Environment(AppState.self) private var app
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     let routeKey: String
     @State private var selectedSeq: Int?

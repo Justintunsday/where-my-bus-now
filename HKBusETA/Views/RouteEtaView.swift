@@ -18,7 +18,7 @@ struct RouteEtaView: View {
 struct ArrivalScreen: View {
     @Environment(AppState.self) private var app
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceMotion) private var reduceMotion
     let entry: RouteEntry
     let target: BusTrackingTarget
     let session: ArrivalSession
@@ -53,6 +53,7 @@ struct ArrivalScreen: View {
                               systemImage: "wave.3.right.circle.fill").frame(maxWidth: .infinity, minHeight: 44)
                     }
                     .transitPrimaryAction().listRowBackground(Color.clear).listRowInsets(EdgeInsets())
+                    .accessibilityIdentifier("tracking.open")
                     Button {
                         if !app.bookmarks.isFavoriteRoute(target.routeKey) {
                             app.bookmarks.toggleFavoriteRoute(entry: entry, routeKey: target.routeKey, modeRawValue: target.mode)
@@ -99,7 +100,7 @@ struct ArrivalScreen: View {
             TrackingSheet(target: target, session: session)
                 .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
         }
-        .task(id: scenePhase) {
+        .task(id: "\(target.id)|\(target.language)|\(scenePhase)") {
             guard scenePhase == .active else { return }
             if let stop = app.data.stop(target.stopID) {
                 app.bookmarks.recordRecentRoute(entry: entry, routeKey: target.routeKey, stopId: target.stopID,

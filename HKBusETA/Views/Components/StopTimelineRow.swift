@@ -2,7 +2,7 @@ import SwiftUI
 
 struct StopTimelineRow: View {
     @Environment(AppState.self) private var app
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceMotion) private var reduceMotion
     let entry: RouteEntry
     let point: RouteStopPoint
     let isLast: Bool
@@ -30,6 +30,7 @@ struct StopTimelineRow: View {
                     }.frame(minHeight: 44).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("route.stop.\(point.seq)")
                 .accessibilityValue(L10n.t(isExpanded ? "common.expanded" : "common.collapsed"))
                 .accessibilityAddTraits(isSelected ? [.isSelected] : [])
                 if isExpanded {

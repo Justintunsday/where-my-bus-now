@@ -4,7 +4,7 @@ import SwiftUI
 
 struct NearbyView: View {
     @Environment(AppState.self) private var app
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var stops: [NearbyDisplayStop] = []
     @State private var selection: String?

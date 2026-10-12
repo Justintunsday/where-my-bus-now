@@ -5,6 +5,52 @@
 	};
 	objectVersion = 77;
 	objects = {
+		B05A00000000000000000020 /* TransitUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TransitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B05A00000000000000000021 /* TransitUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = TransitUITests; sourceTree = "<group>"; };
+		B05A00000000000000000022 /* TransitUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B05A00000000000000000023;
+			buildPhases = (B05A00000000000000000024, B05A00000000000000000025, B05A00000000000000000026,);
+			buildRules = ();
+			dependencies = (B05A00000000000000000027,);
+			fileSystemSynchronizedGroups = (B05A00000000000000000021,);
+			name = TransitUITests;
+			productName = TransitUITests;
+			productReference = B05A00000000000000000020;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		B05A00000000000000000023 = {isa = XCConfigurationList; buildConfigurations = (B05A00000000000000000029, B05A0000000000000000002A,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B05A00000000000000000024 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		B05A00000000000000000025 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		B05A00000000000000000026 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		B05A00000000000000000027 = {isa = PBXTargetDependency; target = DEADBEEF0000000000000006; targetProxy = B05A00000000000000000028; };
+		B05A00000000000000000028 = {isa = PBXContainerItemProxy; containerPortal = DEADBEEF000000000000000A; proxyType = 1; remoteGlobalIDString = DEADBEEF0000000000000006; remoteInfo = HKBusETA; };
+		B05A00000000000000000029 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui.TransitUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = HKBusETA;
+			}; name = Debug;
+		};
+		B05A0000000000000000002A = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui.TransitUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = HKBusETA;
+			}; name = Release;
+		};
 
 		B05A00000000000000000001 /* BusArrivalWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BusArrivalWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B05A00000000000000000002 /* BusArrivalWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (B05A00000000000000000003,); path = BusArrivalWidget; sourceTree = "<group>"; };
@@ -109,6 +155,7 @@
 				DEADBEEF0000000000000002 /* HKBusETA */,
 				B05A00000000000000000002 /* BusArrivalWidget */,
 				B05A00000000000000000004 /* Shared */,
+				B05A00000000000000000021 /* TransitUITests */,
 				DEADBEEF0000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -118,6 +165,7 @@
 			children = (
 				DEADBEEF0000000000000001 /* HKBusETA.app */,
 				B05A00000000000000000001 /* BusArrivalWidget.appex */,
+				B05A00000000000000000020 /* TransitUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -183,6 +231,7 @@
 			targets = (
 				DEADBEEF0000000000000006 /* HKBusETA */,
 				B05A00000000000000000006 /* BusArrivalWidget */,
+				B05A00000000000000000022 /* TransitUITests */,
 			);
 		};
 /* End PBXProject section */

@@ -29,6 +29,9 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
       <Testables>
+         <TestableReference skipped="NO">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B05A00000000000000000022" BuildableName="TransitUITests.xctest" BlueprintName="TransitUITests" ReferencedContainer="container:HKBusETA.xcodeproj"/>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

@@ -17,6 +17,7 @@ struct TrackingSheet: View {
                         .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(DesignTokens.divider, lineWidth: 0.5))
                     Label(L10n.t("tracking.foregroundNotice"), systemImage: "info.circle")
                         .font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("tracking.disclosure")
                     if let error = app.activities.error {
                         Label(error, systemImage: "exclamationmark.circle").foregroundStyle(DesignTokens.warning)
                     }
@@ -40,7 +41,7 @@ struct TrackingSheet: View {
             }
             .background(DesignTokens.background)
             .navigationTitle(L10n.t("tracking.title")).navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.t("common.done")) { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.t("common.done")) { dismiss() }.accessibilityIdentifier("tracking.done") } }
             .sensoryFeedback(.success, trigger: app.activities.isTracking(target))
         }
     }

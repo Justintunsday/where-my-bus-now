@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ETALineView: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceMotion) private var reduceMotion
     @Environment(AppState.self) private var app
     let eta: Eta
     let language: AppLanguage
@@ -110,7 +110,7 @@ struct ETALineView: View {
 
 /// Single-line compact ETA used by the stop departure board.
 struct ETACompactLineView: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceMotion) private var reduceMotion
     @Environment(AppState.self) private var app
     let eta: Eta
     let format: EtaFormat

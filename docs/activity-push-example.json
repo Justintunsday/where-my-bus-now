@@ -1,0 +1,14 @@
+{
+  "aps": {
+    "timestamp": 1800000030,
+    "event": "update",
+    "stale-date": 1800000120,
+    "content-state": {
+      "arrivalEpoch": 1800000420,
+      "updatedEpoch": 1800000030,
+      "validUntilEpoch": 1800000120,
+      "status": "live",
+      "message": ""
+    }
+  }
+}

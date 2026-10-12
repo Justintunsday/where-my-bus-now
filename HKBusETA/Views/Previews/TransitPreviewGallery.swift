@@ -71,6 +71,8 @@ struct TransitPreviewGallery: View {
         }
         .environment(app).environment(\.locale, app.settings.language.locale)
         .tint(DesignTokens.accent)
+        .environment(\.previewReducedEffects, ProcessInfo.processInfo.arguments.contains("--reduce-effects"))
+
     }
 }
 
@@ -80,7 +82,7 @@ struct TransitPreviewGallery: View {
 #Preview("Empty") { TransitPreviewGallery(screen: "empty") }
 #Preview("Network error") { TransitPreviewGallery(screen: "error") }
 #Preview("Reduced effects") {
-    TransitPreviewGallery(screen: "home").environment(\.accessibilityReduceMotion, true).environment(\.accessibilityReduceTransparency, true)
+    TransitPreviewGallery(screen: "home").environment(\.previewReducedEffects, true)
 }
 #Preview("Lock Screen • Stale") { TransitPreviewGallery(screen: "activity-stale") }
 #endif

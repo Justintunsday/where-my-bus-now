@@ -6,7 +6,7 @@ struct BusLockScreenView: View {
     let state: BusArrivalState
     var isStale: Bool = false
     var showsEndButton: Bool = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceMotion) private var reduceMotion
 
     private func copy(_ key: String) -> String {
         BusActivityCopy.text(key, language: target.language)
@@ -60,7 +60,7 @@ struct BusActivityCountdown: View {
     let target: BusTrackingTarget
     let state: BusArrivalState
     let isStale: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceMotion) private var reduceMotion
 
     var body: some View {
         if !isStale, state.isFresh(at: Date()), let arrival = state.arrival, arrival > state.updatedAt {

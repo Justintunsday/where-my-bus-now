@@ -22,8 +22,8 @@ struct RouteStopPoint: Identifiable {
 }
 
 struct RouteMapSection: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.transitReduceMotion) private var reduceMotion
+    @Environment(\.transitReduceTransparency) private var reduceTransparency
     @Environment(AppState.self) private var app
     let entry: RouteEntry
     let points: [RouteStopPoint]
