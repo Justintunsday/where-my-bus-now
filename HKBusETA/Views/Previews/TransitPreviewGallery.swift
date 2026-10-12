@@ -74,7 +74,8 @@ struct TransitPreviewGallery: View {
             case "settings": SettingsView()
             case "region": RegionPickerView()
             case let value where value.hasPrefix("activity"):
-                ActivityPreviewGallery(initialScenario: BusArrivalPreview(rawValue: String(value.dropFirst("activity-".count))) ?? .normal)
+                ActivityPreviewGallery(initialScenario: BusArrivalPreview(rawValue: String(value.dropFirst("activity-".count))) ?? .normal,
+                                       initialLongRoute: value == "activity-long")
             default: RootView()
             }
         }

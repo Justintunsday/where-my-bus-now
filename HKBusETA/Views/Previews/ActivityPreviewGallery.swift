@@ -5,6 +5,7 @@ import SwiftUI
 /// the WidgetKit previews render the system's Island and Lock Screen chrome.
 struct ActivityPreviewGallery: View {
     var initialScenario: BusArrivalPreview = .normal
+    var initialLongRoute = false
     @State private var scenario: BusArrivalPreview = .normal
     @State private var referenceDate = Date()
     @State private var longRoute = false
@@ -66,7 +67,8 @@ struct ActivityPreviewGallery: View {
             .background(DesignTokens.background)
             .navigationTitle(L10n.t("tracking.preview")).navigationBarTitleDisplayMode(.inline)
         }
-        .onAppear { scenario = initialScenario }
+        .onAppear { scenario = initialScenario; longRoute = initialLongRoute }
+        .onChange(of: scenario) { _, _ in referenceDate = Date() }
     }
 }
 

@@ -13,7 +13,7 @@ if [ "$kind" = ipad ]; then
   done
 else
   xcrun simctl ui "$device" appearance light
-  for screen in home search nearby saved route stop eta settings region empty error activity activity-networkError activity-cancelled; do
+  for screen in home search nearby saved route stop eta settings region empty error activity activity-networkError activity-cancelled activity-long; do
     capture_transit_screen "$device" "$screen" "$output/$screen-light.png"
   done
   xcrun simctl ui "$device" appearance dark
