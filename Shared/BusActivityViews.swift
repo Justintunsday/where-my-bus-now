@@ -5,8 +5,6 @@ struct BusLockScreenView: View {
     let target: BusTrackingTarget
     let state: BusArrivalState
     var isStale: Bool = false
-    var showsEndButton: Bool = false
-    @Environment(\.transitReduceMotion) private var reduceMotion
 
     private func copy(_ key: String) -> String {
         BusActivityCopy.text(key, language: target.language)

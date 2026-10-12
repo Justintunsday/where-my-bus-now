@@ -6,6 +6,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build iOS app
@@ -125,6 +129,9 @@ jobs:
 
       - name: Capture simulator UI matrix
         run: bash scripts/capture_simulator_screenshots.sh
+
+      - name: Capture baseline launch screen
+        run: bash scripts/capture_baseline_screenshot.sh
 
       - name: Upload simulator screenshots
         if: always()

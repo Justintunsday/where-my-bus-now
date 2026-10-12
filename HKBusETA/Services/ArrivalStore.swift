@@ -21,12 +21,12 @@ extension BusTrackingTarget {
                   source: metadata?.source.rawValue, language: L10n.language.rawValue)
     }
 
-    func matches(entry: RouteEntry, providerID: String, source: String?) -> Bool {
+    func matches(entry: RouteEntry, providerID: String, source: String?, mode: String?) -> Bool {
         self.providerID == providerID && routeKey == entry.routeKey
             && serviceType == entry.serviceTypeValue && operators.sorted() == entry.co.sorted()
             && directions == entry.bound && lineID == entry.gtfsId?.value
             && entry.canonicalStops.indices.contains(stopSequence)
-            && entry.canonicalStops[stopSequence] == stopID && self.source == source
+            && entry.canonicalStops[stopSequence] == stopID && self.source == source && self.mode == mode
     }
 }
 
@@ -38,6 +38,7 @@ final class ArrivalSession {
     private(set) var updatedAt: Date?
     private(set) var error: String?
     private(set) var isRefreshing = false
+    private(set) var identityInvalid = false
     @ObservationIgnored private let data: DataStore
     @ObservationIgnored private var flight: Task<Void, Never>?
 
@@ -81,6 +82,10 @@ final class ArrivalSession {
         defer { isRefreshing = false }
         do {
             await data.load()
+            while data.db == nil && data.isLoading {
+                try await Task.sleep(for: .milliseconds(100))
+            }
+            guard data.db != nil else { throw URLError(.notConnectedToInternet) }
             if data.entry(target.routeKey) == nil,
                let mainland = data.provider as? any MainlandTransitProvider, let lineID = target.lineID {
                 let mode = target.mode.flatMap(MainlandTransitMode.init(rawValue:)) ?? .bus
@@ -92,7 +97,8 @@ final class ArrivalSession {
             }
             guard let entry = data.entry(target.routeKey), let db = data.db,
                   target.matches(entry: entry, providerID: data.provider.id,
-                                 source: data.mainlandMetadata(for: target.routeKey)?.source.rawValue)
+                                 source: data.mainlandMetadata(for: target.routeKey)?.source.rawValue,
+                                 mode: data.mainlandMetadata(for: target.routeKey)?.mode.rawValue)
             else { throw ArrivalFailure.identityChanged }
             let result: [Eta]
             if let mainland = data.provider as? any MainlandTransitProvider {
@@ -116,10 +122,12 @@ final class ArrivalSession {
             if etas != result { etas = result }
             updatedAt = Date()
             error = nil
+            identityInvalid = false
         } catch is CancellationError {
             return
         } catch {
             guard !Task.isCancelled else { return }
+            identityInvalid = error is ArrivalFailure
             self.error = (error as? ArrivalFailure)?.errorDescription
                 ?? (data.provider is HongKongProvider ? L10n.t("arrival.networkError") : MainlandErrorPresentation.message(for: error))
         }

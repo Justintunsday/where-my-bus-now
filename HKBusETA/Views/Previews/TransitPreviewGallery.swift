@@ -13,7 +13,10 @@ import SwiftUI
         let suite = "busnow.preview.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defaults.set("hk", forKey: "settings.regionID")
-        defaults.set("zh", forKey: "settings.language")
+        let arguments = ProcessInfo.processInfo.arguments
+        let languageIndex = arguments.firstIndex(of: "--snapshot-language")
+        let language = languageIndex.flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil } ?? "zh"
+        defaults.set(language, forKey: "settings.language")
         let app = AppState(defaults: defaults, bookmarkURL: FileManager.default.temporaryDirectory
             .appendingPathComponent("\(suite).json"))
         let names = [Terminal(en: "Star Ferry", zh: "尖沙咀碼頭"), Terminal(en: "Middle Road", zh: "中間道"),
@@ -23,6 +26,7 @@ import SwiftUI
         })
         app.data.installPreviewDatabase(EtaDB(holidays: [], routeList: [entry.routeKey: entry], stopList: stops,
                                              stopMap: [:], serviceDayMap: [:]))
+        app.location.seedPreviewLocation()
         if !empty {
             app.bookmarks.toggleFavoriteRoute(entry: entry, routeKey: entry.routeKey)
             if let target = BusTrackingTarget(app: app, routeKey: entry.routeKey, seq: 2),
@@ -37,6 +41,13 @@ import SwiftUI
                     app.bookmarks.recordRecentStop(id: "p3", name: stop.name, location: stop.location)
                 }
             }
+        }
+        // Export only isolated fixtures for the CI before/after comparison.
+        if let db = app.data.db, let encoded = try? JSONEncoder().encode(db) {
+            try? encoded.write(to: FileManager.default.temporaryDirectory.appendingPathComponent("bus-snapshot-db.json"))
+        }
+        if let bookmarks = try? Data(contentsOf: FileManager.default.temporaryDirectory.appendingPathComponent("\(suite).json")) {
+            try? bookmarks.write(to: FileManager.default.temporaryDirectory.appendingPathComponent("bus-snapshot-bookmarks.json"))
         }
         return app
     }
@@ -56,6 +67,8 @@ struct TransitPreviewGallery: View {
             case "route": NavigationStack { RouteDetailView(routeKey: TransitPreviewData.entry.routeKey).transitDestinations() }
             case "eta", "error": NavigationStack { RouteEtaView(routeKey: TransitPreviewData.entry.routeKey, seq: 2).transitDestinations() }
             case "search": SearchView()
+            case "nearby": NearbyView()
+            case "stop": NavigationStack { StopEtaView(stopId: "p3").transitDestinations() }
             case "saved": FavoritesView()
             case "settings": SettingsView()
             case "region": RegionPickerView()

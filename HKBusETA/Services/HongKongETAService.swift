@@ -99,7 +99,8 @@ enum HongKongETAService {
     // MARK: - Helpers
 
     private static func getJSON<T: Decodable>(_ url: URL) async throws -> T {
-        let (data, _) = try await session.data(from: url)
+        let (data, response) = try await session.data(from: url)
+        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) { throw URLError(.badServerResponse) }
         return try JSONDecoder().decode(T.self, from: data)
     }
 
@@ -108,7 +109,8 @@ enum HongKongETAService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(body)
-        let (data, _) = try await session.data(for: request)
+        let (data, response) = try await session.data(for: request)
+        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) { throw URLError(.badServerResponse) }
         return try JSONDecoder().decode(T.self, from: data)
     }
 

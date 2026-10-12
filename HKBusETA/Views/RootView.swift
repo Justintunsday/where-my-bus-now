@@ -21,7 +21,6 @@ struct RootView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: TransitTab = .today
-    @State private var linkedTarget: BusTrackingTarget?
     @State private var invalidLink = false
 
     var body: some View {
@@ -45,24 +44,24 @@ struct RootView: View {
         }
         .tint(DesignTokens.accent)
         .sheet(item: $app.presentation) { sheet in
-            if sheet == .settings { SettingsView() }
-            else { RegionPickerView() }
-        }
-        .sheet(item: $linkedTarget) { target in
-            NavigationStack {
-                TrackingDestination(target: target)
-                    .transitDestinations()
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button(L10n.t("common.done")) { linkedTarget = nil }
+            switch sheet {
+            case .settings: SettingsView()
+            case .region: RegionPickerView()
+            case .arrival(let target):
+                NavigationStack {
+                    TrackingDestination(target: target)
+                        .transitDestinations()
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button(L10n.t("common.done")) { app.presentation = nil }
+                            }
                         }
-                    }
+                }
             }
         }
         .onOpenURL { url in
             if let target = BusTrackingTarget.decode(url: url), RegionCatalog.region(for: target.regionID) != nil {
-                app.presentation = nil
-                linkedTarget = target
+                app.presentation = .arrival(target)
             } else { invalidLink = true }
         }
         .alert(L10n.t("tracking.identityChanged"), isPresented: $invalidLink) {

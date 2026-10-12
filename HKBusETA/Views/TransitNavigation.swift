@@ -1,8 +1,14 @@
 import SwiftUI
 
-enum TransitSheet: String, Identifiable {
-    case settings, region
-    var id: String { rawValue }
+enum TransitSheet: Identifiable {
+    case settings, region, arrival(BusTrackingTarget)
+    var id: String {
+        switch self {
+        case .settings: "settings"
+        case .region: "region"
+        case .arrival(let target): "arrival:\(target.id)"
+        }
+    }
 }
 
 struct TransitAppToolbar: ToolbarContent {
@@ -64,7 +70,8 @@ struct TrackingDestination: View {
                 guard !Task.isCancelled else { return }
                 guard let entry = app.data.entry(target.routeKey),
                       target.matches(entry: entry, providerID: app.provider.id,
-                                     source: app.data.mainlandMetadata(for: target.routeKey)?.source.rawValue)
+                                     source: app.data.mainlandMetadata(for: target.routeKey)?.source.rawValue,
+                                     mode: app.data.mainlandMetadata(for: target.routeKey)?.mode.rawValue)
                 else { error = L10n.t("tracking.identityChanged"); return }
                 ready = true
             } catch { self.error = MainlandErrorPresentation.message(for: error) }

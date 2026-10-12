@@ -38,6 +38,14 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         manager.stopUpdatingLocation()
     }
 
+    #if DEBUG
+    func seedPreviewLocation() {
+        manager.stopUpdatingLocation()
+        location = CLLocation(latitude: 22.300, longitude: 114.172)
+        authorizationStatus = .authorizedWhenInUse
+    }
+    #endif
+
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
         Task { @MainActor in

@@ -25,8 +25,11 @@ struct BusTrackingTarget: Codable, Hashable, Identifiable, Sendable {
     var id: String {
         // Length-prefixed components avoid collisions when provider IDs contain separators.
         [regionID, providerID, routeKey, serviceType,
-         operators.sorted().joined(separator: ","),
-         directions.keys.sorted().map { "\($0)=\(directions[$0] ?? "")" }.joined(separator: ","),
+         operators.sorted().map { "\($0.utf8.count):\($0)" }.joined(),
+         directions.keys.sorted().map { key in
+             let value = directions[key] ?? ""
+             return "\(key.utf8.count):\(key)\(value.utf8.count):\(value)"
+         }.joined(),
          stopID, String(stopSequence), lineID ?? "", mode ?? "", source ?? ""]
             .map { "\($0.utf8.count):\($0)" }.joined()
     }

@@ -70,6 +70,9 @@ final class BusActivityManager {
 
     /// Called by a scene-bound task only while active. No background polling promises.
     func refreshActive(app: AppState) async {
+        #if DEBUG
+        if app.data.isPreview { return }
+        #endif
         reconcile()
         for activity in Activity<BusActivityAttributes>.activities {
             guard !Task.isCancelled else { return }
@@ -83,7 +86,7 @@ final class BusActivityManager {
             await session.refresh()
             guard !Task.isCancelled else { return }
             let state = session.activityState
-            if state.status == .cancelled || session.error == L10n.t("tracking.identityChanged") {
+            if state.status == .cancelled || session.identityInvalid {
                 await activity.end(ActivityContent(state: state, staleDate: state.staleDate),
                                    dismissalPolicy: .after(Date().addingTimeInterval(60)))
             } else {

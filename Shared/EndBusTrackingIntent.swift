@@ -3,9 +3,9 @@ import AppIntents
 
 /// Included in both targets: LiveActivityIntent executes in the host app process.
 struct EndBusTrackingIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "End tracking"
-    static var description = IntentDescription("End the selected bus arrival Live Activity.")
-    @Parameter(title: "Activity") var activityID: String
+    static var title = LocalizedStringResource("End tracking", table: "BusIntents")
+    static var description = IntentDescription(LocalizedStringResource("End the selected bus arrival Live Activity.", table: "BusIntents"))
+    @Parameter(title: LocalizedStringResource("Activity", table: "BusIntents")) var activityID: String
 
     init() {}
     init(activityID: String) { self.activityID = activityID }
