@@ -134,7 +134,11 @@ struct RouteEntry: Codable, Sendable {
 
     /// The longest stop list among serving companies; used as canonical stop sequence.
     var canonicalStops: [String] {
-        stops.values.max(by: { $0.count < $1.count }) ?? []
+        // Equal-length operator lists must not depend on Dictionary iteration order.
+        let keys = co + stops.keys.filter { !co.contains($0) }.sorted()
+        return keys.compactMap { stops[$0] }.reduce([]) { best, list in
+            list.count > best.count ? list : best
+        }
     }
 
     var boundValue: String { bound.values.first ?? "" }

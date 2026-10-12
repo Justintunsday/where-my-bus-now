@@ -61,6 +61,13 @@ final class DataStore {
     private var syntheticMainlandMetadata: [String: MainlandRouteMetadata] = [:]
 
     let provider: any TransitProvider
+    #if DEBUG
+    private(set) var isPreview = false
+    func installPreviewDatabase(_ db: EtaDB) {
+        isPreview = true
+        apply(Self.buildLoadedData(db))
+    }
+    #endif
 
     private let session: URLSession
 
@@ -136,6 +143,9 @@ final class DataStore {
     }
 
     func refreshIfNeeded() async {
+        #if DEBUG
+        if isPreview { return }
+        #endif
         guard !provider.databaseURLs.isEmpty else { return }
         ensureCacheDirectory()
         migrateLegacyCacheIfNeeded()

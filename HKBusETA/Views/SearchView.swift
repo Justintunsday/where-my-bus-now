@@ -12,6 +12,7 @@ struct SearchView: View {
     @State private var mainlandError: String?
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
+    @Namespace private var routeTransition
 
     private var language: AppLanguage { L10n.language }
 
@@ -21,8 +22,10 @@ struct SearchView: View {
                 content
             }
             .navigationTitle(L10n.t("search.title"))
+            .toolbar { TransitAppToolbar() }
             .navigationDestination(for: RouteDetailTarget.self) { target in
                 RouteDetailView(routeKey: target.routeKey)
+                    .modifier(RouteZoomDestination(id: target.routeKey, namespace: routeTransition))
             }
             .navigationDestination(for: RouteEtaTarget.self) { target in
                 RouteEtaView(routeKey: target.routeKey, seq: target.seq)
@@ -67,12 +70,13 @@ struct SearchView: View {
         .onChange(of: query) { performSearch() }
         .onChange(of: filter) { performSearch() }
         .onChange(of: app.settings.language) { performSearch() }
+        .onDisappear { searchTask?.cancel() }
     }
 
     @ViewBuilder
     private var content: some View {
         if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            recentContent
+            SearchLandingView()
         } else if app.mainlandProvider != nil {
             mainlandContent
         } else if routeKeys.isEmpty && stops.isEmpty {
@@ -89,6 +93,7 @@ struct SearchView: View {
                             if let entry = app.data.entry(key) {
                                 NavigationLink(value: RouteDetailTarget(routeKey: key)) {
                                     RouteResultRow(entry: entry, language: language)
+                                        .modifier(RouteZoomSource(id: key, namespace: routeTransition))
                                 }
                             }
                         }
@@ -178,69 +183,6 @@ struct SearchView: View {
         }
     }
 
-    @ViewBuilder
-    private var recentContent: some View {
-        if app.bookmarks.recentRoutes.isEmpty && app.bookmarks.recentStops.isEmpty {
-            ContentUnavailableView {
-                Label(L10n.t("search.title"), systemImage: "bus")
-            } description: {
-                Text(L10n.t("search.empty.hint"))
-            }
-        } else {
-            List {
-                if !app.bookmarks.recentRoutes.isEmpty {
-                    Section(L10n.t("search.recent.routes")) {
-                        ForEach(app.bookmarks.recentRoutes) { recent in
-                            NavigationLink(value: SavedRouteTarget(
-                                regionID: app.bookmarks.activeRegionID,
-                                recent: recent
-                            )) {
-                                HStack(spacing: 12) {
-                                    RouteBadge(route: recent.route, entry: app.data.entry(recent.routeKey))
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("\(L10n.t("route.to")) \(language.isChinese ? L10n.display(recent.destZh) : recent.destEn)")
-                                            .lineLimit(1)
-                                        HStack(spacing: 6) {
-                                            Text(language.isChinese ? L10n.display(recent.stopNameZh) : recent.stopNameEn)
-                                                .lineLimit(1)
-                                            CompanyLogos(
-                                                co: app.data.entry(recent.routeKey)?.co ?? recent.co,
-                                                language: language,
-                                                height: 12,
-                                                mode: app.data.mainlandMetadata(for: recent.routeKey)?.mode
-                                            )
-                                        }
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if !app.bookmarks.recentStops.isEmpty {
-                    Section(L10n.t("search.recent.stops")) {
-                        ForEach(app.bookmarks.recentStops) { recent in
-                            NavigationLink(value: SavedStopTarget(
-                                regionID: app.bookmarks.activeRegionID,
-                                recent: recent
-                            )) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(language.isChinese ? L10n.display(recent.nameZh) : recent.nameEn)
-                                    if let count = routeCount(recent.id) {
-                                        Text("\(count) \(L10n.t("unit.routes"))")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private func distanceText(_ item: StopSearchItem) -> String? {
         guard let location = app.location.location else { return nil }
         let distance = location.distance(from: CLLocation(latitude: item.location.lat, longitude: item.location.lng))
@@ -262,7 +204,7 @@ struct SearchView: View {
                 try? await Task.sleep(nanoseconds: 250_000_000)
                 guard !Task.isCancelled else { return }
                 isSearching = true
-                defer { isSearching = false }
+                defer { if query == self.query { isSearching = false } }
                 do {
                     guard MainlandSearchFiltering.isSupported(filter) else {
                         mainlandLines = []
@@ -310,7 +252,7 @@ struct MainlandLineRow: View {
                 Text("\(L10n.t("route.to")) \(hit.destination)")
                     .font(.body)
                     .fontWeight(.medium)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 6) {
                     if let symbol = hit.mode.symbolName {
                         RouteModeIcon(
@@ -322,7 +264,7 @@ struct MainlandLineRow: View {
                     Text(hit.origin)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -343,7 +285,7 @@ struct RouteResultRow: View {
                     Text("\(L10n.t("route.to")) \(entry.dest.name(language))")
                         .font(.body)
                         .fontWeight(.medium)
-                        .lineLimit(1)
+                        .fixedSize(horizontal: false, vertical: true)
                     if entry.isSpecialTrip {
                         Text(L10n.t("route.special"))
                             .font(.caption2)
@@ -357,7 +299,7 @@ struct RouteResultRow: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(.vertical, 2)

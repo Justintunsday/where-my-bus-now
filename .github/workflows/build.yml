@@ -19,6 +19,14 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Live Activity contract and resource tests
+        run: |
+          python3 scripts/check_transit_resources.py
+          xcrun swiftc -parse-as-library -O -D BUS_CONTRACT_TESTS \
+            Shared/BusActivityAttributes.swift Shared/BusActivityPreviewData.swift \
+            scripts/activity_contract_self_test.swift -o "$RUNNER_TEMP/activity_contract_test"
+          "$RUNNER_TEMP/activity_contract_test"
+
       - name: Offline mainland provider self-test
         run: |
           xcrun swiftc -parse-as-library -O \
@@ -89,6 +97,7 @@ jobs:
               -project HKBusETA.xcodeproj \
               -scheme HKBusETA \
               -configuration Debug \
+              -derivedDataPath "$RUNNER_TEMP/BusDerived" \
               -sdk iphonesimulator \
               -destination 'generic/platform=iOS Simulator' \
               -resultBundlePath "$RUNNER_TEMP/HKBusETA.xcresult" \
@@ -114,6 +123,17 @@ jobs:
           xcrun xcresulttool get log --path "$RUNNER_TEMP/HKBusETA.xcresult" --type console 2>&1 | tail -300 || true
           exit 1
 
+      - name: Capture simulator UI matrix
+        run: bash scripts/capture_simulator_screenshots.sh
+
+      - name: Upload simulator screenshots
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: Native-transit-screenshots
+          path: ${{ runner.temp }}/bus-screenshots
+          if-no-files-found: warn
+
       - name: Archive for iOS device (unsigned)
         run: |
           for attempt in 1 2 3; do
@@ -136,6 +156,8 @@ jobs:
 
       - name: Package unsigned IPA
         run: |
+          test -d "$RUNNER_TEMP/HKBusETA.xcarchive/Products/Applications/HKBusETA.app/PlugIns/BusArrivalWidget.appex"
+          /usr/libexec/PlistBuddy -c 'Print NSSupportsLiveActivities' "$RUNNER_TEMP/HKBusETA.xcarchive/Products/Applications/HKBusETA.app/Info.plist" | grep true
           cd "$RUNNER_TEMP"
           rm -rf Payload HKBusETA-unsigned.ipa
           mkdir -p Payload

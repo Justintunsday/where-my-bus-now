@@ -26,6 +26,7 @@ struct RouteBadge: View {
     let entry: RouteEntry?
     var fontSize: CGFloat = 17
     var colorHex: UInt32?
+    @ScaledMetric(relativeTo: .headline) private var typeScale: CGFloat = 1
 
     private var info: RouteColorInfo {
         if let colorHex {
@@ -39,10 +40,10 @@ struct RouteBadge: View {
 
     var body: some View {
         Text(route)
-            .font(.system(size: fontSize, weight: .bold, design: .rounded))
+            .font(.system(size: fontSize * typeScale, weight: .bold, design: .rounded))
             .foregroundStyle(info.foreground)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
             .background(info.background, in: RoundedRectangle(cornerRadius: 7))
             .lineLimit(1)
     }

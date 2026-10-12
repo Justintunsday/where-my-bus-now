@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ETALineView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(AppState.self) private var app
     let eta: Eta
     let language: AppLanguage
@@ -89,6 +90,8 @@ struct ETALineView: View {
         HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.xxs) {
             Text("\(minutes)")
                 .font(DesignTokens.tabular(20, weight: .bold))
+                .contentTransition(reduceMotion ? .identity : .numericText(countsDown: true))
+                .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: minutes)
             Text(L10n.t("unit.minutes"))
                 .font(DesignTokens.footnote)
                 .foregroundStyle(.tertiary)
@@ -107,6 +110,7 @@ struct ETALineView: View {
 
 /// Single-line compact ETA used by the stop departure board.
 struct ETACompactLineView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(AppState.self) private var app
     let eta: Eta
     let format: EtaFormat
@@ -137,6 +141,8 @@ struct ETACompactLineView: View {
                 } else {
                     Text("\(minutes)")
                         .font(DesignTokens.tabular(18, weight: .bold))
+                        .contentTransition(reduceMotion ? .identity : .numericText(countsDown: true))
+                        .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: minutes)
                         .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
                     Text(L10n.t("unit.minutes"))
                         .font(DesignTokens.footnote)

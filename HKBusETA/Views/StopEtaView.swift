@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct StopEtaView: View {
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(AppState.self) private var app
     let stopId: String
 
@@ -62,7 +64,8 @@ struct StopEtaView: View {
                 }
             }
             .refreshable { await refresh() }
-            .task(id: stopId) {
+            .task(id: "\(stopId)|\(scenePhase)") {
+                guard scenePhase == .active else { return }
                 recordRecent()
                 while !Task.isCancelled {
                     await refresh()
@@ -92,6 +95,8 @@ struct StopEtaView: View {
                 Image(systemName: isFavorite ? "star.fill" : "star")
             }
             .tint(DesignTokens.accent)
+            .accessibilityLabel(L10n.t(isFavorite ? "common.unfavorite" : "common.favorite"))
+            .sensoryFeedback(.selection, trigger: isFavorite)
         }
     }
 

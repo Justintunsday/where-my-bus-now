@@ -1,6 +1,820 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+"tracking.foregroundNotice": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Arrival predictions refresh while this app is open. In the background, the countdown uses the last prediction. After 90 seconds, or when that bus is due, open the app to refresh. Background push updates are not connected yet.",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "到站预测会在 App 打开时更新。进入后台后，倒计时使用最后的预测；90 秒后或预计到站时，请打开 App 更新。目前尚未连接后台推送。",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "到站預測會在 App 開啟時更新。進入背景後，倒數使用最後的預測；90 秒後或預計到站時，請開啟 App 更新。目前尚未連接背景推送。",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "tracking.title": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Live Activity",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "实时活动",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "實時活動",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "tracking.start": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Track on Lock Screen",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "在锁屏跟踪",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "在鎖定畫面追蹤",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "home.boarding": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Your departures",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "常用上车站",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "常用上車站",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "home.title": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Today",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "今日出行",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "今日出行",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "tracking.manage": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Manage tracking",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "管理跟踪",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "管理追蹤",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "home.empty.title": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Your next bus, at a glance",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "下一班车，一目了然",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "下一班車，一目了然",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "tracking.disabled": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Allow Live Activities for this app in iOS Settings first.",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "请先在 iOS 设置中允许此 App 的实时活动。",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "請先在 iOS 設定中允許此 App 的實時活動。",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "region.search": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Search regions",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "搜索地区",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "搜尋地區",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "home.frequentStops": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Recently used stops",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "常用车站",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "常用車站",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "nearby.emptyHint": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Try another location or check your selected region.",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "请尝试其他位置，或检查当前选择的地区。",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "請嘗試其他位置，或檢查目前選擇的地區。",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "tracking.end": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "End tracking",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "停止跟踪",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "停止追蹤",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "boarding.save": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Pin this departure to Today",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "将此上车站加入首页",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "將此上車站加入首頁",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "common.remove": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Remove",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "移除",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "移除",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "search.discoveryTitle": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Where are you heading?",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "想去哪里？",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "想去哪裡？",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "nearby.map": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Nearby stops map",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "附近车站地图",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "附近車站地圖",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "common.expanded": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Expanded",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "已展开",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "已展開",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "boarding.choose": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Choose a boarding stop",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "选择上车站",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "選擇上車站",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "arrival.networkError": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Unable to refresh. Showing the last received data.",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "无法更新，正显示上次收到的数据。",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "無法更新，正顯示上次收到的資料。",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "common.done": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Done",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "完成",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "完成",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "tracking.preview": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "On your Lock Screen",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "锁屏预览",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "鎖定畫面預覽",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "route.map": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Route and selected stop",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "线路与已选车站",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "路線與已選車站",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "common.collapsed": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Collapsed",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "已收起",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "已收起",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "arrival.upcoming": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Upcoming services",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "接下来的班次",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "接下來的班次",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "tracking.startFailed": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Couldn't start Live Activity. Check iOS Settings and try again.",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "无法开始实时活动，请检查 iOS 设置后重试。",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "無法開始實時活動，請檢查 iOS 設定後重試。",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "app.name": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Where My Bus Now",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "公交到站",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "巴士到站",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "nearby.empty": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "No nearby stops",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "附近没有车站",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "附近沒有車站",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "route.mapUnavailable": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Map unavailable for this data source",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "此数据源暂不提供地图",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "此資料來源暫不提供地圖",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "tracking.needsPrediction": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "A fresh arrival prediction is needed to start tracking.",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "需要有效的到站预测才能开始跟踪。",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "需要有效的到站預測才能開始追蹤。",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "arrival.cancelled": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Service cancelled",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "班次已取消",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "班次已取消",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "home.tracking": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "On your Lock Screen",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "锁屏跟踪",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "鎖定畫面追蹤",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "boarding.saved": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Pinned to Today",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "已加入首页",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "已加入首頁",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "arrival.next": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Next arrival",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "下一班到站",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "下一班到站",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "home.empty.message": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Find a route, choose your boarding stop, and save it here for next time.",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "搜索线路并选择上车站，即可保存在首页，下次快速查看。",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "搜尋路線並選擇上車站，即可儲存在首頁，下次快速查看。",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "tracking.identityChanged": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "This route or stop has changed. Please choose your boarding stop again.",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "此线路或车站已变更，请重新选择上车站。",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "此路線或車站已變更，請重新選擇上車站。",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "boarding.timelineHint": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Choose a stop to see arrivals, then pin it to Today or track it on your Lock Screen.",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "选择车站查看到站时间，并可加入首页或在锁屏跟踪。",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "選擇車站查看到站時間，並可加入首頁或在鎖定畫面追蹤。",
+          "state": "translated"
+        }
+      }
+    }
+  },
+  "arrival.stale": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "value": "Prediction unavailable",
+          "state": "translated"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "value": "暂无有效预测",
+          "state": "translated"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "value": "暫無有效預測",
+          "state": "translated"
+        }
+      }
+    }
+  },
     "common.favorite" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorite" } },

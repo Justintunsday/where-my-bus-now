@@ -11,9 +11,13 @@ enum HongKongETAService {
 
     /// Fetches upcoming ETAs for one route variant at one stop sequence.
     static func fetchEtas(entry: RouteEntry, seq: Int, db: EtaDB, language: AppLanguage) async -> [Eta] {
+        (try? await fetchEtasReportingErrors(entry: entry, seq: seq, db: db, language: language)) ?? []
+    }
+
+    static func fetchEtasReportingErrors(entry: RouteEntry, seq: Int, db: EtaDB, language: AppLanguage) async throws -> [Eta] {
         let availableStops = entry.stops
 
-        let tasks: [Task<[Eta], Never>] = entry.co.compactMap { coRaw in
+        let tasks: [Task<[Eta], Error>] = entry.co.compactMap { coRaw in
             guard let stopIDs = availableStops[coRaw],
                   seq >= 0, seq < stopIDs.count
             else { return nil }
@@ -67,16 +71,19 @@ enum HongKongETAService {
                         }
                         return []
                     }
-                } catch {
-                    return []
                 }
             }
         }
 
         var etas: [Eta] = []
+        var successes = 0
+        var failures: [Error] = []
         for task in tasks {
-            etas.append(contentsOf: await task.value)
+            do { etas.append(contentsOf: try await task.value); successes += 1 }
+            catch { failures.append(error) }
         }
+        try Task.checkCancellation()
+        if successes == 0, let error = failures.first { throw error }
 
         if etas.contains(where: { !$0.eta.isEmpty }) {
             etas = etas.filter { !$0.eta.isEmpty }

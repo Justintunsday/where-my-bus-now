@@ -1,15 +1,10 @@
 import SwiftUI
 
-/// Favorites, grouped by transit region.
-///
-/// Warm Minimal pass (swiftui-design-skill): the region used to be a
-/// third-line caption inside every row, which buried the one piece of
-/// context that matters when favorites span several cities. The region is now
-/// the section header itself — the page's organising element — and rows only
-/// carry destination, origin and operators.
+/// Nationwide saved routes and stops, grouped by their owning transit region.
 struct FavoritesView: View {
     @Environment(AppState.self) private var app
     @State private var navigationPath = NavigationPath()
+    @State private var showsStops = false
 
     private var language: AppLanguage { L10n.language }
 
@@ -28,12 +23,21 @@ struct FavoritesView: View {
                     emptyState
                 } else {
                     List {
-                        routeList
-                        stopList
+                        if showsStops { stopList } else { routeList }
                     }
                 }
             }
             .navigationTitle(L10n.t("favorites.title"))
+            .toolbar { TransitAppToolbar() }
+            .toolbar { ToolbarItem(placement: .primaryAction) { EditButton() } }
+            .safeAreaInset(edge: .top) {
+                Picker(L10n.t("favorites.title"), selection: $showsStops) {
+                    Text(L10n.t("favorites.routes")).tag(false)
+                    Text(L10n.t("favorites.stops")).tag(true)
+                }
+                .pickerStyle(.segmented).padding(.horizontal, 16).padding(.vertical, 8)
+                .background(DesignTokens.background)
+            }
             .navigationDestination(for: RouteDetailTarget.self) { target in
                 RouteDetailView(routeKey: target.routeKey)
             }
@@ -196,7 +200,7 @@ private struct RouteFavoriteRow: View {
                 Text("\(L10n.t("route.to")) \(language.isChinese ? L10n.display(favorite.destZh) : favorite.destEn)")
                     .font(DesignTokens.body)
                     .fontWeight(.medium)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: DesignTokens.Spacing.xs + 2) {
                     Text(language.isChinese ? L10n.display(favorite.origZh) : favorite.origEn)
                     Text("·")
@@ -211,11 +215,11 @@ private struct RouteFavoriteRow: View {
                 }
                 .font(DesignTokens.caption)
                 .foregroundStyle(DesignTokens.textSecondary)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
         }
-        .padding(.vertical, DesignTokens.Spacing.xxs)
+        .padding(.vertical, DesignTokens.Spacing.s)
     }
 }
 
@@ -229,7 +233,7 @@ private struct StopFavoriteRow: View {
         return HStack(spacing: DesignTokens.Spacing.s) {
             Text(language.isChinese ? L10n.display(favorite.nameZh) : favorite.nameEn)
                 .font(DesignTokens.body)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
     }

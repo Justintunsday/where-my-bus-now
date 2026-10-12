@@ -2,6 +2,7 @@ import SwiftUI
 
 struct StopTimelineRow: View {
     @Environment(AppState.self) private var app
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let entry: RouteEntry
     let point: RouteStopPoint
     let isLast: Bool
@@ -9,198 +10,89 @@ struct StopTimelineRow: View {
     let isExpanded: Bool
     let onTap: () -> Void
 
-    private var lineColor: Color { RouteStyle.info(for: entry, provider: app.provider).background }
-
     var body: some View {
-        HStack(alignment: .top, spacing: DesignTokens.Spacing.s) {
+        HStack(alignment: .top, spacing: 16) {
             VStack(spacing: 0) {
-                ZStack {
-                    Circle()
-                        .fill(isSelected ? DesignTokens.accent : Color.clear)
-                    Circle()
-                        .stroke(isSelected ? DesignTokens.accent : lineColor, lineWidth: isSelected ? 5 : 3)
+                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                    .font(.body.weight(.bold)).foregroundStyle(DesignTokens.accent)
+                    .frame(width: 24, height: 44)
+                if !isLast { Rectangle().fill(DesignTokens.divider).frame(width: 2).frame(maxHeight: .infinity) }
+            }.accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 8) {
+                Button(action: onTap) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("\(point.seq + 1)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                        Text(point.name(L10n.language)).font(isSelected ? .headline : .body).foregroundStyle(.primary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.down").font(.caption.bold()).foregroundStyle(.secondary)
+                            .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                    }.frame(minHeight: 44).contentShape(Rectangle())
                 }
-                .frame(width: 17, height: 17)
-                .frame(width: 26, height: 26)
-
-                if !isLast {
-                    Rectangle()
-                        .fill(lineColor.opacity(0.85))
-                        .frame(width: 5)
-                        .frame(maxHeight: .infinity)
-                }
-            }
-            .frame(width: 26)
-
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
-                HStack(spacing: DesignTokens.Spacing.s) {
-                    Text("\(point.seq + 1). \(point.name(L10n.language))")
-                        .font(.body)
-                        .fontWeight(isSelected ? .semibold : .regular)
-                        .multilineTextAlignment(.leading)
-                    Spacer(minLength: 0)
-                    Image(systemName: "chevron.down")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                }
-                .contentShape(Rectangle())
-                .onTapGesture(perform: onTap)
-
+                .buttonStyle(.plain)
+                .accessibilityValue(L10n.t(isExpanded ? "common.expanded" : "common.collapsed"))
+                .accessibilityAddTraits(isSelected ? [.isSelected] : [])
                 if isExpanded {
                     StopEtaInlineView(entry: entry, seq: point.seq)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
+                        .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
                 }
             }
-            .padding(.bottom, isLast ? 0 : DesignTokens.Spacing.m)
         }
+        .padding(.vertical, 4)
     }
 }
 
 struct StopEtaInlineView: View {
     @Environment(AppState.self) private var app
+    @Environment(\.scenePhase) private var scenePhase
     let entry: RouteEntry
     let seq: Int
-
-    @State private var etas: [Eta] = []
-    @State private var isLoading = false
-
-    private var language: AppLanguage { L10n.language }
-    private var mainlandMetadata: MainlandRouteMetadata? {
-        app.data.mainlandMetadata(for: entry.routeKey)
-    }
-    private var isMainlandMetro: Bool {
-        !MainlandRealtimePolicy.allowsRequest(modeHint: mainlandMetadata?.mode)
-    }
-
-    private var stopId: String? {
-        let stops = entry.canonicalStops
-        guard seq >= 0, seq < stops.count else { return nil }
-        return stops[seq]
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
-            if let fare = app.provider.fare(entry: entry, at: seq, db: app.data.db ?? .empty, at: Date()) {
-                HStack(spacing: DesignTokens.Spacing.xs) {
-                    Text(L10n.t("route.fare"))
-                        .foregroundStyle(.secondary)
-                    Text("\(isMainlandMetro ? "¥" : "$")\(fare)")
-                        .fontWeight(.medium)
-                        .monospacedDigit()
-                }
-                .font(.caption)
-            }
-
-            if isMainlandMetro {
-                Label(L10n.t("mainland.metroNoRealtime"), systemImage: "tram.fill")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else if isLoading && etas.isEmpty {
-                ProgressView()
-                    .controlSize(.small)
-            } else if etas.isEmpty {
-                Text(L10n.t("eta.noEta"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(Array(etas.prefix(3).enumerated()), id: \.offset) { index, eta in
-                    ETALineView(
-                        eta: eta,
-                        language: language,
-                        format: app.settings.etaFormat,
-                        annotateScheduled: app.settings.annotateScheduled,
-                        highlight: index == 0,
-                        showCompany: entry.co.count > 1,
-                        showDestination: true
-                    )
-                }
-            }
-
-            HStack(spacing: DesignTokens.Spacing.m) {
-                if !isMainlandMetro {
-                    NavigationLink(value: RouteEtaTarget(routeKey: entry.routeKey, seq: seq)) {
-                        Label(L10n.t("route.fullEta"), systemImage: "clock.arrow.circlepath")
-                            .font(.caption)
-                    }
-                    .tint(DesignTokens.accent)
-                }
-
-                if let stopId, let stop = app.data.stop(stopId) {
-                    if stop.location.isValid {
-                        StopNavigationButton(
-                            stopName: stop.name.name(language),
-                            location: stop.location
-                        ) {
-                            Label(L10n.t("navigation.navigate"), systemImage: "figure.walk")
-                                .font(DesignTokens.caption)
+        VStack(alignment: .leading, spacing: 12) {
+            if let target = BusTrackingTarget(app: app, routeKey: entry.routeKey, seq: seq),
+               let session = app.arrivals.session(for: target, app: app) {
+                InlineArrivals(session: session)
+                    .task(id: scenePhase) {
+                        guard scenePhase == .active else { return }
+                        while !Task.isCancelled {
+                            await session.refresh()
+                            do { try await Task.sleep(for: .seconds(30)) } catch { break }
                         }
-                        .buttonStyle(.plain)
-                        .tint(DesignTokens.accent)
                     }
-
-                    let isFavorite = app.bookmarks.isFavoriteStop(stopId)
+                NavigationLink(value: RouteEtaTarget(routeKey: entry.routeKey, seq: seq)) {
+                    Label(L10n.t("route.fullEta"), systemImage: "clock.arrow.circlepath")
+                        .frame(minHeight: 44)
+                }.buttonStyle(.bordered)
+                if let stop = app.data.stop(target.stopID), stop.location.isValid {
+                    StopNavigationButton(stopName: stop.name.name(L10n.language), location: stop.location) {
+                        Label(L10n.t("navigation.navigate"), systemImage: "figure.walk").frame(minHeight: 44)
+                    }
                     Button {
-                        app.bookmarks.toggleFavoriteStop(id: stopId, name: stop.name, location: stop.location)
+                        app.bookmarks.toggleFavoriteStop(id: target.stopID, name: stop.name, location: stop.location)
                     } label: {
-                        Label(
-                            isFavorite ? L10n.t("common.unfavorite") : L10n.t("common.favorite"),
-                            systemImage: isFavorite ? "star.fill" : "star"
-                        )
-                        .font(DesignTokens.caption)
-                    }
-                    .buttonStyle(.plain)
-                    .tint(DesignTokens.accent)
-                }
-            }
-        }
-        .padding(DesignTokens.Spacing.s + DesignTokens.Spacing.xs)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            Color(uiColor: .secondarySystemBackground),
-            in: RoundedRectangle(cornerRadius: DesignTokens.Radius.m, style: .continuous)
-        )
-        .task(id: "\(entry.routeKey)#\(seq)") {
-            if !isMainlandMetro {
-                while !Task.isCancelled {
-                    await refresh()
-                    do {
-                        try await Task.sleep(nanoseconds: 30_000_000_000)
-                    } catch {
-                        break
+                        Label(L10n.t(app.bookmarks.isFavoriteStop(target.stopID) ? "common.unfavorite" : "common.favorite"), systemImage: "star")
+                            .frame(minHeight: 44)
                     }
                 }
             }
         }
+        .font(.subheadline)
     }
+}
 
-    private func refresh() async {
-        guard let db = app.data.db else { return }
-        guard !isMainlandMetro else { return }
-        if etas.isEmpty { isLoading = true }
-        if let mainland = app.mainlandProvider {
-            guard let stopIDs = entry.stops["mainland"] ?? entry.stops["chelaile"],
-                  seq >= 0, seq < stopIDs.count,
-                  let lineID = entry.gtfsId?.value, !lineID.isEmpty
-            else {
-                etas = []
-                isLoading = false
-                return
+private struct InlineArrivals: View {
+    @Environment(AppState.self) private var app
+    let session: ArrivalSession
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if session.etas.isEmpty {
+                Text(L10n.t(session.isRefreshing ? "status.loading" : "eta.noEta")).foregroundStyle(.secondary)
             }
-            let stopLocation = app.data.stop(stopIDs[seq])?.location
-            etas = (try? await mainland.fetchEtas(
-                lineID: lineID,
-                stopID: stopIDs[seq],
-                stopSequence: seq,
-                latitude: stopLocation?.coordinateSystem == .wgs84 ? stopLocation?.lat : nil,
-                longitude: stopLocation?.coordinateSystem == .wgs84 ? stopLocation?.lng : nil,
-                source: mainlandMetadata?.source,
-                language: language,
-                modeHint: mainlandMetadata?.mode
-            )) ?? []
-        } else {
-            etas = await app.provider.fetchEtas(entry: entry, seq: seq, db: db, language: language)
+            ForEach(ArrivalSlot.make(Array(session.etas.prefix(2)))) { slot in
+                ETALineView(eta: slot.eta, language: L10n.language, format: app.settings.etaFormat,
+                            annotateScheduled: app.settings.annotateScheduled, highlight: true)
+            }
+            FreshnessLabel(updatedAt: session.updatedAt, error: session.error)
         }
-        isLoading = false
     }
 }

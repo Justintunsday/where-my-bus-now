@@ -1,23 +1,17 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(AppState.self) private var app
     @State private var isRefreshing = false
+    @State private var showsRegion = false
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    Picker(selection: Binding(
-                        get: { app.settings.selectedRegionID },
-                        set: { app.settings.selectedRegionID = $0; app.selectRegion($0) }
-                    )) {
-                        Text(L10n.t("settings.region.auto")).tag(RegionCatalog.autoID)
-                        ForEach(RegionCatalog.all) { region in
-                            Text(region.name).tag(region.id)
-                        }
-                    } label: {
-                        Text(L10n.t("settings.region"))
+                    Button { showsRegion = true } label: {
+                        Label(L10n.t("settings.region"), systemImage: "globe.asia.australia")
                     }
                     LabeledContent(L10n.t("settings.region.current"), value: app.region.name)
                     if app.region.isQueryMode {
@@ -69,6 +63,15 @@ struct SettingsView: View {
                     ))
                 }
 
+                Section(L10n.t("tracking.title")) {
+                    Label(L10n.t("tracking.foregroundNotice"), systemImage: "info.circle")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                    ForEach(app.activities.activeTargets) { target in
+                        Button(role: .destructive) { Task { await app.activities.end(target) } } label: {
+                            Label("\(L10n.t("tracking.end")) · \(target.route)", systemImage: "stop.circle")
+                        }
+                    }
+                }
                 Section(L10n.t("settings.data")) {
                     if let lastLoaded = app.data.lastLoaded {
                         LabeledContent(L10n.t("settings.data.lastUpdated")) {
@@ -113,6 +116,8 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(L10n.t("settings.title"))
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.t("common.done")) { dismiss() } } }
+            .sheet(isPresented: $showsRegion) { RegionPickerView() }
         }
     }
 
