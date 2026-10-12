@@ -1,25 +1,25 @@
 import SwiftUI
 import UIKit
 
-/// Native transit: semantic surfaces, readable type, operator identity and a quiet action tint.
+/// Warm Minimal colors with native, scalable typography and transit hierarchy.
 enum DesignTokens {
     // MARK: Colors
 
-    /// Adaptive transit blue for actions and selection.
-    static let accent = Color(light: "005FCC", dark: "64A9FF")
+    /// Original Warm Coral. Operator route colors remain independent.
+    static let accent = TransitBrand.coral
     /// Soft accent background for selections and badges.
-    static let accentSoft = Color(light: "EAF2FF", dark: "172B47")
+    static let accentSoft = TransitBrand.softAccent
     /// Text/icon color on top of the accent.
     static let onAccent = Color.white
 
-    // Semantic system surfaces
-    static let background = Color(uiColor: .systemGroupedBackground)
-    static let surface = Color(uiColor: .secondarySystemGroupedBackground)
-    static let surfaceMuted = Color(uiColor: .tertiarySystemGroupedBackground)
-    static let textPrimary = Color.primary
-    static let textSecondary = Color.secondary
-    static let textTertiary = Color(uiColor: .secondaryLabel)
-    static let divider = Color(uiColor: .separator)
+    // Original adaptive warm neutrals; shared with the Lock Screen presentation.
+    static let background = TransitBrand.background
+    static let surface = TransitBrand.surface
+    static let surfaceMuted = TransitBrand.mutedSurface
+    static let textPrimary = TransitBrand.primaryText
+    static let textSecondary = TransitBrand.secondaryText
+    static let textTertiary = TransitBrand.tertiaryText
+    static let divider = TransitBrand.divider
 
     // Functional status tints
     static let success = Color(light: "2E8B57", dark: "4CD07D")

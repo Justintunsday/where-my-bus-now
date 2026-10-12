@@ -7,6 +7,7 @@ struct RouteDetailView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let routeKey: String
     @State private var selectedSeq: Int?
+    @State private var mapSelection: Int?
 
     var body: some View {
         DataGate {
@@ -51,7 +52,8 @@ struct RouteDetailView: View {
 
     @ViewBuilder private func map(_ entry: RouteEntry, points: [RouteStopPoint]) -> some View {
         if points.contains(where: { $0.coordinate != nil }) {
-            RouteMapSection(entry: entry, points: points, selectedSeq: $selectedSeq)
+            RouteMapSection(entry: entry, points: points, selectedSeq: Binding(
+                get: { selectedSeq }, set: { selectedSeq = $0; mapSelection = $0 }))
                 .accessibilityLabel(L10n.t("route.map"))
         } else {
             ContentUnavailableView(L10n.t("route.mapUnavailable"), systemImage: "map")
@@ -82,7 +84,8 @@ struct RouteDetailView: View {
                 } footer: { Text(L10n.t("boarding.timelineHint")) }
             }
             .listStyle(.insetGrouped)
-            .onChange(of: selectedSeq) { _, seq in
+            .transitListSurface()
+            .onChange(of: mapSelection) { _, seq in
                 guard let seq else { return }
                 withAnimation(TransitMotion.selection(reduced: reduceMotion)) { proxy.scrollTo(seq, anchor: .center) }
             }

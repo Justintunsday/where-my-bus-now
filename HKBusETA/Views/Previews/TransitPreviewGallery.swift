@@ -73,13 +73,8 @@ struct TransitPreviewGallery: View {
             case "saved": FavoritesView()
             case "settings": SettingsView()
             case "region": RegionPickerView()
-            case "activity", "activity-stale":
-                VStack(spacing: 24) {
-                    Text(L10n.t("tracking.preview")).font(.title2.bold())
-                    BusLockScreenView(target: .preview, state: .preview, isStale: screen == "activity-stale")
-                        .background(DesignTokens.surface, in: RoundedRectangle(cornerRadius: 24))
-                    Text(L10n.t("tracking.foregroundNotice")).font(.caption).foregroundStyle(.secondary)
-                }.padding(24).frame(maxHeight: .infinity).background(DesignTokens.background)
+            case let value where value.hasPrefix("activity"):
+                ActivityPreviewGallery(initialScenario: BusArrivalPreview(rawValue: String(value.dropFirst("activity-".count))) ?? .normal)
             default: RootView()
             }
         }
@@ -87,6 +82,7 @@ struct TransitPreviewGallery: View {
         .environment(\.timeZone, app.region.timeZone)
         .tint(DesignTokens.accent)
         .environment(\.previewReducedEffects, inheritedReducedEffects || ProcessInfo.processInfo.arguments.contains("--reduce-effects"))
+        .environment(\.previewDimmed, ProcessInfo.processInfo.arguments.contains("--dimmed"))
         .task {
             // Debug-only render readiness for CI; screenshot capture waits instead of guessing startup time.
             await Task.yield()

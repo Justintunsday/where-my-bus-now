@@ -56,6 +56,7 @@ struct StopEtaView: View {
                     }
                 }
             }
+            .transitListSurface()
             .navigationTitle(app.data.stopName(stopId, language))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

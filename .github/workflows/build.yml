@@ -82,6 +82,11 @@ jobs:
             Shared/BusActivityAttributes.swift Shared/BusActivityPreviewData.swift \
             scripts/activity_contract_self_test.swift -o "$RUNNER_TEMP/activity_contract_test"
           "$RUNNER_TEMP/activity_contract_test"
+          xcrun swiftc -parse-as-library -O -D BUS_CONTRACT_TESTS \
+            Shared/BusActivityAttributes.swift Shared/BusActivityPreviewData.swift \
+            HKBusETA/Services/BusActivityPushRegistration.swift scripts/activity_push_self_test.swift \
+            -o "$RUNNER_TEMP/activity_push_test"
+          "$RUNNER_TEMP/activity_push_test"
 
       - name: Offline mainland provider self-test
         run: |
@@ -179,38 +184,6 @@ jobs:
           xcrun xcresulttool get log --path "$RUNNER_TEMP/HKBusETA.xcresult" --type console 2>&1 | tail -300 || true
           exit 1
 
-      - name: Capture simulator UI matrix
-        timeout-minutes: 18
-        run: bash scripts/capture_simulator_screenshots.sh
-
-      - name: Capture baseline launch screen
-        run: bash scripts/capture_baseline_screenshot.sh
-
-      - name: Upload simulator screenshots
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: Native-transit-screenshots
-          path: ${{ runner.temp }}/bus-screenshots
-          if-no-files-found: warn
-
-      - name: Native navigation UI tests
-        run: |
-          device=$(cat "$RUNNER_TEMP/bus-simulator-id")
-          xcodebuild test -project HKBusETA.xcodeproj -scheme HKBusETA \
-            -configuration Debug -destination "platform=iOS Simulator,id=$device" \
-            -derivedDataPath "$RUNNER_TEMP/BusDerived" \
-            -resultBundlePath "$RUNNER_TEMP/TransitUITests.xcresult" \
-            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO
-
-      - name: Upload UI test results
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: Native-transit-ui-tests
-          path: ${{ runner.temp }}/TransitUITests.xcresult
-          if-no-files-found: warn
-
       - name: Archive for iOS device (unsigned)
         run: |
           for attempt in 1 2 3; do
@@ -249,3 +222,52 @@ jobs:
           path: ${{ runner.temp }}/HKBusETA-unsigned.ipa
           if-no-files-found: error
           retention-days: 30
+
+      - name: Native navigation UI tests
+        run: |
+          bash scripts/prepare_simulator.sh phone
+          device=$(cat "$RUNNER_TEMP/bus-simulator-id")
+          xcodebuild test -project HKBusETA.xcodeproj -scheme HKBusETA \
+            -configuration Debug -destination "platform=iOS Simulator,id=$device" \
+            -derivedDataPath "$RUNNER_TEMP/BusDerived" \
+            -resultBundlePath "$RUNNER_TEMP/TransitUITests.xcresult" \
+            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload UI test results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: Native-transit-ui-tests
+          path: ${{ runner.temp }}/TransitUITests.xcresult
+          if-no-files-found: warn
+
+
+  screenshots:
+    name: UI evidence (${{ matrix.device }})
+    if: ${{ !inputs.preview_only }}
+    runs-on: macos-26
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [phone, ipad]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build preview host and embedded widget
+        run: |
+          xcodebuild build -project HKBusETA.xcodeproj -scheme HKBusETA -configuration Debug \
+            -derivedDataPath "$RUNNER_TEMP/BusDerived" -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
+      - name: Capture UI layouts
+        timeout-minutes: 22
+        run: bash scripts/capture_simulator_screenshots.sh "${{ matrix.device }}"
+      - name: Capture original interface for comparison
+        if: matrix.device == 'phone'
+        run: bash scripts/capture_baseline_screenshot.sh
+      - name: Upload screenshots and runtime inventory
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: Native-transit-screenshots-${{ matrix.device }}
+          path: ${{ runner.temp }}/bus-screenshots
+          if-no-files-found: warn

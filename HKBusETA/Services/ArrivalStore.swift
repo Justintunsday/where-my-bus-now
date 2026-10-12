@@ -40,6 +40,8 @@ final class ArrivalSession {
     private(set) var error: String?
     private(set) var isRefreshing = false
     private(set) var identityInvalid = false
+    private(set) var lastSuccessfulState: BusArrivalState?
+    private var isNetworkFailure = false
     @ObservationIgnored private let data: DataStore
     @ObservationIgnored private var flight: Task<Void, Never>?
 
@@ -49,17 +51,10 @@ final class ArrivalSession {
     }
 
     var activityState: BusArrivalState {
-        guard error == nil, let updatedAt else {
-            // Preserve last successful timestamp; a failed request is never a fresh prediction.
-            return .unavailable(at: updatedAt ?? Date(), message: error ?? "")
+        if let error {
+            return .failed(previous: lastSuccessfulState, at: Date(), network: isNetworkFailure, message: error)
         }
-        if let eta = etas.first(where: { ($0.date ?? .distantPast) > Date() }), let arrival = eta.date {
-            return .prediction(arrival: arrival, updatedAt: updatedAt,
-                               scheduled: eta.isScheduled, message: eta.remark.name(language))
-        }
-        let message = etas.first?.remark.name(language) ?? L10n.t("eta.noEta")
-        let cancelled = message.localizedCaseInsensitiveContains("cancel") || message.contains("取消")
-        return .unavailable(at: updatedAt, message: message, cancelled: cancelled)
+        return lastSuccessfulState ?? .unavailable(at: updatedAt ?? Date())
     }
 
     private var language: AppLanguage { AppLanguage(rawValue: target.language) ?? .en }
@@ -117,7 +112,9 @@ final class ArrivalSession {
             }
             guard !Task.isCancelled else { return }
             if etas != result { etas = result }
-            updatedAt = Date()
+            let receivedAt = Date()
+            lastSuccessfulState = makeState(result, at: receivedAt)
+            updatedAt = receivedAt
             error = nil
             identityInvalid = false
         } catch is CancellationError {
@@ -125,9 +122,25 @@ final class ArrivalSession {
         } catch {
             guard !Task.isCancelled else { return }
             identityInvalid = error is ArrivalFailure
+            isNetworkFailure = error is URLError
             self.error = (error as? ArrivalFailure)?.errorDescription
                 ?? (data.provider is HongKongProvider ? L10n.t("arrival.networkError") : MainlandErrorPresentation.message(for: error))
         }
+    }
+
+    private func makeState(_ result: [Eta], at date: Date) -> BusArrivalState {
+        let sorted = result.filter { ($0.date ?? .distantPast) > date }.sorted { $0.date! < $1.date! }
+        let first = sorted.first
+        let message = first?.remark.name(language) ?? result.first?.remark.name(language) ?? ""
+        let explicit: BusArrivalStatus?
+        if message.localizedCaseInsensitiveContains("cancel") || message.contains("取消") { explicit = .cancelled }
+        else if message.localizedCaseInsensitiveContains("departed") || message.contains("已開出") || message.contains("已离站") { explicit = .departed }
+        else if message.localizedCaseInsensitiveContains("arrived") || message.contains("已到站") { explicit = .arrived }
+        else if message.localizedCaseInsensitiveContains("unavailable") || message.contains("暫停") || message.contains("暂时") { explicit = .unavailable }
+        else { explicit = nil }
+        return .snapshot(arrivals: sorted.compactMap { $0.date?.timeIntervalSince1970 }, updatedAt: date,
+                         scheduled: first?.isScheduled ?? false, message: message, explicitStatus: explicit,
+                         previous: lastSuccessfulState)
     }
 
     #if DEBUG
@@ -135,6 +148,8 @@ final class ArrivalSession {
         self.etas = etas
         self.updatedAt = updatedAt
         self.error = error
+        self.lastSuccessfulState = makeState(etas, at: updatedAt)
+        self.isNetworkFailure = error != nil
     }
     #endif
 }

@@ -33,6 +33,7 @@ struct RegionPickerView: View {
                     }
                 }
             }
+            .transitListSurface()
             .searchable(text: $query, prompt: Text(L10n.t("region.search")))
             .navigationTitle(L10n.t("settings.region"))
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.t("common.done")) { dismiss() } } }

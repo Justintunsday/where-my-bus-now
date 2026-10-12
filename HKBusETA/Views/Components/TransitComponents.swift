@@ -89,14 +89,33 @@ struct ArrivalHero: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 } else {
-                    Label(L10n.t(state.status == .cancelled ? "arrival.cancelled" : "arrival.stale"),
+                    Label(BusActivityCopy.text(statusKey, language: L10n.language.rawValue),
                           systemImage: "clock.badge.exclamationmark")
                         .font(.title3.weight(.semibold))
+                    if let arrival = state.arrival {
+                        HStack {
+                            Text(BusActivityCopy.text("lastKnown", language: L10n.language.rawValue))
+                            Text(arrival, style: .time).monospacedDigit()
+                        }.font(.subheadline).foregroundStyle(.secondary)
+                    }
                     if !state.message.isEmpty { Text(state.message).font(.subheadline).foregroundStyle(.secondary) }
                 }
             }
             .padding(.vertical, 16)
             .accessibilityElement(children: .combine)
+        }
+    }
+
+    private var statusKey: String {
+        switch state.status {
+        case .live, .scheduled: "stale"
+        case .networkError: "networkError"
+        case .noService: "noService"
+        case .arrived: "arrived"
+        case .departed: "departed"
+        case .cancelled: "cancelled"
+        case .ended: "ended"
+        case .unavailable: "unavailable"
         }
     }
 
@@ -142,4 +161,7 @@ struct TransitPrimaryStyle: ViewModifier {
 
 extension View {
     func transitPrimaryAction() -> some View { modifier(TransitPrimaryStyle()) }
+    func transitListSurface() -> some View {
+        scrollContentBackground(.hidden).background(DesignTokens.background)
+    }
 }

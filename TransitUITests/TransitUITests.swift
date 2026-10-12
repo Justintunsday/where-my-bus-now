@@ -46,7 +46,7 @@ import XCTest
         XCTAssertTrue(app.staticTexts["下一班車，一目了然"].waitForExistence(timeout: 10))
         app.terminate()
         let failed = launch("error")
-        XCTAssertTrue(failed.staticTexts["暫無有效預測"].waitForExistence(timeout: 10))
+        XCTAssertTrue(failed.staticTexts["網絡中斷 · 上次資料"].waitForExistence(timeout: 10))
         screenshot("network-failure")
     }
 

@@ -49,6 +49,6 @@ struct SearchLandingView: View {
                     }
                 }
             }
-        }.listStyle(.insetGrouped)
+        }.listStyle(.insetGrouped).transitListSurface()
     }
 }

@@ -72,7 +72,7 @@ struct HomeView: View {
                     }
                 }
             }
-            .listStyle(.insetGrouped)
+            .listStyle(.insetGrouped).transitListSurface()
             .navigationTitle(L10n.t("home.title"))
             .toolbar { TransitAppToolbar() }
             .transitDestinations()

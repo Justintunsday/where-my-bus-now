@@ -26,6 +26,7 @@ struct BusTrackingTarget: Codable, Hashable, Identifiable, Sendable {
     var timeZone: TimeZone {
         TimeZone(identifier: timeZoneIdentifier ?? "Asia/Hong_Kong") ?? TimeZone(secondsFromGMT: 28_800)!
     }
+    var locale: Locale { Locale(identifier: language == "zh" ? "zh_Hant_HK" : (language == "zhHans" ? "zh_Hans_CN" : "en_GB")) }
 
     var id: String {
         // Length-prefixed components avoid collisions when provider IDs contain separators.
@@ -62,8 +63,10 @@ struct BusTrackingTarget: Codable, Hashable, Identifiable, Sendable {
 }
 
 enum BusArrivalStatus: String, Codable, Hashable, Sendable {
-    case live, scheduled, unavailable, cancelled, ended
+    case live, scheduled, unavailable, networkError, noService, arrived, departed, cancelled, ended
 }
+
+enum BusArrivalChange: String, Codable, Hashable, Sendable { case adjusted, nextBus }
 
 /// Unix seconds are explicit in the APNs contract (no Foundation reference-date ambiguity).
 struct BusArrivalState: Codable, Hashable, Sendable {
@@ -72,10 +75,15 @@ struct BusArrivalState: Codable, Hashable, Sendable {
     var validUntilEpoch: Double
     var status: BusArrivalStatus
     var message: String
+    // Optional additions decode activities created by earlier versions unchanged.
+    var secondArrivalEpoch: Double? = nil
+    var change: BusArrivalChange? = nil
 
     var arrival: Date? { arrivalEpoch.map(Date.init(timeIntervalSince1970:)) }
     var updatedAt: Date { Date(timeIntervalSince1970: updatedEpoch) }
     var staleDate: Date { Date(timeIntervalSince1970: validUntilEpoch) }
+    var secondArrival: Date? { secondArrivalEpoch.map(Date.init(timeIntervalSince1970:)) }
+    var isTerminal: Bool { [.cancelled, .noService, .arrived, .departed, .ended].contains(status) }
 
     func isFresh(at date: Date) -> Bool {
         date.timeIntervalSince1970 < validUntilEpoch && (status == .live || status == .scheduled)
@@ -93,6 +101,37 @@ struct BusArrivalState: Codable, Hashable, Sendable {
         Self(arrivalEpoch: nil, updatedEpoch: date.timeIntervalSince1970,
              validUntilEpoch: date.timeIntervalSince1970,
              status: cancelled ? .cancelled : .unavailable, message: message)
+    }
+
+    /// Time passing alone never proves that a bus physically arrived or departed.
+    /// Only a new provider snapshot can advance the tracked service.
+    static func snapshot(arrivals: [Double], updatedAt: Date, scheduled: Bool = false,
+                         message: String = "", explicitStatus: BusArrivalStatus? = nil,
+                         previous: Self? = nil) -> Self {
+        let upcoming = Array(Set(arrivals.filter { $0.isFinite && $0 > updatedAt.timeIntervalSince1970 })).sorted()
+        guard let first = upcoming.first else {
+            var result = unavailable(at: updatedAt, message: message)
+            result.status = explicitStatus ?? .noService
+            return result
+        }
+        var result = prediction(arrival: Date(timeIntervalSince1970: first), updatedAt: updatedAt,
+                                scheduled: scheduled, message: message)
+        result.secondArrivalEpoch = upcoming.dropFirst().first
+        if let old = previous?.arrivalEpoch {
+            if old <= updatedAt.timeIntervalSince1970 { result.change = .nextBus }
+            else if abs(old - first) >= 15 { result.change = .adjusted }
+        }
+        return result
+    }
+
+    /// Retain the last clock times as history, never continue a live countdown after a failure.
+    static func failed(previous: Self?, at date: Date, network: Bool, message: String) -> Self {
+        var result = previous ?? unavailable(at: date)
+        result.status = network ? .networkError : .unavailable
+        result.validUntilEpoch = min(result.validUntilEpoch, date.timeIntervalSince1970)
+        result.message = message
+        result.change = nil
+        return result
     }
 }
 
@@ -119,7 +158,20 @@ enum BusActivityCopy {
             "remaining": ["Time until arrival", "距離到站", "距离到站"],
             "end": ["End tracking", "停止追蹤", "停止跟踪"],
             "foreground": ["Updates while app is open", "App 開啟時更新", "App 打开时更新"],
-            "minutes": ["min", "分鐘", "分钟"]
+            "minutes": ["min", "分鐘", "分钟"],
+            "to": ["To", "往", "往"],
+            "next": ["Next", "下一班", "下一班"],
+            "following": ["Following", "後續班次", "后续班次"],
+            "lastKnown": ["Last ETA", "上次預測", "上次预测"],
+            "networkError": ["Offline · last received data", "網絡中斷 · 上次資料", "网络中断 · 上次资料"],
+            "noService": ["No further departures", "暫無後續班次", "暂无后续班次"],
+            "arrived": ["Bus arrived", "班次已到站", "班次已到站"],
+            "departed": ["Bus departed", "班次已離站", "班次已离站"],
+            "approaching": ["Arriving soon", "即將到站", "即将到站"],
+            "adjusted": ["ETA revised", "到站預測已調整", "到站预测已调整"],
+            "nextBus": ["Next departure selected", "已切換下一班", "已切换下一班"],
+            "timer": ["min:sec", "分：秒", "分：秒"],
+            "local": ["Foreground data", "前台資料", "前台资料"]
         ]
         let index = language == "zhHans" ? 2 : (language == "zh" ? 1 : 0)
         return values[key]?[index] ?? key

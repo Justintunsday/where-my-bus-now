@@ -24,7 +24,7 @@ struct FavoritesView: View {
                 } else {
                     List {
                         if showsStops { stopList } else { routeList }
-                    }
+                    }.transitListSurface()
                 }
             }
             .navigationTitle(L10n.t("favorites.title"))

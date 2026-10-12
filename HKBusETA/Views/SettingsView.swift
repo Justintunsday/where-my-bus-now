@@ -116,6 +116,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            .transitListSurface()
             .navigationTitle(L10n.t("settings.title"))
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.t("common.done")) { dismiss() } } }
             .sheet(isPresented: $showsRegion) { RegionPickerView() }

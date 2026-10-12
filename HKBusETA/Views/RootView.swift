@@ -32,7 +32,7 @@ struct RootView: View {
                         Label(item.title, systemImage: item.symbol).tag(item)
                     }
                     .navigationTitle(L10n.t("app.name"))
-                    .listStyle(.sidebar)
+                    .listStyle(.sidebar).transitListSurface()
                 } detail: { destination(tab) }
             } else {
                 TabView(selection: $tab) {

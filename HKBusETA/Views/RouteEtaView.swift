@@ -91,7 +91,7 @@ struct ArrivalScreen: View {
             }
             Section { FreshnessLabel(updatedAt: session.updatedAt, error: session.error) }.listRowBackground(Color.clear)
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.insetGrouped).transitListSurface()
         .navigationTitle(target.route).navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

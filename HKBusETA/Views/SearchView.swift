@@ -108,7 +108,7 @@ struct SearchView: View {
                         }
                     }
                 }
-            }
+            }.transitListSurface()
         }
     }
 
@@ -179,7 +179,7 @@ struct SearchView: View {
                         }
                     }
                 }
-            }
+            }.transitListSurface()
         }
     }
 

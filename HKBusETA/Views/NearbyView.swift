@@ -119,7 +119,7 @@ struct NearbyView: View {
                             }
                         }
                     }
-                    .listStyle(.plain)
+                    .listStyle(.plain).transitListSurface()
                     .refreshable { await load() }
                     .onChange(of: selection) { _, id in
                         guard let id else { return }

@@ -21,7 +21,7 @@ private struct CircularToolbarControl: ViewModifier {
     }
 
     private func opaqueControl(_ content: Content) -> some View {
-        control(content).background(Color(uiColor: .secondarySystemGroupedBackground), in: Circle())
+        control(content).background(DesignTokens.surface, in: Circle())
             .overlay(Circle().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5))
     }
 }
