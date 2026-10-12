@@ -192,6 +192,7 @@ struct MainlandMetroInfoView: View {
                 }
             }
         }
+        .transitListSurface()
         .navigationTitle(name)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -284,6 +285,7 @@ struct MainlandStopBoardView: View {
                         }
                     }
                 }
+                .transitListSurface()
                 .refreshable { await load() }
             }
         }

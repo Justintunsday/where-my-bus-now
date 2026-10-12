@@ -32,4 +32,4 @@ else
   done
 fi
 xcrun simctl list devices available > "$output/runtime-inventory.txt"
-xcrun simctl shutdown "$device"
+if [ "$kind" = ipad ]; then xcrun simctl shutdown "$device"; fi

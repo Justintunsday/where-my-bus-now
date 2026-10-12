@@ -4,10 +4,12 @@ import SwiftUI
 import WidgetKit
 
 @main
-struct BusArrivalWidgetBundle: WidgetBundle {
-    var body: some Widget {
-        if #available(iOS 18.0, *) { SupplementedBusArrivalWidget() }
-        else { BusArrivalWidget() }
+enum BusArrivalWidgetEntry {
+    // WidgetConfiguration and WidgetBundleBuilder cannot erase two configuration
+    // types across availability. Choose the public Widget.main entry point instead.
+    static func main() {
+        if #available(iOS 18.0, *) { SupplementedBusArrivalWidget.main() }
+        else { BusArrivalWidget.main() }
     }
 }
 
