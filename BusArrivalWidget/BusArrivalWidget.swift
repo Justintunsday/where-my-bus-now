@@ -35,7 +35,16 @@ struct BusArrivalWidget: Widget {
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(context.attributes.target.destination).font(.headline).lineLimit(1)
-                        Label(context.attributes.target.stopName, systemImage: "mappin.circle.fill").font(.caption)
+                        HStack(alignment: .firstTextBaseline) {
+                            Label(context.attributes.target.stopName, systemImage: "mappin.circle.fill")
+                            Spacer(minLength: 8)
+                            if !context.isStale, context.state.isFresh(at: Date()), let arrival = context.state.arrival {
+                                Text(BusActivityCopy.text("arrival", language: context.attributes.target.language))
+                                Text(arrival, style: .time).monospacedDigit()
+                            }
+                        }
+                        .font(.caption)
+                        .environment(\.timeZone, context.attributes.target.timeZone)
                         HStack {
                             Text(BusActivityCopy.text(context.isStale ? "stale" : "updated", language: context.attributes.target.language))
                             Text(context.state.updatedAt, style: .time).environment(\.timeZone, context.attributes.target.timeZone)

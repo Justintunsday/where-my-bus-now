@@ -33,6 +33,7 @@ struct BusLockScreenView: View {
                 Text(state.updatedAt, style: .time).monospacedDigit()
                 Spacer(minLength: 0)
                 if let arrival = state.arrival, !isStale, state.isFresh(at: Date()) {
+                    Text(copy("arrival"))
                     Text(arrival, style: .time).monospacedDigit()
                 }
             }

@@ -109,6 +109,7 @@ enum BusActivityCopy {
     static func text(_ key: String, language: String) -> String {
         let values: [String: [String]] = [
             "updated": ["Updated", "更新於", "更新于"],
+            "arrival": ["Arrival", "預計到站", "预计到站"],
             "stale": ["Open app to refresh", "開啟 App 更新", "打开 App 更新"],
             "unavailable": ["No live prediction", "暫無實時預測", "暂无实时预测"],
             "cancelled": ["Service cancelled", "班次取消", "班次取消"],
