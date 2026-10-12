@@ -23,7 +23,7 @@ struct BusActivityDisplay {
             if state.change == .nextBus { return "nextBus" }
             if state.change == .adjusted { return "adjusted" }
             if let arrival = state.arrival, arrival.timeIntervalSince(now) <= 60 { return "approaching" }
-            return state.status == .scheduled ? "scheduled" : "local"
+            return state.status == .scheduled ? "scheduled" : (state.updateSource == .push ? "remote" : "local")
         }
     }
     var symbol: String {
@@ -182,9 +182,9 @@ struct BusIslandExpandedArrival: View {
         VStack(alignment: .trailing, spacing: 2) {
             BusActivityCountdown(target: display.target, state: display.state, isStale: display.isStale)
                 .font(.title.bold()).fontDesign(.rounded)
-            if display.fresh, let arrival = display.state.arrival {
+            if let arrival = display.state.arrival {
                 HStack(spacing: 4) {
-                    Text(display.copy("arrival"))
+                    Text(display.copy(display.fresh ? "arrival" : "lastKnown"))
                     Text(arrival, style: .time).monospacedDigit()
                 }.font(.caption2.weight(.medium)).foregroundStyle(.secondary)
             }

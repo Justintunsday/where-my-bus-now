@@ -122,7 +122,11 @@ final class ArrivalSession {
         } catch {
             guard !Task.isCancelled else { return }
             identityInvalid = error is ArrivalFailure
-            isNetworkFailure = error is URLError
+            if let urlError = error as? URLError {
+                isNetworkFailure = [.notConnectedToInternet, .networkConnectionLost, .timedOut,
+                    .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed].contains(urlError.code)
+            } else if case CheLaileAPIError.transport = error { isNetworkFailure = true }
+            else { isNetworkFailure = false }
             self.error = (error as? ArrivalFailure)?.errorDescription
                 ?? (data.provider is HongKongProvider ? L10n.t("arrival.networkError") : MainlandErrorPresentation.message(for: error))
         }

@@ -5,17 +5,21 @@ import WidgetKit
 
 @main
 struct BusArrivalWidgetBundle: WidgetBundle {
-    var body: some Widget { BusArrivalWidget() }
+    var body: some Widget {
+        if #available(iOS 18.0, *) { SupplementedBusArrivalWidget() }
+        else { BusArrivalWidget() }
+    }
+}
+
+@available(iOS 18.0, *)
+private struct SupplementedBusArrivalWidget: Widget {
+    var body: some WidgetConfiguration {
+        BusArrivalWidget().body.supplementalActivityFamilies([.small, .medium])
+    }
 }
 
 struct BusArrivalWidget: Widget {
     var body: some WidgetConfiguration {
-        if #available(iOS 18.0, *) {
-            configuration.supplementalActivityFamilies([.small, .medium])
-        } else { configuration }
-    }
-
-    private var configuration: some WidgetConfiguration {
         ActivityConfiguration(for: BusActivityAttributes.self) { context in
             Group {
                 if #available(iOS 18.0, *) { AdaptiveBusActivity(context: context) }
@@ -29,7 +33,7 @@ struct BusArrivalWidget: Widget {
             .widgetURL(context.attributes.target.deepLink)
         } dynamicIsland: { context in
             let display = BusActivityDisplay(target: context.attributes.target, state: context.state, isStale: context.isStale)
-            DynamicIsland {
+            return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     BusIslandRoute(target: context.attributes.target)
                         .dynamicIsland(verticalPlacement: .belowIfTooWide)

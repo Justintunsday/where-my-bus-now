@@ -67,6 +67,7 @@ enum BusArrivalStatus: String, Codable, Hashable, Sendable {
 }
 
 enum BusArrivalChange: String, Codable, Hashable, Sendable { case adjusted, nextBus }
+enum BusArrivalSource: String, Codable, Hashable, Sendable { case foreground, push }
 
 /// Unix seconds are explicit in the APNs contract (no Foundation reference-date ambiguity).
 struct BusArrivalState: Codable, Hashable, Sendable {
@@ -78,6 +79,7 @@ struct BusArrivalState: Codable, Hashable, Sendable {
     // Optional additions decode activities created by earlier versions unchanged.
     var secondArrivalEpoch: Double? = nil
     var change: BusArrivalChange? = nil
+    var updateSource: BusArrivalSource? = nil
 
     var arrival: Date? { arrivalEpoch.map(Date.init(timeIntervalSince1970:)) }
     var updatedAt: Date { Date(timeIntervalSince1970: updatedEpoch) }
@@ -116,6 +118,7 @@ struct BusArrivalState: Codable, Hashable, Sendable {
         }
         var result = prediction(arrival: Date(timeIntervalSince1970: first), updatedAt: updatedAt,
                                 scheduled: scheduled, message: message)
+        result.updateSource = .foreground
         result.secondArrivalEpoch = upcoming.dropFirst().first
         if let old = previous?.arrivalEpoch {
             if old <= updatedAt.timeIntervalSince1970 { result.change = .nextBus }
@@ -171,7 +174,8 @@ enum BusActivityCopy {
             "adjusted": ["ETA revised", "到站預測已調整", "到站预测已调整"],
             "nextBus": ["Next departure selected", "已切換下一班", "已切换下一班"],
             "timer": ["min:sec", "分：秒", "分：秒"],
-            "local": ["Foreground data", "前台資料", "前台资料"]
+            "local": ["Foreground data", "前台資料", "前台资料"],
+            "remote": ["Operator prediction", "營運商預測", "运营商预测"]
         ]
         let index = language == "zhHans" ? 2 : (language == "zh" ? 1 : 0)
         return values[key]?[index] ?? key
