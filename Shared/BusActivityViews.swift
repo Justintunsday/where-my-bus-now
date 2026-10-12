@@ -61,7 +61,8 @@ struct BusLockScreenView: View {
                         Text(target.route).font(.title3.bold()).fontDesign(.rounded)
                             .foregroundStyle(accent).lineLimit(1).minimumScaleFactor(0.7)
                         Text("\(display.copy("to")) \(target.destination)")
-                            .font(.headline).lineLimit(typeSize.isAccessibilitySize ? 1 : 2)
+                            .font(.headline).lineLimit(1)
+                            .accessibilityLabel("\(display.copy("to")) \(target.destination)")
                     }
                     Label(target.stopName, systemImage: "mappin.circle.fill")
                         .font(.subheadline).lineLimit(1)
@@ -70,7 +71,8 @@ struct BusLockScreenView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 VStack(alignment: .trailing, spacing: 2) {
                     BusActivityCountdown(target: target, state: state, isStale: isStale)
-                        .font(.largeTitle.bold()).fontDesign(.rounded).foregroundStyle(accent)
+                        .font(typeSize.isAccessibilitySize ? .title2.bold() : .largeTitle.bold())
+                        .fontDesign(.rounded).foregroundStyle(accent)
                     if display.fresh { Text(display.copy("timer")).font(.caption2.weight(.medium)).foregroundStyle(.secondary) }
                 }
                 .frame(maxWidth: typeSize.isAccessibilitySize ? 130 : 110, alignment: .trailing)

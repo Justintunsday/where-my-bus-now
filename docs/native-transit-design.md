@@ -17,15 +17,15 @@ Three structural alternatives were considered: search-first (fast for unfamiliar
 - Settings: native Form, searchable region sheet, language and arrival display preferences, data source information.
 - iPad: native NavigationSplitView sidebar; iPhone: native TabView and independent NavigationStacks. System sheets retain swipe dismissal and detents.
 
-## Design system (standard profile)
+## Design system (Warm Minimal brand)
 
-System semantic backgrounds and label colors, one adaptive transit-blue action tint, operator colors limited to route identity. SF Pro for text; SF Rounded and tabular digits for route codes and arrivals. All readable typography scales with Dynamic Type. Spacing: 4/8/16/24/32. Primary controls have 44pt minimum targets. Content has no glass backgrounds; iOS 26 uses native bars plus one glass control style, with opaque Reduce Transparency and pre-26 fallbacks.
+Original adaptive warm backgrounds and semantic text tokens, Warm Coral #E85D3A for actions, and operator colors limited to route identity. SF Pro for text; SF Rounded and tabular digits for route codes and arrivals. All readable typography scales with Dynamic Type. Spacing: 4/8/16/24/32. Primary controls have 44pt minimum targets. Content has no glass backgrounds; iOS 26 uses native bars plus one glass control style, with opaque Reduce Transparency and pre-26 fallbacks.
 
 ## Motion contract
 
 | Interaction | Motion and state owner | Reduced effects |
 | --- | --- | --- |
-| Boarding selection | Retargetable 0.32s, low-bounce spring; route detail owns selected sequence; map camera follows and list scrolls to the same stable sequence | Immediate selection/camera and scroll |
+| Boarding selection | Retargetable 0.32s, low-bounce spring; route detail owns selected sequence; map camera follows a list selection; only map-originated selections scroll the timeline, so tapping an expanded stop never moves its own disclosure button | Immediate selection/camera and scroll |
 | Saved trip expansion | matchedGeometryEffect within a single hierarchy; one source badge per trip; native navigation from the expanded preview to route detail/ETA | Immediate expansion |
 | Route push on iOS 18+ | Native source-linked zoom, system interactive back | System push when Reduce Motion is enabled or iOS 17 |
 | ETA changes | numericText + scoped smooth animation; arrival slots retain identity while timestamps change | Immediate text update |
@@ -43,3 +43,6 @@ ETA sessions own loading, successful/empty/error snapshots and timestamps. Refre
 ## Skill provenance
 
 Applied: [SwiftUI Expert](https://github.com/AvdLee/SwiftUI-Agent-Skill/tree/main/skills/swiftui-expert-skill), [Interface Design](https://github.com/ZHUOLIN0928/swiftui-interface-design-skill), [iOS Design Agent](https://github.com/vermont42/iOS-Design-Agent-Skill/tree/main/ios-design-agent-skill), [Animation](https://github.com/dpearson2699/swift-ios-skills/tree/main/skills/swiftui-animation), [Liquid Glass](https://github.com/dpearson2699/swift-ios-skills/tree/main/skills/swiftui-liquid-glass), [ActivityKit](https://github.com/dpearson2699/swift-ios-skills/tree/main/skills/activitykit). Availability and SDK compilation take precedence over examples targeting later Swift versions. User-requested native restraint takes precedence over decorative suggestions. Validation evidence and remaining hard gates are recorded separately; no Apple-quality or frame-rate score is inferred from code alone.
+
+
+The activity-focused revision additionally applies [Apple Design](https://github.com/tzzs/apple-design-skill), [WidgetKit](https://github.com/dpearson2699/swift-ios-skills/tree/main/skills/widgetkit), [Push Notifications](https://github.com/dpearson2699/swift-ios-skills/tree/main/skills/push-notifications) and [iOS Accessibility](https://github.com/dpearson2699/swift-ios-skills/tree/main/skills/ios-accessibility), including their relevant references for compact layouts, lifecycle, token rotation, animation and accessibility. Pasted list numbers in the requested URLs were resolved to the actual skill directories. Apple HIG and ActivityKit documentation take precedence; Xcode 16.4/26 builds verify availability. See [the independent activity design](activity-design.md).

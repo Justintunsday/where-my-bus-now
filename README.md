@@ -75,6 +75,8 @@ Save a route, choose its direction, then select a stop in the timeline. On its a
 
 Live Activities currently refresh **only while the app is active**. Native countdown rendering continues in the background, but predictions expire after at most 90 seconds (or the predicted arrival, whichever is earlier); stale UI asks you to reopen the app. There is no background polling or deployed APNs activity service. [APNs architecture and deployment contract](docs/live-activities-apns.md) describe the separate server work and signing requirements.
 
+The Warm Minimal brand palette is retained, with a completely new departure-board Lock Screen and compact/minimal/expanded Island design. [Activity design and states](docs/activity-design.md) document the four surfaces, native update motion and truthful freshness. Optional per-activity push token management and an authenticated HTTP registrar are implemented but disabled until the server/signing deployment is ready.
+
 Existing bookmark files and region namespaces are preserved. Boarding points use a separate additive preferences key.
 
 ## Build
@@ -88,7 +90,7 @@ cd where-my-bus-now
 open HKBusETA.xcodeproj
 ```
 
-GitHub Actions uses Xcode 26 for the simulator, screenshot matrix, navigation UI tests and unsigned device archive. Packaging asserts that `BusArrivalWidget.appex` is embedded before generating the unsigned IPA. A separate Xcode 16.4 job installs an iOS 17.5 runtime and runs compatibility UI tests. Hosted API reachability remains non-blocking; offline provider, navigation, bookmark, localization and ActivityKit contract tests are required.
+GitHub Actions uses Xcode 26 for the simulator, navigation UI tests and unsigned device archive; separate phone/iPad jobs capture the screenshot matrix. Packaging asserts that `BusArrivalWidget.appex` is embedded before generating the unsigned IPA. A separate Xcode 16.4 job installs an iOS 17.5 runtime and runs compatibility UI tests. Hosted API reachability remains non-blocking; offline provider, navigation, bookmark, localization and ActivityKit contract tests are required.
 
 `TransitPreviewGallery.swift` provides isolated fixtures for SwiftUI previews and simulator screenshots; production storage and provider requests are bypassed in this debug-only path. `BusArrivalWidget.swift` includes Lock Screen, compact, expanded and minimal WidgetKit previews. In-app activity screenshots show the shared content layout, not a signed-device Lock Screen capture.
 

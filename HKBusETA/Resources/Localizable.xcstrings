@@ -1,6 +1,29 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "tracking.remoteNotice" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remote updates require the connected push service. Check the received timestamp; stale predictions are never live data."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "遠程更新依賴已連接的推送服務。請留意資料接收時間；過期預測不屬於實時資料。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "远程更新依赖已连接的推送服务。请留意数据接收时间；过期预测不属于实时数据。"
+          }
+        }
+      }
+    },
     "tracking.previewState" : {
       "extractionState": "manual",
       "localizations": {

@@ -64,7 +64,7 @@ struct SettingsView: View {
                 }
 
                 Section(L10n.t("tracking.title")) {
-                    Label(L10n.t("tracking.foregroundNotice"), systemImage: "info.circle")
+                    Label(L10n.t(app.activities.supportsRemoteUpdates ? "tracking.remoteNotice" : "tracking.foregroundNotice"), systemImage: "info.circle")
                         .font(.subheadline).foregroundStyle(.secondary)
                     ForEach(app.activities.activeTargets) { target in
                         Button(role: .destructive) { Task { await app.activities.end(target) } } label: {

@@ -133,18 +133,23 @@ final class ArrivalSession {
     }
 
     private func makeState(_ result: [Eta], at date: Date) -> BusArrivalState {
-        let sorted = result.filter { ($0.date ?? .distantPast) > date }.sorted { $0.date! < $1.date! }
+        let sorted = result.filter {
+            ($0.date ?? .distantPast) > date && explicitStatus($0.remark.name(language)) == nil
+        }.sorted { $0.date! < $1.date! }
         let first = sorted.first
         let message = first?.remark.name(language) ?? result.first?.remark.name(language) ?? ""
-        let explicit: BusArrivalStatus?
-        if message.localizedCaseInsensitiveContains("cancel") || message.contains("取消") { explicit = .cancelled }
-        else if message.localizedCaseInsensitiveContains("departed") || message.contains("已開出") || message.contains("已离站") { explicit = .departed }
-        else if message.localizedCaseInsensitiveContains("arrived") || message.contains("已到站") { explicit = .arrived }
-        else if message.localizedCaseInsensitiveContains("unavailable") || message.contains("暫停") || message.contains("暂时") { explicit = .unavailable }
-        else { explicit = nil }
+        let explicit = first == nil ? result.compactMap { explicitStatus($0.remark.name(language)) }.first : nil
         return .snapshot(arrivals: sorted.compactMap { $0.date?.timeIntervalSince1970 }, updatedAt: date,
                          scheduled: first?.isScheduled ?? false, message: message, explicitStatus: explicit,
                          previous: lastSuccessfulState)
+    }
+
+    private func explicitStatus(_ message: String) -> BusArrivalStatus? {
+        if message.localizedCaseInsensitiveContains("cancel") || message.contains("取消") { return .cancelled }
+        if message.localizedCaseInsensitiveContains("departed") || message.contains("已開出") || message.contains("已离站") { return .departed }
+        if message.localizedCaseInsensitiveContains("arrived") || message.contains("已到站") { return .arrived }
+        if message.localizedCaseInsensitiveContains("unavailable") || message.contains("暫停") || message.contains("暂时") { return .unavailable }
+        return nil
     }
 
     #if DEBUG

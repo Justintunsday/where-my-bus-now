@@ -14,7 +14,7 @@ final class AppState {
     let location: LocationService
     let arrivals = ArrivalStore()
     let boarding: BoardingStore
-    let activities = BusActivityManager()
+    let activities: BusActivityManager
     var presentation: TransitSheet?
 
     /// Optional mainland query capability exposed to views without coupling
@@ -23,7 +23,8 @@ final class AppState {
         provider as? any MainlandTransitProvider
     }
 
-    init(defaults: UserDefaults = .standard, bookmarkURL: URL? = nil) {
+    init(defaults: UserDefaults = .standard, bookmarkURL: URL? = nil,
+         activityRegistrar: (any BusActivityPushRegistering)? = nil) {
         let settings = AppSettings(defaults: defaults)
         let region = RegionCatalog.region(for: settings.selectedRegionID) ?? RegionCatalog.hongKong
         let provider = RegionCatalog.provider(for: region)
@@ -34,6 +35,7 @@ final class AppState {
         bookmarks = BookmarkStore(regionID: region.id, storageURL: bookmarkURL)
         boarding = BoardingStore(defaults: defaults)
         location = LocationService()
+        activities = BusActivityManager(registrar: activityRegistrar)
         RegionClock.timeZone = provider.timeZone
     }
 
