@@ -1,3 +1,4 @@
+import ActivityKit
 import Foundation
 import Observation
 
@@ -72,6 +73,20 @@ final class ArrivalSession {
     }
 
     func cancel() { flight?.cancel() }
+
+    /// Restore the system's last received snapshot before the first foreground request.
+    /// A cold-start network failure must not erase an existing activity's clock history.
+    func restore(_ state: BusArrivalState) {
+        guard lastSuccessfulState == nil else { return }
+        lastSuccessfulState = state
+        updatedAt = state.updatedAt
+        if state.status == .networkError || state.status == .unavailable {
+            isNetworkFailure = state.status == .networkError
+            error = state.message.isEmpty
+                ? BusActivityCopy.text(isNetworkFailure ? "networkError" : "unavailable", language: target.language)
+                : state.message
+        }
+    }
 
     private func performRefresh() async {
         isRefreshing = true
@@ -183,6 +198,9 @@ final class ArrivalStore {
         // Bound the cache; activities and views retain the sessions they use.
         if sessions.count > 40 { sessions = sessions.filter { $0.value.isRefreshing } }
         let session = ArrivalSession(target: target, data: data)
+        if let activity = Activity<BusActivityAttributes>.activities.first(where: {
+            $0.attributes.target.id == target.id && ($0.activityState == .active || $0.activityState == .stale)
+        }) { session.restore(activity.content.state) }
         sessions[cacheKey] = session
         return session
     }

@@ -35,6 +35,7 @@ import XCTest
         XCTAssertTrue(stop.waitForExistence(timeout: 10))
         stop.tap()
         XCTAssertTrue(app.buttons["route.stop.0"].waitForExistence(timeout: 5))
+        XCTAssertEqual(stop.value as? String, "已展開")
         stop.tap()
         XCTAssertTrue(stop.exists)
         XCTAssertEqual(stop.value as? String, "已收起")
@@ -47,7 +48,36 @@ import XCTest
         app.terminate()
         let failed = launch("error")
         XCTAssertTrue(failed.staticTexts["網絡中斷 · 上次資料"].waitForExistence(timeout: 10))
+        XCTAssertTrue(failed.staticTexts["上次預測"].exists)
         screenshot("network-failure")
+    }
+
+    func testSystemActivityCanStartAndEndWhenAuthorized() throws {
+        let app = launch("eta")
+        let open = app.buttons["tracking.open"]
+        for _ in 0..<4 where !open.isHittable { app.swipeUp() }
+        XCTAssertTrue(open.waitForExistence(timeout: 5))
+        open.tap()
+        let start = app.buttons["tracking.start"]
+        XCTAssertTrue(start.waitForExistence(timeout: 5))
+        for _ in 0..<3 where !start.isHittable { app.swipeUp() }
+        start.tap()
+        let disabled = app.staticTexts["請先在 iOS 設定中允許此 App 的實時活動。"]
+        if disabled.waitForExistence(timeout: 2) {
+            throw XCTSkip("This simulator disables ActivityKit authorization; signed-device lifecycle remains required")
+        }
+        let dismissed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.buttons["tracking.done"])
+        wait(for: [dismissed], timeout: 10)
+        XCTAssertFalse(app.descendants(matching: .any)["tracking.error"].exists)
+        open.tap()
+        let end = app.buttons["tracking.end"]
+        XCTAssertTrue(end.waitForExistence(timeout: 5))
+        for _ in 0..<3 where !end.isHittable { app.swipeUp() }
+        end.tap()
+        XCTAssertTrue(open.waitForExistence(timeout: 5))
+        open.tap()
+        XCTAssertTrue(app.buttons["tracking.start"].waitForExistence(timeout: 5), "System activity ended and reconciled")
+        screenshot("activity-start-end")
     }
 
     func testArrivalHasAccessibleDescriptionsAndUnclippedText() throws {

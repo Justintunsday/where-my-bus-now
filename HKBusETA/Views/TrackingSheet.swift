@@ -20,6 +20,7 @@ struct TrackingSheet: View {
                         .accessibilityIdentifier("tracking.disclosure")
                     if let error = app.activities.error {
                         Label(error, systemImage: "exclamationmark.circle").foregroundStyle(DesignTokens.warning)
+                            .accessibilityIdentifier("tracking.error")
                     }
                     if app.activities.isTracking(target) {
                         Button(role: .destructive) {
@@ -27,6 +28,7 @@ struct TrackingSheet: View {
                         } label: {
                             Label(L10n.t("tracking.end"), systemImage: "stop.circle").frame(maxWidth: .infinity, minHeight: 44)
                         }.buttonStyle(.bordered)
+                        .accessibilityIdentifier("tracking.end")
                     } else {
                         Button { Task { await start() } } label: {
                             HStack {
@@ -35,6 +37,7 @@ struct TrackingSheet: View {
                             }.frame(maxWidth: .infinity, minHeight: 44)
                         }
                         .disabled(app.activities.isStarting).transitPrimaryAction()
+                        .accessibilityIdentifier("tracking.start")
                     }
                 }
                 .padding(24).frame(maxWidth: 640).frame(maxWidth: .infinity)

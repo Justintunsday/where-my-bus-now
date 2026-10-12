@@ -21,6 +21,7 @@ struct SearchView: View {
             DataGate {
                 content
             }
+            .background(DesignTokens.background)
             .navigationTitle(L10n.t("search.title"))
             .toolbar { TransitAppToolbar() }
             .navigationDestination(for: RouteDetailTarget.self) { target in

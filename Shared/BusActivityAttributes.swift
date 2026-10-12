@@ -96,13 +96,13 @@ struct BusArrivalState: Codable, Hashable, Sendable {
         Self(arrivalEpoch: arrival.timeIntervalSince1970,
              updatedEpoch: updatedAt.timeIntervalSince1970,
              validUntilEpoch: min(updatedAt.addingTimeInterval(90), arrival).timeIntervalSince1970,
-             status: scheduled ? .scheduled : .live, message: message)
+             status: scheduled ? .scheduled : .live, message: String(message.prefix(160)))
     }
 
     static func unavailable(at date: Date, message: String = "", cancelled: Bool = false) -> Self {
         Self(arrivalEpoch: nil, updatedEpoch: date.timeIntervalSince1970,
              validUntilEpoch: date.timeIntervalSince1970,
-             status: cancelled ? .cancelled : .unavailable, message: message)
+             status: cancelled ? .cancelled : .unavailable, message: String(message.prefix(160)))
     }
 
     /// Time passing alone never proves that a bus physically arrived or departed.
@@ -132,7 +132,7 @@ struct BusArrivalState: Codable, Hashable, Sendable {
         var result = previous ?? unavailable(at: date)
         result.status = network ? .networkError : .unavailable
         result.validUntilEpoch = min(result.validUntilEpoch, date.timeIntervalSince1970)
-        result.message = message
+        result.message = String(message.prefix(160))
         result.change = nil
         return result
     }

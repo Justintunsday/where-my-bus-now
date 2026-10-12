@@ -27,6 +27,7 @@ struct FavoritesView: View {
                     }.transitListSurface()
                 }
             }
+            .background(DesignTokens.background)
             .navigationTitle(L10n.t("favorites.title"))
             .toolbar { TransitAppToolbar() }
             .toolbar { ToolbarItem(placement: .primaryAction) { EditButton() } }
