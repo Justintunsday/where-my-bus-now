@@ -54,6 +54,7 @@ import SwiftUI
 }
 
 struct TransitPreviewGallery: View {
+    @Environment(\.previewReducedEffects) private var inheritedReducedEffects
     let screen: String
     @State private var app: AppState
     init(screen: String) {
@@ -84,7 +85,7 @@ struct TransitPreviewGallery: View {
         }
         .environment(app).environment(\.locale, app.settings.language.locale)
         .tint(DesignTokens.accent)
-        .environment(\.previewReducedEffects, ProcessInfo.processInfo.arguments.contains("--reduce-effects"))
+        .environment(\.previewReducedEffects, inheritedReducedEffects || ProcessInfo.processInfo.arguments.contains("--reduce-effects"))
 
     }
 }

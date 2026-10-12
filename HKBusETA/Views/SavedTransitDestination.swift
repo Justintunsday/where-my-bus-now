@@ -12,10 +12,15 @@ struct SavedRouteDestination: View {
                     .task { app.openSavedRegion(target.regionID) }
             } else if app.mainlandProvider != nil {
                 SavedMainlandRouteResolver(target: target)
-            } else if let seq = target.seq {
-                RouteEtaView(routeKey: target.routeKey, seq: seq)
             } else {
-                RouteDetailView(routeKey: target.routeKey)
+                DataGate {
+                    if let entry = app.data.entry(target.routeKey), let previous = target.seq,
+                       let stopID = target.stopID, let seq = entry.canonicalSequence(for: stopID, preferredSequence: previous) {
+                        RouteEtaView(routeKey: target.routeKey, seq: seq)
+                    } else {
+                        RouteDetailView(routeKey: target.routeKey)
+                    }
+                }
             }
         }
     }
@@ -36,6 +41,7 @@ private struct SavedMainlandRouteResolver: View {
                     lineId: lineID,
                     title: target.route,
                     seq: target.seq,
+                    stopID: target.stopID,
                     modeHint: resolvedMode ?? target.modeHint,
                     origin: target.origin,
                     destination: target.destination

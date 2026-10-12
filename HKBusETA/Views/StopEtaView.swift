@@ -148,6 +148,7 @@ struct StopBoardRowView: View {
 
     var body: some View {
         let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+        let slots = ArrivalSlot.make(Array(item.upcoming.prefix(3)))
         return layout {
             RouteBadge(route: item.entry.route, entry: item.entry)
             VStack(alignment: .leading, spacing: 2) {
@@ -168,12 +169,12 @@ struct StopBoardRowView: View {
                         .multilineTextAlignment(.trailing)
                         .lineLimit(2)
                 } else {
-                    ForEach(ArrivalSlot.make(Array(upcoming.prefix(3)))) { slot in
+                    ForEach(slots) { slot in
                         ETACompactLineView(
                             eta: slot.eta,
                             format: settings.etaFormat,
                             annotateScheduled: settings.annotateScheduled,
-                            highlight: slot.id == ArrivalSlot.make(Array(upcoming.prefix(3))).first?.id
+                            highlight: slot.id == slots.first?.id
                         )
                     }
                 }

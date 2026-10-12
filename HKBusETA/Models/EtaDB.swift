@@ -141,6 +141,20 @@ struct RouteEntry: Codable, Sendable {
         }
     }
 
+    /// Preserve loop occurrences and legacy joint-operator stop IDs when reopening history.
+    /// Unknown IDs must return to the timeline instead of silently opening another stop.
+    func canonicalSequence(for stopID: String, preferredSequence: Int) -> Int? {
+        let canonical = canonicalStops
+        if canonical.indices.contains(preferredSequence), canonical[preferredSequence] == stopID { return preferredSequence }
+        if let exact = canonical.firstIndex(of: stopID) { return exact }
+        let lists = co.compactMap { stops[$0] }
+        if canonical.indices.contains(preferredSequence), lists.contains(where: { $0.indices.contains(preferredSequence) && $0[preferredSequence] == stopID }) {
+            return preferredSequence
+        }
+        let positions = Set(lists.compactMap { $0.firstIndex(of: stopID) }.filter { canonical.indices.contains($0) })
+        return positions.count == 1 ? positions.first : nil
+    }
+
     var boundValue: String { bound.values.first ?? "" }
 
     var routeKey: String {

@@ -1,4 +1,4 @@
-# Where My Bus Now (WMBN) · 1.9.0
+# Where My Bus Now (WMBN) · 2.0.0
 
 ![Build](https://github.com/Justintunsday/where-my-bus-now/actions/workflows/build.yml/badge.svg)
 
@@ -28,6 +28,8 @@ official base data when configured. This is not an official app.
   any stop with a valid coordinate
 - Stop departure boards with aligned tabular ETA columns
 - Nearby stops with distance, favorites for whole routes and stops, recents
+- Commute-first Today tab: save a route, direction and boarding stop to see its next arrival immediately
+- Lock Screen Live Activities and all Dynamic Island presentations, with native countdowns, stale-state disclosure, deep links and an end action
 - ETA display modes (clock time / minutes / both), scheduled-trip markers
 - Traditional Chinese, Simplified Chinese and English
 - iPhone and iPad, dark mode, iOS 26 Liquid Glass
@@ -55,9 +57,7 @@ official base data when configured. This is not an official app.
 - Query-mode lines are synthesized into standard `RouteEntry` values and
   registered in `DataStore`, so the map / timeline / ETA screens are fully
   reused across regions
-- **Liquid Glass**: built with the Xcode 26 / iOS 26 SDK, standard controls
-  adopt Liquid Glass automatically on iOS 26+; custom controls use the
-  `glassEffect` API (compiler-gated so Xcode 16 still builds)
+- **Liquid Glass**: native bars and a restrained `.glassProminent` primary action on iOS 26; semantic opaque controls on older systems and with Reduce Transparency
 - Xcode 16 synchronized folders (`PBXFileSystemSynchronizedRootGroup`) — new
   files need no `project.pbxproj` changes
 - `HKBusETA/Models` — EtaDB, TransitOperator, TransitRegion
@@ -65,7 +65,17 @@ official base data when configured. This is not an official app.
   protocols/routers, AMapClient/AMapTransitProvider, hosted CheLaile client,
   DataStore, ETA services, bookmarks, location
 - `HKBusETA/Views` — search, route, ETA, nearby, favorites, settings
-- `docs/brand-spec.md` — Warm Minimal design system
+- `Shared` — typed activity identity, Unix-timestamp content state, shared Lock Screen layout and end intent
+- `BusArrivalWidget` — embedded Widget Extension; no networking or location access
+- `docs/brand-spec.md` and `docs/native-transit-design.md` — native design system and interaction contract
+
+## Track a departure
+
+Save a route, choose its direction, then select a stop in the timeline. On its arrival screen, use **Save boarding point** for Today or **Start tracking** for the Lock Screen. Manage/end the activity in the same sheet, Settings, or its system end button. Tapping an activity resolves the complete regional/provider identity before opening ETA.
+
+Live Activities currently refresh **only while the app is active**. Native countdown rendering continues in the background, but predictions expire after at most 90 seconds (or the predicted arrival, whichever is earlier); stale UI asks you to reopen the app. There is no background polling or deployed APNs activity service. [APNs architecture and deployment contract](docs/live-activities-apns.md) describe the separate server work and signing requirements.
+
+Existing bookmark files and region namespaces are preserved. Boarding points use a separate additive preferences key.
 
 ## Build
 
@@ -78,9 +88,9 @@ cd where-my-bus-now
 open HKBusETA.xcodeproj
 ```
 
-GitHub Actions (`macos-26` / Xcode 26.6) runs the offline fixture self-tests
-and a non-blocking hosted API reachability probe, then builds the simulator
-app, an unsigned device archive and an IPA on every push.
+GitHub Actions uses Xcode 26 for the simulator, screenshot matrix, navigation UI tests and unsigned device archive. Packaging asserts that `BusArrivalWidget.appex` is embedded before generating the unsigned IPA. A separate Xcode 16.4 job installs an iOS 17.5 runtime and runs compatibility UI tests. Hosted API reachability remains non-blocking; offline provider, navigation, bookmark, localization and ActivityKit contract tests are required.
+
+`TransitPreviewGallery.swift` provides isolated fixtures for SwiftUI previews and simulator screenshots; production storage and provider requests are bypassed in this debug-only path. `BusArrivalWidget.swift` includes Lock Screen, compact, expanded and minimal WidgetKit previews. In-app activity screenshots show the shared content layout, not a signed-device Lock Screen capture.
 
 ## Data Sources
 

@@ -48,6 +48,13 @@ import XCTest
         screenshot("network-failure")
     }
 
+    func testArrivalHasAccessibleDescriptionsAndUnclippedText() throws {
+        let app = launch("eta", reduced: true)
+        XCTAssertTrue(app.staticTexts["彌敦道"].waitForExistence(timeout: 10))
+        try app.performAccessibilityAudit(for: [.sufficientElementDescription, .textClipped])
+        screenshot("arrival-accessibility-audit")
+    }
+
     private func screenshot(_ name: String) {
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name

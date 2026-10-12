@@ -110,6 +110,7 @@ enum BusActivityCopy {
             "ended": ["Tracking ended", "已停止追蹤", "已停止跟踪"],
             "scheduled": ["Scheduled", "預定班次", "计划班次"],
             "boarding": ["Board at", "上車站", "上车站"],
+            "remaining": ["Time until arrival", "距離到站", "距离到站"],
             "end": ["End tracking", "停止追蹤", "停止跟踪"],
             "foreground": ["Updates while app is open", "App 開啟時更新", "App 打开时更新"],
             "minutes": ["min", "分鐘", "分钟"]

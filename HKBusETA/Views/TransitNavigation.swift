@@ -59,11 +59,11 @@ struct TrackingDestination: View {
         .task(id: target.id) {
             guard RegionCatalog.region(for: target.regionID) != nil else { error = L10n.t("tracking.identityChanged"); return }
             app.openSavedRegion(target.regionID)
-            await app.data.load()
             do {
+                try await app.data.ensureLoaded()
                 if app.data.entry(target.routeKey) == nil, let provider = app.mainlandProvider, let lineID = target.lineID,
                    let payload = try await provider.linePayload(lineID: lineID, modeHint: target.mode.flatMap(MainlandTransitMode.init(rawValue:)) ?? .bus),
-                   let shared = MainlandRouteAdapter.makeSharedRoute(from: payload) {
+                   let shared = MainlandRouteAdapter.makeSharedRoute(from: payload.applying(modeHint: target.mode.flatMap(MainlandTransitMode.init(rawValue:)) ?? .bus)) {
                     guard !Task.isCancelled else { return }
                     app.data.registerSynthetic(entry: shared.entry, stops: shared.stops, mainlandMetadata: shared.metadata)
                 }

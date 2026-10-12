@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+set -x
 output="$RUNNER_TEMP/bus-screenshots"
 mkdir -p "$output"
 xcrun simctl list devices available --json > "$RUNNER_TEMP/sim-devices.json"

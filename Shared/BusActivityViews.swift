@@ -66,7 +66,8 @@ struct BusActivityCountdown: View {
             Text(timerInterval: state.updatedAt...arrival, countsDown: true, showsHours: false)
                 .monospacedDigit()
                 .contentTransition(reduceMotion ? .identity : .numericText(countsDown: true))
-                .accessibilityLabel(BusActivityCopy.text("boarding", language: target.language))
+                .accessibilityLabel(BusActivityCopy.text("remaining", language: target.language))
+                .accessibilityValue(Text(timerInterval: state.updatedAt...arrival, countsDown: true, showsHours: false))
         } else {
             Image(systemName: state.status == .cancelled ? "xmark.circle" : "clock.badge.exclamationmark")
                 .accessibilityLabel(BusActivityCopy.text("stale", language: target.language))

@@ -11,6 +11,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  compatibility:
+    name: iOS 17 compatibility (Xcode 16.4)
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v5
+      - name: Show compatibility SDK
+        run: xcodebuild -version
+      - name: Install iOS 17.5 runtime when absent
+        timeout-minutes: 10
+        run: |
+          if ! xcrun simctl list runtimes available | grep -q 'iOS 17'; then
+            xcodebuild -downloadPlatform iOS -buildVersion 17.5
+          fi
+      - name: Build, launch and test on iOS 17
+        run: bash scripts/validate_ios17.sh
+      - name: Upload iOS 17 evidence
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: iOS-17-compatibility
+          path: |
+            ${{ runner.temp }}/ios17-screenshots
+            ${{ runner.temp }}/iOS17Tests.xcresult
+          if-no-files-found: warn
+
   build:
     name: Build iOS app
     runs-on: macos-26
@@ -128,6 +156,7 @@ jobs:
           exit 1
 
       - name: Capture simulator UI matrix
+        timeout-minutes: 12
         run: bash scripts/capture_simulator_screenshots.sh
 
       - name: Capture baseline launch screen

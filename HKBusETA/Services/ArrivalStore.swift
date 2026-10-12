@@ -81,11 +81,7 @@ final class ArrivalSession {
         isRefreshing = true
         defer { isRefreshing = false }
         do {
-            await data.load()
-            while data.db == nil && data.isLoading {
-                try await Task.sleep(for: .milliseconds(100))
-            }
-            guard data.db != nil else { throw URLError(.notConnectedToInternet) }
+            try await data.ensureLoaded()
             if data.entry(target.routeKey) == nil,
                let mainland = data.provider as? any MainlandTransitProvider, let lineID = target.lineID {
                 let mode = target.mode.flatMap(MainlandTransitMode.init(rawValue:)) ?? .bus

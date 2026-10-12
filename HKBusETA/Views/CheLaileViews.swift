@@ -7,6 +7,7 @@ struct MainlandLineLoaderView: View {
     let lineId: String
     let title: String
     let seq: Int?
+    let stopID: String?
     let modeHint: MainlandTransitMode
     let origin: String?
     let destination: String?
@@ -21,6 +22,7 @@ struct MainlandLineLoaderView: View {
         lineId: String,
         title: String,
         seq: Int? = nil,
+        stopID: String? = nil,
         modeHint: MainlandTransitMode = .bus,
         origin: String? = nil,
         destination: String? = nil,
@@ -31,6 +33,7 @@ struct MainlandLineLoaderView: View {
         self.lineId = lineId
         self.title = title
         self.seq = seq
+        self.stopID = stopID
         self.modeHint = modeHint
         self.origin = origin
         self.destination = destination
@@ -42,8 +45,16 @@ struct MainlandLineLoaderView: View {
     var body: some View {
         Group {
             if let routeKey {
-                if let seq {
-                    RouteEtaView(routeKey: routeKey, seq: seq)
+                if let seq, let entry = app.data.entry(routeKey) {
+                    if let stopID {
+                        if let resolved = entry.canonicalSequence(for: stopID, preferredSequence: seq) {
+                            RouteEtaView(routeKey: routeKey, seq: resolved)
+                        } else {
+                            RouteDetailView(routeKey: routeKey)
+                        }
+                    } else {
+                        RouteEtaView(routeKey: routeKey, seq: seq)
+                    }
                 } else {
                     RouteDetailView(routeKey: routeKey)
                 }

@@ -120,6 +120,16 @@ final class DataStore {
 
     // MARK: - Loading
 
+    /// Joins a load already started by another visible surface before resolving an identity.
+    func ensureLoaded() async throws {
+        await load()
+        while db == nil && isLoading {
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        try Task.checkCancellation()
+        guard db != nil else { throw URLError(.notConnectedToInternet) }
+    }
+
     func load() async {
         guard db == nil, !isLoading else { return }
         isLoading = true

@@ -5,14 +5,14 @@ import UIKit
 enum DesignTokens {
     // MARK: Colors
 
-    /// Primary accent — warm coral. Interactive states, selection, links.
+    /// Adaptive transit blue for actions and selection.
     static let accent = Color(light: "005FCC", dark: "64A9FF")
     /// Soft accent background for selections and badges.
     static let accentSoft = Color(light: "EAF2FF", dark: "172B47")
     /// Text/icon color on top of the accent.
     static let onAccent = Color.white
 
-    // Warm neutrals
+    // Semantic system surfaces
     static let background = Color(uiColor: .systemGroupedBackground)
     static let surface = Color(uiColor: .secondarySystemGroupedBackground)
     static let surfaceMuted = Color(uiColor: .tertiarySystemGroupedBackground)
@@ -21,13 +21,13 @@ enum DesignTokens {
     static let textTertiary = Color(uiColor: .secondaryLabel)
     static let divider = Color(uiColor: .separator)
 
-    // Functional tints layered on top of the warm base
+    // Functional status tints
     static let success = Color(light: "2E8B57", dark: "4CD07D")
     static let warning = Color(light: "B26A00", dark: "FFB340")
 
     // MARK: Typography
 
-    /// Display numerals — route numbers, countdowns. Warm and friendly.
+    /// Rounded, tabular route and arrival numerals.
     static let displayNumerals = Font.system(.largeTitle, design: .rounded, weight: .bold)
     static let display = Font.system(.title, design: .default, weight: .bold)
     static let displaySmall = Font.system(.title2, design: .default, weight: .bold)
