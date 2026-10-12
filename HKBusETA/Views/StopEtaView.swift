@@ -59,17 +59,22 @@ struct StopEtaView: View {
             .navigationTitle(app.data.stopName(stopId, language))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    if let stop = app.data.stop(stopId), stop.location.isValid {
+                if let stop = app.data.stop(stopId), stop.location.isValid {
+                    ToolbarItem(placement: .topBarTrailing) {
                         StopNavigationButton(
                             stopName: stop.name.name(language),
                             location: stop.location
                         ) {
                             Image(systemName: "map")
                         }
+                        .transitCircularToolbarControl()
                     }
+                    .transitIndependentToolbarItem()
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     favoriteButton
                 }
+                .transitIndependentToolbarItem()
             }
             .refreshable { await refresh() }
             .task(id: "\(stopId)|\(scenePhase)") {
@@ -105,6 +110,7 @@ struct StopEtaView: View {
             .tint(DesignTokens.accent)
             .accessibilityLabel(L10n.t(isFavorite ? "common.unfavorite" : "common.favorite"))
             .sensoryFeedback(.selection, trigger: isFavorite)
+            .transitCircularToolbarControl()
         }
     }
 

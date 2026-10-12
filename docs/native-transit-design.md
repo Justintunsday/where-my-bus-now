@@ -34,6 +34,8 @@ System semantic backgrounds and label colors, one adaptive transit-blue action t
 
 No perpetual symbol effects, phase loops, artificial animation delays or decorative gradients. Phase/keyframe animators are deliberately unnecessary for these finite interactions.
 
+Toolbar refinement: account, region, favorite, refresh and direction controls use individual 44 × 44pt circular surfaces. iOS 26 hides the bar's shared capsule before applying interactive glass in `Circle()`; older systems and Reduce Transparency use the same circular geometry with an opaque semantic background. Textual Done/Edit controls retain native text button treatment.
+
 ## Data and lifecycle
 
 ETA sessions own loading, successful/empty/error snapshots and timestamps. Refreshes coalesce and preserve the previous snapshot on transport failure. Region/provider/operator-bound/service/stop-sequence identity is checked before requests and deep-link resolution. Refreshing never changes row identity or sorts the whole page. Timelines run only on visible/active surfaces. Live Activities use absolute arrival/freshness timestamps and ActivityContent, no extension networking; remote APNs deployment is a separate documented phase.

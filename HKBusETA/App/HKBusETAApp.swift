@@ -21,6 +21,7 @@ struct HKBusETAApp: App {
             RootView()
                 .environment(app)
                 .environment(\.locale, app.settings.language.locale)
+                .environment(\.timeZone, app.region.timeZone)
                 .task {
                     await app.data.load()
                 }

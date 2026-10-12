@@ -179,7 +179,7 @@ private struct FavoriteSectionHeader: View {
     }
 
     private var regionName: String {
-        RegionCatalog.region(for: regionID)?.name ?? regionID
+        RegionCatalog.region(for: regionID)?.localizedName ?? regionID
     }
 }
 

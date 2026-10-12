@@ -6,7 +6,7 @@ struct SearchLandingView: View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label(app.region.name, systemImage: "location.circle.fill").foregroundStyle(DesignTokens.accent)
+                    Label(app.region.localizedName, systemImage: "location.circle.fill").foregroundStyle(DesignTokens.accent)
                     Text(L10n.t("search.discoveryTitle")).font(.title2.bold())
                     Text(L10n.t("search.empty.hint")).font(.subheadline).foregroundStyle(.secondary)
                 }.padding(.vertical, 12)

@@ -34,8 +34,10 @@ import XCTest
         for _ in 0..<3 where !stop.isHittable { app.swipeUp() }
         XCTAssertTrue(stop.waitForExistence(timeout: 10))
         stop.tap()
+        XCTAssertTrue(app.buttons["route.stop.0"].waitForExistence(timeout: 5))
         stop.tap()
         XCTAssertTrue(stop.exists)
+        XCTAssertEqual(stop.value as? String, "已收起")
         screenshot("timeline-reduced-effects")
     }
 
@@ -50,7 +52,7 @@ import XCTest
 
     func testArrivalHasAccessibleDescriptionsAndUnclippedText() throws {
         let app = launch("eta", reduced: true)
-        XCTAssertTrue(app.staticTexts["彌敦道"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["1A"].waitForExistence(timeout: 10))
         try app.performAccessibilityAudit(for: [.sufficientElementDescription, .textClipped])
         screenshot("arrival-accessibility-audit")
     }

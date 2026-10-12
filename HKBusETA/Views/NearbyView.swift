@@ -11,6 +11,8 @@ struct NearbyView: View {
     @State private var camera: MapCameraPosition = .automatic
     @State private var isLoading = false
     @State private var error: String?
+    @State private var loadGeneration = 0
+    @State private var path = NavigationPath()
 
     /// Quantized location prevents tiny GPS movements from launching overlapping network calls.
     private var requestID: String {
@@ -19,9 +21,10 @@ struct NearbyView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             DataGate { content }
                 .navigationTitle(L10n.t("nearby.title"))
+                .navigationBarTitleDisplayMode(.inline)
                 .toolbar { TransitAppToolbar() }
                 .transitDestinations()
                 .navigationDestination(for: MainlandStopTarget.self) { target in
@@ -100,12 +103,14 @@ struct NearbyView: View {
                                             }
                                         }.frame(minHeight: 44).contentShape(Rectangle())
                                     }.buttonStyle(.plain)
-                                    if app.mainlandProvider != nil {
-                                        NavigationLink(value: MainlandStopTarget(stopID: stop.id, namesakeStopID: stop.namesakeID,
-                                            title: stop.name, location: stop.location)) { Image(systemName: "arrow.up.right").frame(minWidth: 44, minHeight: 44) }
-                                    } else {
-                                        NavigationLink(value: StopTarget(stopId: stop.id)) { Image(systemName: "arrow.up.right").frame(minWidth: 44, minHeight: 44) }
-                                    }
+                                    Button {
+                                        if app.mainlandProvider != nil {
+                                            path.append(MainlandStopTarget(stopID: stop.id, namesakeStopID: stop.namesakeID,
+                                                title: stop.name, location: stop.location))
+                                        } else { path.append(StopTarget(stopId: stop.id)) }
+                                    } label: { Image(systemName: "arrow.up.right").frame(minWidth: 44, minHeight: 44) }
+                                    .buttonStyle(.plain).foregroundStyle(DesignTokens.accent)
+                                    .accessibilityLabel("\(L10n.t("route.fullEta")) · \(stop.name)")
                                 }
                                 .accessibilityElement(children: .contain)
                                 .accessibilityAddTraits(stop.id == selection ? [.isSelected] : [])
@@ -136,13 +141,15 @@ struct NearbyView: View {
 
     private func load() async {
         guard let location = app.location.location else { return }
+        loadGeneration += 1
+        let generation = loadGeneration
         let data = app.data
         let provider = app.mainlandProvider
         let regionID = app.region.id
         isLoading = true
-        defer { if regionID == app.region.id { isLoading = false } }
-        await data.load()
+        defer { if generation == loadGeneration { isLoading = false } }
         do {
+            try await data.ensureLoaded()
             let result: [NearbyDisplayStop]
             if let provider {
                 result = try await provider.nearby(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude, limit: 20).map {
@@ -158,10 +165,10 @@ struct NearbyView: View {
                         distance: $0.distance, location: $0.item.location)
                 }
             }
-            guard !Task.isCancelled, regionID == app.region.id else { return }
+            guard !Task.isCancelled, regionID == app.region.id, generation == loadGeneration else { return }
             stops = result; error = nil
         } catch {
-            guard !Task.isCancelled, regionID == app.region.id else { return }
+            guard !Task.isCancelled, regionID == app.region.id, generation == loadGeneration else { return }
             self.error = MainlandErrorPresentation.message(for: error)
         }
     }

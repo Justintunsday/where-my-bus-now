@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 set -x
+source scripts/snapshot_helpers.sh
 output="$RUNNER_TEMP/bus-screenshots"
 mkdir -p "$output"
 xcrun simctl list devices available --json > "$RUNNER_TEMP/sim-devices.json"
@@ -20,24 +21,17 @@ xcrun simctl install "$device" "$RUNNER_TEMP/BusDerived/Build/Products/Debug-iph
 for appearance in light dark; do
   xcrun simctl ui "$device" appearance "$appearance"
   for screen in home search nearby saved route stop eta settings region empty error activity activity-stale; do
-    xcrun simctl terminate "$device" app.hkbus.swiftui || true
-    xcrun simctl launch "$device" app.hkbus.swiftui --ui-snapshot "$screen"
-    sleep 3
-    xcrun simctl io "$device" screenshot "$output/$screen-$appearance.png"
+    capture_transit_screen "$device" "$screen" "$output/$screen-$appearance.png"
   done
 done
 xcrun simctl ui "$device" content_size accessibility-extra-extra-extra-large
-xcrun simctl terminate "$device" app.hkbus.swiftui || true
-xcrun simctl launch "$device" app.hkbus.swiftui --ui-snapshot eta --reduce-effects
-sleep 3
-xcrun simctl io "$device" screenshot "$output/eta-accessibility-reduced.png"
+capture_transit_screen "$device" eta "$output/eta-accessibility-reduced.png" --reduce-effects
 xcrun simctl ui "$device" content_size large
 for language in en zhHans; do
-  xcrun simctl terminate "$device" app.hkbus.swiftui || true
-  xcrun simctl launch "$device" app.hkbus.swiftui --ui-snapshot eta --snapshot-language "$language"
-  sleep 3
-  xcrun simctl io "$device" screenshot "$output/eta-$language.png"
+  capture_transit_screen "$device" eta "$output/eta-$language.png" --snapshot-language "$language"
 done
+printf '%s\n' "$device" > "$RUNNER_TEMP/bus-simulator-id"
+xcrun simctl shutdown "$device"
 ipad=$(python3 - "$RUNNER_TEMP/sim-devices.json" <<'PY'
 import json,sys
 devices=json.load(open(sys.argv[1]))['devices']
@@ -51,12 +45,10 @@ if [ -n "$ipad" ]; then
   xcrun simctl bootstatus "$ipad" -b
   xcrun simctl install "$ipad" "$RUNNER_TEMP/BusDerived/Build/Products/Debug-iphonesimulator/HKBusETA.app"
   for screen in home route eta; do
-    xcrun simctl terminate "$ipad" app.hkbus.swiftui || true
-    xcrun simctl launch "$ipad" app.hkbus.swiftui --ui-snapshot "$screen"
-    sleep 3
-    xcrun simctl io "$ipad" screenshot "$output/$screen-ipad.png"
+    capture_transit_screen "$ipad" "$screen" "$output/$screen-ipad.png"
   done
   xcrun simctl shutdown "$ipad"
 fi
 xcrun simctl list devices available > "$output/runtime-inventory.txt"
-printf '%s\n' "$device" > "$RUNNER_TEMP/bus-simulator-id"
+xcrun simctl boot "$device"
+xcrun simctl bootstatus "$device" -b

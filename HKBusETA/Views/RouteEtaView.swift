@@ -28,6 +28,14 @@ struct ArrivalScreen: View {
         MainlandRealtimePolicy.allowsRequest(modeHint: target.mode.flatMap(MainlandTransitMode.init(rawValue:)))
     }
 
+    private var followingArrivals: [Eta] {
+        var upcoming = session.etas.filter { ($0.date ?? .distantFuture) > Date() }
+        if session.activityState.isFresh(at: Date()), let next = upcoming.firstIndex(where: { $0.date != nil }) {
+            upcoming.remove(at: next)
+        }
+        return upcoming
+    }
+
     var body: some View {
         List {
             Section { RouteIdentityHeader(entry: entry, stopName: target.stopName) }
@@ -37,9 +45,9 @@ struct ArrivalScreen: View {
                     HStack { ProgressView(); Text(L10n.t("status.loading")).foregroundStyle(.secondary) }.padding(.vertical, 24)
                 } else { ArrivalHero(state: session.activityState) }
             }
-            if !session.etas.isEmpty {
-                Section(L10n.t("arrival.upcoming")) {
-                    ForEach(ArrivalSlot.make(session.etas)) { slot in
+            if !followingArrivals.isEmpty {
+                Section(L10n.t(session.error == nil ? "arrival.upcoming" : "arrival.cached")) {
+                    ForEach(ArrivalSlot.make(followingArrivals)) { slot in
                         ETALineView(eta: slot.eta, language: L10n.language,
                             format: app.settings.etaFormat, annotateScheduled: app.settings.annotateScheduled,
                             highlight: false, showCompany: entry.co.count > 1).padding(.vertical, 8)
@@ -86,14 +94,19 @@ struct ArrivalScreen: View {
         .listStyle(.insetGrouped)
         .navigationTitle(target.route).navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { Task { await refresh() } } label: {
                     Image(systemName: "arrow.clockwise").symbolEffect(.bounce, value: session.updatedAt)
                         .symbolEffectsRemoved(reduceMotion).frame(minWidth: 44, minHeight: 44)
                 }
                 .disabled(session.isRefreshing).accessibilityLabel(L10n.t("common.retry"))
+                .transitCircularToolbarControl()
+            }
+            .transitIndependentToolbarItem()
+            ToolbarItem(placement: .topBarTrailing) {
                 FavoriteRouteButton(routeKey: target.routeKey, entry: entry)
             }
+            .transitIndependentToolbarItem()
         }
         .refreshable { await refresh() }
         .sheet(isPresented: $showsTracking) {

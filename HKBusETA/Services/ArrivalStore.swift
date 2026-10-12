@@ -18,7 +18,8 @@ extension BusTrackingTarget {
                   operators: entry.co.sorted(), directions: entry.bound, stopID: stopID,
                   stopName: app.data.stopName(stopID, L10n.language), stopSequence: seq,
                   lineID: entry.gtfsId?.value, mode: metadata?.mode.rawValue,
-                  source: metadata?.source.rawValue, language: L10n.language.rawValue)
+                  source: metadata?.source.rawValue, language: L10n.language.rawValue,
+                  timeZoneIdentifier: app.region.timeZone.identifier)
     }
 
     func matches(entry: RouteEntry, providerID: String, source: String?, mode: String?) -> Bool {
@@ -144,7 +145,8 @@ final class ArrivalStore {
     private var regionData: [String: DataStore] = [:]
 
     func session(for target: BusTrackingTarget, app: AppState) -> ArrivalSession? {
-        if let session = sessions[target.id], session.target.language == target.language { return session }
+        let cacheKey = "\(target.id)|language:\(target.language)"
+        if let session = sessions[cacheKey] { return session }
         guard let region = RegionCatalog.region(for: target.regionID) else { return nil }
         let data: DataStore
         if app.region.id == target.regionID { data = app.data }
@@ -157,7 +159,7 @@ final class ArrivalStore {
         // Bound the cache; activities and views retain the sessions they use.
         if sessions.count > 40 { sessions = sessions.filter { $0.value.isRefreshing } }
         let session = ArrivalSession(target: target, data: data)
-        sessions[target.id] = session
+        sessions[cacheKey] = session
         return session
     }
 

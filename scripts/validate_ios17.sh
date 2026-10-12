@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+source scripts/snapshot_helpers.sh
 output="$RUNNER_TEMP/ios17-screenshots"
 mkdir -p "$output"
 xcrun simctl list runtimes available --json > "$output/runtimes.json"
@@ -17,10 +18,7 @@ xcodebuild build -project HKBusETA.xcodeproj -scheme HKBusETA -configuration Deb
   -destination "platform=iOS Simulator,id=$device" -derivedDataPath "$RUNNER_TEMP/BusDerived17" CODE_SIGNING_ALLOWED=NO
 xcrun simctl install "$device" "$RUNNER_TEMP/BusDerived17/Build/Products/Debug-iphonesimulator/HKBusETA.app"
 for screen in home route eta activity; do
-  xcrun simctl terminate "$device" app.hkbus.swiftui || true
-  xcrun simctl launch "$device" app.hkbus.swiftui --ui-snapshot "$screen"
-  sleep 3
-  xcrun simctl io "$device" screenshot "$output/$screen-ios17.png"
+  capture_transit_screen "$device" "$screen" "$output/$screen-ios17.png"
 done
 xcodebuild test -project HKBusETA.xcodeproj -scheme HKBusETA -configuration Debug \
   -destination "platform=iOS Simulator,id=$device" -derivedDataPath "$RUNNER_TEMP/BusDerived17" \

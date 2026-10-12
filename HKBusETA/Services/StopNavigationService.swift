@@ -96,6 +96,9 @@ struct StopNavigationButton<Label: View>: View {
         } label: {
             label()
         }
+        // List's automatic button style otherwise hands the entire row to Maps,
+        // including sibling controls such as the station disclosure button.
+        .buttonStyle(.plain)
         .frame(minWidth: 44, minHeight: 44)
         .accessibilityLabel(L10n.t("navigation.navigate"))
         .alert(

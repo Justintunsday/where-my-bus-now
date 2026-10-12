@@ -3,6 +3,12 @@ import Foundation
 @main enum ActivityContractSelfTest {
     static func main() throws {
         let target = BusTrackingTarget.preview
+        precondition(target.timeZone.secondsFromGMT(for: Date(timeIntervalSince1970: 0)) == 28_800,
+                     "Legacy boarding records retain their transit time zone")
+        var regional = target
+        regional.timeZoneIdentifier = "Asia/Shanghai"
+        let regionalDecoded = try JSONDecoder().decode(BusTrackingTarget.self, from: JSONEncoder().encode(regional))
+        precondition(regionalDecoded.timeZone.identifier == "Asia/Shanghai")
         let url = target.deepLink!
         precondition(BusTrackingTarget.decode(url: url) == target, "Unicode/deep link round trip")
         precondition(BusTrackingTarget.decode(url: URL(string: "https://example.com/eta")!) == nil)

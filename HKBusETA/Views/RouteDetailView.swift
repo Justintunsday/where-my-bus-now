@@ -30,14 +30,19 @@ struct RouteDetailView: View {
                 .background(DesignTokens.background)
                 .navigationTitle(entry.route).navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItemGroup(placement: .topBarTrailing) {
-                        if let opposite = app.data.oppositeEntry(for: entry) {
+                    if let opposite = app.data.oppositeEntry(for: entry) {
+                        ToolbarItem(placement: .topBarTrailing) {
                             NavigationLink(value: RouteDetailTarget(routeKey: opposite.key)) {
                                 Image(systemName: "arrow.left.arrow.right").frame(minWidth: 44, minHeight: 44)
                             }.accessibilityLabel(L10n.t("route.reverse"))
+                                .transitCircularToolbarControl()
                         }
+                        .transitIndependentToolbarItem()
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
                         FavoriteRouteButton(routeKey: routeKey, entry: entry)
                     }
+                    .transitIndependentToolbarItem()
                 }
                 .sensoryFeedback(.selection, trigger: selectedSeq)
             } else { ContentUnavailableView(L10n.t("route.notFound"), systemImage: "questionmark.circle") }

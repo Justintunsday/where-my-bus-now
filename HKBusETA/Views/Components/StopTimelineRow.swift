@@ -74,6 +74,7 @@ struct StopEtaInlineView: View {
                         Label(L10n.t(app.bookmarks.isFavoriteStop(target.stopID) ? "common.unfavorite" : "common.favorite"), systemImage: "star")
                             .frame(minHeight: 44)
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }

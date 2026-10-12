@@ -41,6 +41,7 @@ struct BusLockScreenView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
+        .environment(\.timeZone, target.timeZone)
         .accessibilityElement(children: .combine)
     }
 

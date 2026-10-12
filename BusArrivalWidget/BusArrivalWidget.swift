@@ -38,7 +38,7 @@ struct BusArrivalWidget: Widget {
                         Label(context.attributes.target.stopName, systemImage: "mappin.circle.fill").font(.caption)
                         HStack {
                             Text(BusActivityCopy.text(context.isStale ? "stale" : "updated", language: context.attributes.target.language))
-                            Text(context.state.updatedAt, style: .time)
+                            Text(context.state.updatedAt, style: .time).environment(\.timeZone, context.attributes.target.timeZone)
                             Spacer()
                             Button(intent: EndBusTrackingIntent(activityID: context.activityID)) {
                                 Label(BusActivityCopy.text("end", language: context.attributes.target.language), systemImage: "stop.circle")

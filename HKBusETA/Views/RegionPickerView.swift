@@ -5,7 +5,8 @@ struct RegionPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
     private var regions: [TransitRegion] {
-        RegionCatalog.all.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) || $0.id.localizedCaseInsensitiveContains(query) }
+        RegionCatalog.all.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query)
+            || $0.localizedName.localizedCaseInsensitiveContains(query) || $0.id.localizedCaseInsensitiveContains(query) }
     }
     var body: some View {
         NavigationStack {
@@ -18,12 +19,12 @@ struct RegionPickerView: View {
                             if app.settings.selectedRegionID == RegionCatalog.autoID { Image(systemName: "checkmark") }
                         }.frame(minHeight: 44)
                     }
-                } footer: { Text("\(L10n.t("settings.region.current")) · \(app.region.name)") }
+                } footer: { Text("\(L10n.t("settings.region.current")) · \(app.region.localizedName)") }
                 Section(L10n.t("settings.region")) {
                     ForEach(regions) { region in
                         Button { select(region.id) } label: {
                             HStack {
-                                Text(region.name).foregroundStyle(.primary)
+                                Text(region.localizedName).foregroundStyle(.primary)
                                 Spacer()
                                 if app.settings.selectedRegionID == region.id { Image(systemName: "checkmark") }
                             }.frame(minHeight: 44)

@@ -84,9 +84,15 @@ struct TransitPreviewGallery: View {
             }
         }
         .environment(app).environment(\.locale, app.settings.language.locale)
+        .environment(\.timeZone, app.region.timeZone)
         .tint(DesignTokens.accent)
         .environment(\.previewReducedEffects, inheritedReducedEffects || ProcessInfo.processInfo.arguments.contains("--reduce-effects"))
-
+        .task {
+            // Debug-only render readiness for CI; screenshot capture waits instead of guessing startup time.
+            await Task.yield()
+            try? await Task.sleep(for: .seconds(1))
+            try? Data(screen.utf8).write(to: FileManager.default.temporaryDirectory.appendingPathComponent("bus-snapshot-ready"))
+        }
     }
 }
 

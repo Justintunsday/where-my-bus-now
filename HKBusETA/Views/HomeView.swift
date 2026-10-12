@@ -113,7 +113,7 @@ private struct BoardingTripRow: View {
             if expanded {
                 HStack {
                     badge.matchedGeometryEffect(id: "route", in: identity)
-                    Text(RegionCatalog.region(for: target.regionID)?.name ?? target.regionID).font(.caption).foregroundStyle(.secondary)
+                    Text(RegionCatalog.region(for: target.regionID)?.localizedName ?? target.regionID).font(.caption).foregroundStyle(.secondary)
                     Spacer()
                 }
                 .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))

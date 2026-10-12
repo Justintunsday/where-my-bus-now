@@ -13,7 +13,7 @@ struct SettingsView: View {
                     Button { showsRegion = true } label: {
                         Label(L10n.t("settings.region"), systemImage: "globe.asia.australia")
                     }
-                    LabeledContent(L10n.t("settings.region.current"), value: app.region.name)
+                    LabeledContent(L10n.t("settings.region.current"), value: app.region.localizedName)
                     if app.region.isQueryMode {
                         if let mainland = app.mainlandProvider {
                             LabeledContent(
@@ -75,7 +75,8 @@ struct SettingsView: View {
                 Section(L10n.t("settings.data")) {
                     if let lastLoaded = app.data.lastLoaded {
                         LabeledContent(L10n.t("settings.data.lastUpdated")) {
-                            Text(lastLoaded.formatted(date: .abbreviated, time: .shortened))
+                            Text(lastLoaded, format: Date.FormatStyle(date: .abbreviated, time: .shortened,
+                                locale: app.settings.language.locale, timeZone: app.region.timeZone))
                                 .foregroundStyle(.secondary)
                         }
                     }

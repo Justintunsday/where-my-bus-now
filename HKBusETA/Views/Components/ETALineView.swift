@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ETALineView: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.transitReduceMotion) private var reduceMotion
     @Environment(AppState.self) private var app
     let eta: Eta
@@ -12,7 +13,8 @@ struct ETALineView: View {
     var showDestination: Bool = true
 
     var body: some View {
-        HStack(spacing: DesignTokens.Spacing.s) {
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+        return layout {
             if showCompany, let op = app.provider.operators.op(eta.co) {
                 Text(op.name(language))
                     .font(DesignTokens.footnote)
@@ -29,10 +31,15 @@ struct ETALineView: View {
                     .foregroundStyle(.secondary)
             }
             remarkText
-            Spacer(minLength: DesignTokens.Spacing.xs)
+            if hasMetadata && !typeSize.isAccessibilitySize { Spacer(minLength: DesignTokens.Spacing.xs) }
             timeContent
         }
-        .lineLimit(1)
+    }
+
+    private var hasMetadata: Bool {
+        showCompany || (annotateScheduled && eta.isScheduled)
+            || (showDestination && eta.co == "mtr" && !eta.dest.name(language).isEmpty)
+            || (!eta.remark.name(language).isEmpty && !eta.isScheduled)
     }
 
     @ViewBuilder
@@ -42,7 +49,7 @@ struct ETALineView: View {
             Text(remark)
                 .font(DesignTokens.footnote)
                 .foregroundStyle(.tertiary)
-                .lineLimit(1)
+                .lineLimit(typeSize.isAccessibilitySize ? nil : 2)
         }
     }
 
@@ -61,16 +68,19 @@ struct ETALineView: View {
                     minutesWithUnit(minutes)
                 }
             case .mixed:
-                HStack(spacing: DesignTokens.Spacing.s) {
+                let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+                layout {
                     Text(RegionClock.timeString(eta.eta))
                         .font(DesignTokens.tabular(14, weight: .regular))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
+                    if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
                     if isArriving(minutes) {
                         arrivingText
                     } else {
                         minutesWithUnit(minutes)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         } else {
             Text(eta.remark.name(language))
