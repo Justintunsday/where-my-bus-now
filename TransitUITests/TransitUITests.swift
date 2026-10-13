@@ -112,6 +112,7 @@ import XCTest
         let island = springboard.otherElements.matching(NSPredicate(
             format: "identifier BEGINSWITH %@", "jindo-container-view:")).firstMatch
         XCTAssertTrue(island.exists)
+        XCTAssertLessThan(island.frame.width, 300, "Compact fixture must not reserve an oversized empty region")
         island.press(forDuration: 1.2)
         let renderedStop = springboard.descendants(matching: .any).matching(NSPredicate(
             format: "label CONTAINS %@", stop)).firstMatch
