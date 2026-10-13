@@ -49,11 +49,6 @@ enum MainlandRouteAdapter {
 
 enum MainlandProviderPalette {
     static func color(for line: String) -> UInt32 {
-        let palette: [UInt32] = [0x2F6FED, 0x0E9F6E, 0xE0245E, 0xF08C00, 0x7C3AED, 0x0E7490]
-        var hash: UInt32 = 0
-        for scalar in line.unicodeScalars {
-            hash = hash &* 31 &+ scalar.value
-        }
-        return palette[Int(hash % UInt32(palette.count))]
+        RouteTheme.mainlandColor(for: line)
     }
 }

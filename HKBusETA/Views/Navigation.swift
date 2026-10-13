@@ -79,6 +79,7 @@ struct SavedRouteTarget: Hashable {
     let destination: String
     let seq: Int?
     let modeRawValue: String?
+    let stopID: String?
 
     init(_ item: RegionalFavoriteRoute) {
         let value = item.favorite
@@ -90,6 +91,7 @@ struct SavedRouteTarget: Hashable {
         destination = value.destZh.isEmpty ? value.destEn : value.destZh
         seq = nil
         modeRawValue = value.modeRawValue
+        stopID = nil
     }
 
     init(regionID: String, recent: RecentRoute) {
@@ -101,6 +103,7 @@ struct SavedRouteTarget: Hashable {
         destination = recent.destZh.isEmpty ? recent.destEn : recent.destZh
         seq = recent.seq
         modeRawValue = recent.modeRawValue
+        stopID = recent.stopId
     }
 
     var modeHint: MainlandTransitMode {

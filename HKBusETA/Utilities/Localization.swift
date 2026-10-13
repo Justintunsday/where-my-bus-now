@@ -50,6 +50,7 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
         switch resolved {
         case .zhHans: return Locale(identifier: "zh_Hans_CN")
         case .zh: return Locale(identifier: "zh_Hant_HK")
+        case .en: return Locale(identifier: "en")
         default: return Locale.current
         }
     }
@@ -59,6 +60,7 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
         switch resolved {
         case .zhHans: return "zh-Hans"
         case .zh: return "zh-Hant"
+        case .en: return "en"
         default: return nil
         }
     }

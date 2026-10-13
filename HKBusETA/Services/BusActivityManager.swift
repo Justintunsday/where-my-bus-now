@@ -1,0 +1,169 @@
+import ActivityKit
+import Foundation
+import Observation
+
+@MainActor @Observable
+final class BusActivityManager {
+    private(set) var activeTargets: [BusTrackingTarget] = []
+    private(set) var isStarting = false
+    private(set) var error: String?
+    private(set) var snapshots: [String: BusArrivalState] = [:]
+    private(set) var remoteRegistrations: [String: BusActivityPushCoordinator.RegistrationStatus] = [:]
+    @ObservationIgnored private var observers: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private var tokenObservers: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private var contentObservers: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private var push: BusActivityPushCoordinator?
+    var supportsRemoteUpdates: Bool { push != nil }
+
+    init(registrar: (any BusActivityPushRegistering)? = nil) {
+        if let registrar {
+            push = BusActivityPushCoordinator(registrar: registrar) { [weak self] id, status in
+                self?.remoteRegistrations[id] = status
+            }
+        }
+        reconcile()
+    }
+
+    func isTracking(_ target: BusTrackingTarget) -> Bool { activeTargets.contains { $0.id == target.id } }
+
+    #if DEBUG
+    func seedPreviewTracking(target: BusTrackingTarget, state: BusArrivalState) {
+        activeTargets = [target]
+        snapshots = [target.id: state]
+    }
+    #endif
+
+    func supportsRemoteUpdates(for target: BusTrackingTarget) -> Bool { push?.supports(target) == true }
+
+    func remoteStatusKey(for target: BusTrackingTarget) -> String {
+        guard supportsRemoteUpdates(for: target) else { return "tracking.foreground" }
+        guard let activity = Activity<BusActivityAttributes>.activities.first(where: { $0.attributes.target.id == target.id }) else {
+            return "tracking.remoteNotice"
+        }
+        if snapshots[target.id]?.updateSource == .push { return "tracking.remoteReceived" }
+        switch remoteRegistrations[activity.id] {
+        case .registered: return "tracking.remoteRegistered"
+        case .failed: return "tracking.remoteFailed"
+        default: return "tracking.remotePending"
+        }
+    }
+
+    func start(target: BusTrackingTarget, session: ArrivalSession) async {
+        guard !isStarting else { return }
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            error = L10n.t("tracking.disabled"); return
+        }
+        isStarting = true
+        defer { isStarting = false }
+        error = nil
+        await session.refresh()
+        guard !Task.isCancelled else { return }
+        let state = session.activityState
+        guard state.isFresh(at: Date()) else { error = L10n.t("tracking.needsPrediction"); return }
+        if isTracking(target) { return }
+        do {
+            // One trip at a time. Create first so a failed request does not destroy an existing trip.
+            let activity = try Activity<BusActivityAttributes>.request(
+                attributes: BusActivityAttributes(target: target, startedAt: Date()),
+                content: ActivityContent(state: state, staleDate: state.staleDate), pushType: supportsRemoteUpdates(for: target) ? .token : nil)
+            for previous in Activity<BusActivityAttributes>.activities where previous.id != activity.id {
+                push?.end(activityID: previous.id)
+                await previous.end(nil, dismissalPolicy: .immediate)
+            }
+            reconcile()
+        } catch { self.error = L10n.t("tracking.startFailed") }
+    }
+
+    func end(_ target: BusTrackingTarget) async {
+        for activity in Activity<BusActivityAttributes>.activities where activity.attributes.target.id == target.id {
+            push?.end(activityID: activity.id)
+            var state = activity.content.state
+            state.status = .ended
+            state.arrivalEpoch = nil
+            await activity.end(ActivityContent(state: state, staleDate: Date()), dismissalPolicy: .immediate)
+        }
+        reconcile()
+    }
+
+    func reconcile() {
+        let activities = Activity<BusActivityAttributes>.activities.filter {
+            $0.activityState == .active || $0.activityState == .stale
+        }
+        let targets = activities.map(\.attributes.target)
+        if activeTargets != targets { activeTargets = targets }
+        let ids = Set(activities.map(\.id))
+        snapshots = Dictionary(activities.map { ($0.attributes.target.id, $0.content.state) }, uniquingKeysWith: { a, b in
+            a.updatedEpoch > b.updatedEpoch ? a : b
+        })
+        remoteRegistrations = remoteRegistrations.filter { ids.contains($0.key) }
+        push?.reconcile(activeIDs: ids)
+        for id in Array(observers.keys) where !ids.contains(id) { observers.removeValue(forKey: id)?.cancel() }
+        for id in Array(tokenObservers.keys) where !ids.contains(id) { tokenObservers.removeValue(forKey: id)?.cancel() }
+        for id in Array(contentObservers.keys) where !ids.contains(id) { contentObservers.removeValue(forKey: id)?.cancel() }
+        for activity in activities where contentObservers[activity.id] == nil {
+            contentObservers[activity.id] = Task { [weak self] in
+                for await content in activity.contentUpdates {
+                    guard !Task.isCancelled else { return }
+                    self?.snapshots[activity.attributes.target.id] = content.state
+                }
+            }
+        }
+        for activity in activities where observers[activity.id] == nil {
+            observers[activity.id] = Task { [weak self] in
+                for await _ in activity.activityStateUpdates {
+                    guard !Task.isCancelled else { return }
+                    self?.reconcile()
+                }
+            }
+        }
+        if let push {
+            for activity in activities where tokenObservers[activity.id] == nil {
+                if let token = activity.pushToken {
+                    push.receive(token: token, activityID: activity.id, target: activity.attributes.target,
+                                 startedAt: activity.attributes.startedAt)
+                }
+                tokenObservers[activity.id] = Task {
+                    for await token in activity.pushTokenUpdates {
+                        guard !Task.isCancelled else { return }
+                        push.receive(token: token, activityID: activity.id, target: activity.attributes.target,
+                                     startedAt: activity.attributes.startedAt)
+                    }
+                }
+            }
+        }
+    }
+
+    /// Called by a scene-bound task only while active. No background polling promises.
+    func refreshActive(app: AppState) async {
+        #if DEBUG
+        if app.data.isPreview { return }
+        #endif
+        reconcile()
+        for activity in Activity<BusActivityAttributes>.activities {
+            guard !Task.isCancelled else { return }
+            if Date().timeIntervalSince(activity.attributes.startedAt) > 3600 {
+                await end(activity.attributes.target)
+                continue
+            }
+            guard let session = app.arrivals.session(for: activity.attributes.target, app: app) else {
+                await end(activity.attributes.target); continue
+            }
+            await session.refresh()
+            guard !Task.isCancelled else { return }
+            let state = session.activityState
+            let systemState = activity.content.state
+            // A resumed app must not overwrite a newer remote snapshot or mark a fresh
+            // server prediction offline merely because its own request failed.
+            if !session.identityInvalid && systemState.shouldPreserve(over: state, at: Date()) { continue }
+            // An empty board is not proof that service has ended; keep monitoring.
+            if (state.isTerminal && state.status != .noService) || session.identityInvalid {
+                push?.end(activityID: activity.id)
+                await activity.end(ActivityContent(state: state, staleDate: state.staleDate),
+                                   dismissalPolicy: .after(Date().addingTimeInterval(60)))
+            } else {
+                await activity.update(ActivityContent(state: state, staleDate: state.staleDate))
+            }
+        }
+        reconcile()
+    }
+}

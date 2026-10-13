@@ -1,93 +1,25 @@
-# Brand Specification — HK Bus ETA (SwiftUI)
+# Where My Bus Now — Warm Minimal, native transit
 
-Design direction: **Warm Minimal** — soft warm neutrals, rounded surfaces,
-restrained information density, one warm accent. Avoids generic transit-app
-chrome while keeping outdoor readability and data density.
+The redesign retains the original Warm Minimal brand palette. It replaces the old layouts and navigation, not the brand. The reading order is route → destination → boarding stop → next arrival. Native lists, maps, bars and sheets provide structure.
 
-## Colors
+| Token | Light | Dark | Purpose |
+| --- | --- | --- | --- |
+| Warm Coral | #E85D3A | #E85D3A | Primary action, selection, arrival emphasis |
+| Soft accent | #FBE9E2 | #3B241C | Selected boarding point and map row |
+| Background | #FAF9F7 | #1C1C1E | Page canvas |
+| Surface | #FFFFFF | #2C2C2E | Native list rows and Lock Screen content |
+| Muted surface | #F2EFEB | #242426 | Nested content |
+| Primary text | #1A1A1A | #F2F2F7 | App text |
+| Secondary text | #6B6862 | #9A9A9E | Metadata |
+| Tertiary text | #9A968F | #6E6E73 | Supporting information |
+| Divider | #E9E5E0 | #38383A | Quiet separation |
+| Success | #2E8B57 | #4CD07D | Always accompanied by meaning in text/symbols |
+| Warning | #B26A00 | #FFB340 | Always accompanied by meaning in text/symbols |
 
-### Primary Accent
-- **Color**: Warm Coral
-- **Hex**: `#E85D3A`
-- **Usage**: selection, links, active states, the first ETA countdown, timeline highlight, favorite active
+`Shared/TransitBrand.swift` owns the adaptive brand colors; `DesignTokens.swift` retains their semantic app names. The asset accent uses the original coral. Operator logos, route badges and map lines retain their existing provider colors. System semantic labels are used where system-owned chrome requires them, especially the black Dynamic Island. Status never depends on coral alone; increased contrast and dimmed Lock Screen presentation prioritize readable primary text.
 
-### Accent Soft
-- **Hex**: `#FBE9E2` light / `#3B241C` dark
-- **Usage**: selection backgrounds, inline badges
+SF Pro semantic typography, SF Rounded route/arrival numerals and monospaced digits scale with Dynamic Type. Spacing follows 4/8/16/24/32 pt; Live Activity content follows the system’s compact margins. Primary controls have 44 × 44 pt tap targets. Account/settings, region, favorite, refresh and direction toolbar controls are completely circular.
 
-### Neutrals (warm undertone)
-| Token           | Light Mode | Dark Mode | Usage                    |
-| --------------- | ---------- | --------- | ------------------------ |
-| Background      | `#FAF9F7`  | `#1C1C1E` | Screen background        |
-| Surface         | `#FFFFFF`  | `#2C2C2E` | Cards, elevated surfaces |
-| Surface Muted   | `#F2EFEB`  | `#242426` | Chips, inactive fills    |
-| Text Primary    | `#1A1A1A`  | `#F2F2F7` | Main text                |
-| Text Secondary  | `#6B6862`  | `#9A9A9E` | Subtitles, metadata      |
-| Text Tertiary   | `#9A968F`  | `#6E6E73` | Hints, timestamps        |
-| Divider         | `#E9E5E0`  | `#38383A` | Separators               |
+No decorative gradients, custom fonts or third-party UI frameworks. iOS 26 supplies Liquid Glass on bars and sheets; circular toolbar controls and the tracking action opt into native glass. Reduce Transparency and older systems use opaque/bordered equivalents. Glass does not cover the arrival board or the Island.
 
-### Functional Colors
-Company brand colors (KMB red, Citybus yellow, GMB green, MTR line colors…)
-remain functional identity colors for route badges, map polylines and timelines.
-The app accent is reserved for interaction and selection, so the two never
-compete.
-
-## Typography
-
-### Display / Numerals
-- **Font**: SF Rounded (system, `design: .rounded`) — rounded terminals match the Warm Minimal philosophy and keep CJK body text clean
-- **Usage**: route numbers, countdown minutes, board ETA columns
-
-### Body
-- **Font**: SF Pro (system default)
-- **Usage**: all labels, stop names, Chinese text
-
-### Type Scale
-| Level        | Size  | Weight   | Font        |
-| ------------ | ----- | -------- | ----------- |
-| Display      | 44pt  | Bold     | SF Rounded  |
-| Title        | 28pt  | Bold     | SF Rounded  |
-| Heading      | 18pt  | Semibold | SF Pro      |
-| Body         | 15pt  | Regular  | SF Pro      |
-| Caption      | 12pt  | Regular  | SF Pro      |
-| Footnote     | 11pt  | Regular  | SF Pro      |
-
-Tabular numerals (`.monospacedDigit()`) are mandatory for ETA columns so the
-minutes align vertically.
-
-Note: serif display type (as suggested for Editorial directions) is deliberately
-not used — at small CJK sizes it reduces scan speed for outdoor transit use.
-
-## Spacing
-- **Grid**: 8pt base (`4 / 8 / 16 / 24 / 32`)
-- **Horizontal padding**: 16pt phone, 20-24pt tablet
-- **Section spacing**: 24pt
-- **Element spacing**: 8-16pt
-- **Minimum tap target**: 44pt
-
-## Corner Radius
-| Level  | Value | Usage                |
-| ------ | ----- | -------------------- |
-| Small  | 8pt   | Chips, badges        |
-| Medium | 12pt  | Inputs, inner panels |
-| Large  | 16pt  | Cards, map container |
-| XL     | 20pt  | Sheets               |
-
-## Signature Details (one per screen)
-| Screen          | Signature                                                        |
-| --------------- | ---------------------------------------------------------------- |
-| Route ETA       | 44pt rounded coral countdown numeral as the hero element          |
-| Stop board      | Aligned tabular ETA column — every route scans like a departure board |
-| Route detail    | Timeline with route-colored spine and map card with numbered pins |
-| Search          | Route number monograms in company colors on warm surface cards    |
-| Nearby          | Right-aligned tabular distance column                            |
-
-## Motion
-- Selection/expansion: `.snappy` spring
-- Map camera: 0.35s ease-in-out
-- No decorative animations — motion only confirms state changes
-
-## Logo Usage
-- App icon: white bus silhouette on warm coral-to-red gradient (native rounded-square mask)
-- Minimum display size: 44×44pt
-- Clear space: 16pt on all sides
+See [the experience contract](native-transit-design.md) and [activity layouts and state behavior](activity-design.md).

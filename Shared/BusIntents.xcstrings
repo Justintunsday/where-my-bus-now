@@ -1,0 +1,21 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "End tracking": {"localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "End tracking"}},
+      "zh-Hant": {"stringUnit": {"state": "translated", "value": "停止追蹤"}},
+      "zh-Hans": {"stringUnit": {"state": "translated", "value": "停止跟踪"}}
+    }},
+    "Activity": {"localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Activity"}},
+      "zh-Hant": {"stringUnit": {"state": "translated", "value": "實時活動"}},
+      "zh-Hans": {"stringUnit": {"state": "translated", "value": "实时活动"}}
+    }},
+    "End the selected bus arrival Live Activity.": {"localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "End the selected bus arrival Live Activity."}},
+      "zh-Hant": {"stringUnit": {"state": "translated", "value": "停止所選的巴士到站實時活動。"}},
+      "zh-Hans": {"stringUnit": {"state": "translated", "value": "停止所选的公交到站实时活动。"}}
+    }}
+  },
+  "version": "1.0"
+}

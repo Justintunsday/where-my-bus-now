@@ -1,6 +1,6 @@
 import Foundation
 
-struct Eta: Identifiable, Sendable {
+struct Eta: Identifiable, Equatable, Sendable {
     let eta: String
     let remark: Terminal
     let dest: Terminal

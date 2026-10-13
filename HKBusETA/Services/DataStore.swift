@@ -61,6 +61,13 @@ final class DataStore {
     private var syntheticMainlandMetadata: [String: MainlandRouteMetadata] = [:]
 
     let provider: any TransitProvider
+    #if DEBUG
+    private(set) var isPreview = false
+    func installPreviewDatabase(_ db: EtaDB) {
+        isPreview = true
+        apply(Self.buildLoadedData(db))
+    }
+    #endif
 
     private let session: URLSession
 
@@ -113,6 +120,16 @@ final class DataStore {
 
     // MARK: - Loading
 
+    /// Joins a load already started by another visible surface before resolving an identity.
+    func ensureLoaded() async throws {
+        await load()
+        while db == nil && isLoading {
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        try Task.checkCancellation()
+        guard db != nil else { throw URLError(.notConnectedToInternet) }
+    }
+
     func load() async {
         guard db == nil, !isLoading else { return }
         isLoading = true
@@ -136,6 +153,9 @@ final class DataStore {
     }
 
     func refreshIfNeeded() async {
+        #if DEBUG
+        if isPreview { return }
+        #endif
         guard !provider.databaseURLs.isEmpty else { return }
         ensureCacheDirectory()
         migrateLegacyCacheIfNeeded()

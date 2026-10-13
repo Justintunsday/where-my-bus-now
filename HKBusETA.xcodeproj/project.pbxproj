@@ -5,6 +5,127 @@
 	};
 	objectVersion = 77;
 	objects = {
+		B05A00000000000000000020 /* TransitUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TransitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B05A00000000000000000021 /* TransitUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = TransitUITests; sourceTree = "<group>"; };
+		B05A00000000000000000022 /* TransitUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B05A00000000000000000023;
+			buildPhases = (B05A00000000000000000024, B05A00000000000000000025, B05A00000000000000000026,);
+			buildRules = ();
+			dependencies = (B05A00000000000000000027,);
+			fileSystemSynchronizedGroups = (B05A00000000000000000021,);
+			name = TransitUITests;
+			productName = TransitUITests;
+			productReference = B05A00000000000000000020;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		B05A00000000000000000023 = {isa = XCConfigurationList; buildConfigurations = (B05A00000000000000000029, B05A0000000000000000002A,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B05A00000000000000000024 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		B05A00000000000000000025 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		B05A00000000000000000026 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		B05A00000000000000000027 = {isa = PBXTargetDependency; target = DEADBEEF0000000000000006; targetProxy = B05A00000000000000000028; };
+		B05A00000000000000000028 = {isa = PBXContainerItemProxy; containerPortal = DEADBEEF000000000000000A; proxyType = 1; remoteGlobalIDString = DEADBEEF0000000000000006; remoteInfo = HKBusETA; };
+		B05A00000000000000000029 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui.TransitUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = HKBusETA;
+			}; name = Debug;
+		};
+		B05A0000000000000000002A = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui.TransitUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = HKBusETA;
+			}; name = Release;
+		};
+
+		B05A00000000000000000001 /* BusArrivalWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BusArrivalWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B05A00000000000000000002 /* BusArrivalWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (B05A00000000000000000003,); path = BusArrivalWidget; sourceTree = "<group>"; };
+		B05A00000000000000000003 /* Widget Info */ = {isa = PBXFileSystemSynchronizedBuildFileExceptionSet; membershipExceptions = (Info.plist,); target = B05A00000000000000000006; };
+		B05A00000000000000000004 /* Shared */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Shared; sourceTree = "<group>"; };
+		B05A00000000000000000005 /* Host Info */ = {isa = PBXFileSystemSynchronizedBuildFileExceptionSet; membershipExceptions = (Info.plist, HKBusETA.entitlements,); target = DEADBEEF0000000000000006; };
+		B05A00000000000000000006 /* BusArrivalWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B05A00000000000000000007;
+			buildPhases = (B05A00000000000000000008, B05A00000000000000000009, B05A0000000000000000000A,);
+			buildRules = ();
+			dependencies = ();
+			fileSystemSynchronizedGroups = (B05A00000000000000000002, B05A00000000000000000004,);
+			name = BusArrivalWidget;
+			packageProductDependencies = ();
+			productName = BusArrivalWidget;
+			productReference = B05A00000000000000000001;
+			productType = "com.apple.product-type.app-extension";
+		};
+		B05A00000000000000000007 = {isa = XCConfigurationList; buildConfigurations = (B05A0000000000000000000B, B05A0000000000000000000C,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B05A00000000000000000008 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		B05A00000000000000000009 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		B05A0000000000000000000A = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		B05A0000000000000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 28;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BusArrivalWidget/Info.plist;
+                SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) BUS_WIDGET_EXTENSION";
+				INFOPLIST_KEY_CFBundleDisplayName = "Bus Arrivals";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks",);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui.BusArrivalWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			}; name = Debug;
+		};
+		B05A0000000000000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 28;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BusArrivalWidget/Info.plist;
+                SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) BUS_WIDGET_EXTENSION";
+				INFOPLIST_KEY_CFBundleDisplayName = "Bus Arrivals";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks",);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui.BusArrivalWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			}; name = Release;
+		};
+		B05A0000000000000000000D /* Extension dependency */ = {isa = PBXTargetDependency; target = B05A00000000000000000006; targetProxy = B05A0000000000000000000E; };
+		B05A0000000000000000000E = {isa = PBXContainerItemProxy; containerPortal = DEADBEEF000000000000000A; proxyType = 1; remoteGlobalIDString = B05A00000000000000000006; remoteInfo = BusArrivalWidget; };
+		B05A0000000000000000000F /* Embed Widget */ = {isa = PBXBuildFile; fileRef = B05A00000000000000000001; settings = {ATTRIBUTES = (RemoveHeadersOnCopy,); }; };
+		B05A00000000000000000010 /* Embed App Extensions */ = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (B05A0000000000000000000F,); name = "Embed App Extensions"; runOnlyForDeploymentPostprocessing = 0; };
 
 /* Begin PBXFileReference section */
 		DEADBEEF0000000000000001 /* HKBusETA.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HKBusETA.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -13,6 +134,7 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DEADBEEF0000000000000002 /* HKBusETA */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (B05A00000000000000000005,);
 			path = HKBusETA;
 			sourceTree = "<group>";
 		};
@@ -33,6 +155,9 @@
 			isa = PBXGroup;
 			children = (
 				DEADBEEF0000000000000002 /* HKBusETA */,
+				B05A00000000000000000002 /* BusArrivalWidget */,
+				B05A00000000000000000004 /* Shared */,
+				B05A00000000000000000021 /* TransitUITests */,
 				DEADBEEF0000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +166,8 @@
 			isa = PBXGroup;
 			children = (
 				DEADBEEF0000000000000001 /* HKBusETA.app */,
+				B05A00000000000000000001 /* BusArrivalWidget.appex */,
+				B05A00000000000000000020 /* TransitUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -55,13 +182,16 @@
 				DEADBEEF0000000000000008 /* Sources */,
 				DEADBEEF0000000000000003 /* Frameworks */,
 				DEADBEEF0000000000000009 /* Resources */,
+				B05A00000000000000000010 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B05A0000000000000000000D /* Extension dependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				DEADBEEF0000000000000002 /* HKBusETA */,
+				B05A00000000000000000004 /* Shared */,
 			);
 			name = HKBusETA;
 			packageProductDependencies = (
@@ -82,6 +212,7 @@
 				TargetAttributes = {
 					DEADBEEF0000000000000006 = {
 						CreatedOnToolsVersion = 16.0;
+                        SystemCapabilities = { com.apple.Push = { enabled = 1; }; };
 					};
 				};
 			};
@@ -102,6 +233,8 @@
 			projectRoot = "";
 			targets = (
 				DEADBEEF0000000000000006 /* HKBusETA */,
+				B05A00000000000000000006 /* BusArrivalWidget */,
+				B05A00000000000000000022 /* TransitUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -252,11 +385,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Where My Bus Now";
+				INFOPLIST_FILE = HKBusETA/Info.plist;
+                CODE_SIGN_ENTITLEMENTS = HKBusETA/HKBusETA.entitlements;
+                APNS_ENVIRONMENT = development;
+                INFOPLIST_KEY_CFBundleDisplayName = "Where My Bus Now";
 				INFOPLIST_KEY_AMAP_WEB_SERVICE_KEY = "$(AMAP_WEB_SERVICE_KEY)";
 				INFOPLIST_KEY_CHELAILE_API_BASE_URL = "$(CHELAILE_API_BASE_URL)";
 				INFOPLIST_KEY_CHELAILE_API_KEY = "$(CHELAILE_API_KEY)";
@@ -274,7 +410,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.9.0;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -291,11 +427,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Where My Bus Now";
+				INFOPLIST_FILE = HKBusETA/Info.plist;
+                CODE_SIGN_ENTITLEMENTS = HKBusETA/HKBusETA.entitlements;
+                APNS_ENVIRONMENT = production;
+                INFOPLIST_KEY_CFBundleDisplayName = "Where My Bus Now";
 				INFOPLIST_KEY_AMAP_WEB_SERVICE_KEY = "$(AMAP_WEB_SERVICE_KEY)";
 				INFOPLIST_KEY_CHELAILE_API_BASE_URL = "$(CHELAILE_API_BASE_URL)";
 				INFOPLIST_KEY_CHELAILE_API_KEY = "$(CHELAILE_API_KEY)";
@@ -313,7 +452,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.9.0;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.hkbus.swiftui;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

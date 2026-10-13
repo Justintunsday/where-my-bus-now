@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct StopEtaView: View {
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(AppState.self) private var app
     let stopId: String
 
@@ -13,6 +15,14 @@ struct StopEtaView: View {
     var body: some View {
         DataGate {
             List {
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label(L10n.t("eta.currentStop"), systemImage: "mappin.circle.fill")
+                            .font(.caption).foregroundStyle(DesignTokens.accent)
+                        Text(app.data.stopName(stopId, language)).font(.title2.bold())
+                            .fixedSize(horizontal: false, vertical: true)
+                    }.padding(.vertical, 8)
+                }
                 Section {
                     if isLoading && items.isEmpty {
                         HStack(spacing: DesignTokens.Spacing.s) {
@@ -46,23 +56,30 @@ struct StopEtaView: View {
                     }
                 }
             }
+            .transitListSurface()
             .navigationTitle(app.data.stopName(stopId, language))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    if let stop = app.data.stop(stopId), stop.location.isValid {
+                if let stop = app.data.stop(stopId), stop.location.isValid {
+                    ToolbarItem(placement: .topBarTrailing) {
                         StopNavigationButton(
                             stopName: stop.name.name(language),
                             location: stop.location
                         ) {
                             Image(systemName: "map")
                         }
+                        .transitCircularToolbarControl()
                     }
+                    .transitIndependentToolbarItem()
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     favoriteButton
                 }
+                .transitIndependentToolbarItem()
             }
             .refreshable { await refresh() }
-            .task(id: stopId) {
+            .task(id: "\(stopId)|\(scenePhase)") {
+                guard scenePhase == .active else { return }
                 recordRecent()
                 while !Task.isCancelled {
                     await refresh()
@@ -92,6 +109,9 @@ struct StopEtaView: View {
                 Image(systemName: isFavorite ? "star.fill" : "star")
             }
             .tint(DesignTokens.accent)
+            .accessibilityLabel(L10n.t(isFavorite ? "common.unfavorite" : "common.favorite"))
+            .sensoryFeedback(.selection, trigger: isFavorite)
+            .transitCircularToolbarControl()
         }
     }
 
@@ -101,28 +121,47 @@ struct StopEtaView: View {
     }
 
     private func refresh() async {
+        guard !isLoading else { return }
         guard let db = app.data.db else { return }
-        if items.isEmpty { isLoading = true }
+        #if DEBUG
+        if app.data.isPreview {
+            items = app.data.routesAtStop(stopId).compactMap { ref in
+                guard let entry = app.data.entry(ref.routeKey),
+                      let target = BusTrackingTarget(app: app, routeKey: ref.routeKey, seq: ref.seq),
+                      let session = app.arrivals.session(for: target, app: app) else { return nil }
+                return StopBoardItem(routeKey: ref.routeKey, entry: entry, etas: session.etas, seq: ref.seq)
+            }
+            lastUpdated = Date()
+            return
+        }
+        #endif
+        isLoading = true
+        defer { isLoading = false }
         let refs = app.data.routesAtStop(stopId)
         let result = await StopBoardService.fetchStopBoard(refs: refs, db: db, provider: app.provider, language: language)
-        items = result
+        guard !Task.isCancelled else { return }
+        // Keep visible row positions while predictions change. New services append naturally.
+        let order = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, $0.offset) })
+        items = result.sorted { (order[$0.id] ?? Int.max) < (order[$1.id] ?? Int.max) }
         lastUpdated = Date()
-        isLoading = false
     }
 }
 
 struct StopBoardRowView: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let item: StopBoardItem
     let language: AppLanguage
     let settings: AppSettings
 
     var body: some View {
-        HStack(alignment: .center, spacing: DesignTokens.Spacing.s) {
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+        let slots = ArrivalSlot.make(Array(item.upcoming.prefix(3)))
+        return layout {
             RouteBadge(route: item.entry.route, entry: item.entry)
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(L10n.t("route.to")) \(item.entry.dest.name(language))")
                     .font(.body)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
                 CompanyLogos(co: item.entry.co, language: language, height: 13)
                     .lineLimit(1)
             }
@@ -137,17 +176,17 @@ struct StopBoardRowView: View {
                         .multilineTextAlignment(.trailing)
                         .lineLimit(2)
                 } else {
-                    ForEach(Array(upcoming.prefix(3).enumerated()), id: \.offset) { index, eta in
+                    ForEach(slots) { slot in
                         ETACompactLineView(
-                            eta: eta,
+                            eta: slot.eta,
                             format: settings.etaFormat,
                             annotateScheduled: settings.annotateScheduled,
-                            highlight: index == 0
+                            highlight: slot.id == slots.first?.id
                         )
                     }
                 }
             }
-            .fixedSize(horizontal: true, vertical: false)
+            .fixedSize(horizontal: !typeSize.isAccessibilitySize, vertical: false)
         }
         .padding(.vertical, DesignTokens.Spacing.xs)
     }

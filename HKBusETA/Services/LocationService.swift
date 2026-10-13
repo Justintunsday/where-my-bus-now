@@ -6,6 +6,7 @@ import Observation
 @Observable
 final class LocationService: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
+    private var isPreview = false
 
     private(set) var location: CLLocation?
     private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
@@ -26,10 +27,12 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     func requestAuthorization() {
+        guard !isPreview else { return }
         manager.requestWhenInUseAuthorization()
     }
 
     func startUpdating() {
+        guard !isPreview else { return }
         guard isAuthorized else { return }
         manager.startUpdatingLocation()
     }
@@ -38,9 +41,19 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         manager.stopUpdatingLocation()
     }
 
+    #if DEBUG
+    func seedPreviewLocation() {
+        isPreview = true
+        manager.stopUpdatingLocation()
+        location = CLLocation(latitude: 22.300, longitude: 114.172)
+        authorizationStatus = .authorizedWhenInUse
+    }
+    #endif
+
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
         Task { @MainActor in
+            guard !self.isPreview else { return }
             self.authorizationStatus = status
             if status == .authorizedWhenInUse || status == .authorizedAlways {
                 manager.startUpdatingLocation()
@@ -51,6 +64,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let latest = locations.last else { return }
         Task { @MainActor in
+            guard !self.isPreview else { return }
             self.location = latest
         }
     }

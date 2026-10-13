@@ -1,0 +1,4 @@
+.env
+secrets/
+*.sqlite*
+node_modules/

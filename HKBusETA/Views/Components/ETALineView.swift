@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct ETALineView: View {
+    @Environment(\.routeTheme) private var theme
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.transitReduceMotion) private var reduceMotion
     @Environment(AppState.self) private var app
     let eta: Eta
     let language: AppLanguage
@@ -11,7 +14,8 @@ struct ETALineView: View {
     var showDestination: Bool = true
 
     var body: some View {
-        HStack(spacing: DesignTokens.Spacing.s) {
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+        return layout {
             if showCompany, let op = app.provider.operators.op(eta.co) {
                 Text(op.name(language))
                     .font(DesignTokens.footnote)
@@ -28,10 +32,15 @@ struct ETALineView: View {
                     .foregroundStyle(.secondary)
             }
             remarkText
-            Spacer(minLength: DesignTokens.Spacing.xs)
+            if hasMetadata && !typeSize.isAccessibilitySize { Spacer(minLength: DesignTokens.Spacing.xs) }
             timeContent
         }
-        .lineLimit(1)
+    }
+
+    private var hasMetadata: Bool {
+        showCompany || (annotateScheduled && eta.isScheduled)
+            || (showDestination && eta.co == "mtr" && !eta.dest.name(language).isEmpty)
+            || (!eta.remark.name(language).isEmpty && !eta.isScheduled)
     }
 
     @ViewBuilder
@@ -41,7 +50,7 @@ struct ETALineView: View {
             Text(remark)
                 .font(DesignTokens.footnote)
                 .foregroundStyle(.tertiary)
-                .lineLimit(1)
+                .lineLimit(typeSize.isAccessibilitySize ? nil : 2)
         }
     }
 
@@ -52,7 +61,7 @@ struct ETALineView: View {
             case .exact:
                 Text(RegionClock.timeString(eta.eta))
                     .font(DesignTokens.tabular(17, weight: highlight ? .bold : .medium))
-                    .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
+                    .foregroundStyle(highlight ? theme.accent : Color.primary)
             case .diff:
                 if isArriving(minutes) {
                     arrivingText
@@ -60,16 +69,19 @@ struct ETALineView: View {
                     minutesWithUnit(minutes)
                 }
             case .mixed:
-                HStack(spacing: DesignTokens.Spacing.s) {
+                let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+                layout {
                     Text(RegionClock.timeString(eta.eta))
                         .font(DesignTokens.tabular(14, weight: .regular))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
+                    if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
                     if isArriving(minutes) {
                         arrivingText
                     } else {
                         minutesWithUnit(minutes)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         } else {
             Text(eta.remark.name(language))
@@ -82,18 +94,20 @@ struct ETALineView: View {
         Text(L10n.t("eta.arriving"))
             .font(DesignTokens.subheading)
             .fontWeight(.semibold)
-            .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
+            .foregroundStyle(highlight ? theme.accent : Color.primary)
     }
 
     private func minutesWithUnit(_ minutes: Int) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.xxs) {
             Text("\(minutes)")
                 .font(DesignTokens.tabular(20, weight: .bold))
+                .contentTransition(reduceMotion ? .identity : .numericText(countsDown: true))
+                .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: minutes)
             Text(L10n.t("unit.minutes"))
                 .font(DesignTokens.footnote)
                 .foregroundStyle(.tertiary)
         }
-        .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
+        .foregroundStyle(highlight ? theme.accent : Color.primary)
     }
 
     private func isArriving(_ minutes: Int) -> Bool {
@@ -107,6 +121,8 @@ struct ETALineView: View {
 
 /// Single-line compact ETA used by the stop departure board.
 struct ETACompactLineView: View {
+    @Environment(\.routeTheme) private var theme
+    @Environment(\.transitReduceMotion) private var reduceMotion
     @Environment(AppState.self) private var app
     let eta: Eta
     let format: EtaFormat
@@ -133,11 +149,13 @@ struct ETACompactLineView: View {
                     Text(L10n.t("eta.arriving"))
                         .font(DesignTokens.caption)
                         .fontWeight(.semibold)
-                        .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
+                        .foregroundStyle(highlight ? theme.accent : Color.primary)
                 } else {
                     Text("\(minutes)")
                         .font(DesignTokens.tabular(18, weight: .bold))
-                        .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
+                        .contentTransition(reduceMotion ? .identity : .numericText(countsDown: true))
+                        .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: minutes)
+                        .foregroundStyle(highlight ? theme.accent : Color.primary)
                     Text(L10n.t("unit.minutes"))
                         .font(DesignTokens.footnote)
                         .foregroundStyle(.tertiary)

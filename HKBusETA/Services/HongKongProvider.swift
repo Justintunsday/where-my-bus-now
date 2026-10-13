@@ -31,7 +31,7 @@ struct HongKongProvider: TransitProvider {
             table[id] = TransitOperator(
                 id: id,
                 names: ["zh-Hant": zh, "en": en],
-                brandHex: brand,
+                brandHex: RouteTheme.operatorColor(id) ?? brand,
                 onBrandHex: onBrand,
                 isFerry: ferry,
                 logoAsset: logo
@@ -159,37 +159,7 @@ struct HongKongProvider: TransitProvider {
 
     func routeColorHex(entry: RouteEntry) -> UInt32 {
         let companies = entry.co
-        if companies.first == "mtr" {
-            switch entry.route {
-            case "AEL": return 0x00888E
-            case "TCL": return 0xF3982D
-            case "TML": return 0x9C2E00
-            case "TKL": return 0x7E3C93
-            case "EAL": return 0x5EB7E8
-            case "SIL": return 0xCBD300
-            case "TWL": return 0xE60012
-            case "ISL": return 0x0075C2
-            case "KTL": return 0x00A040
-            case "DRL": return 0xEB6EA5
-            default: return 0xFF4747
-            }
-        }
-        if companies.contains("lightRail") {
-            switch entry.route {
-            case "505": return 0xDA2127
-            case "507": return 0x00A652
-            case "610": return 0x551C15
-            case "614": return 0x00BFF3
-            case "614P": return 0xF4858E
-            case "615": return 0xFFDD00
-            case "615P": return 0x016682
-            case "705": return 0x73BF43
-            case "706": return 0xB47AB5
-            case "751": return 0xF48221
-            case "761P": return 0x6F2D91
-            default: return 0xD3A809
-            }
-        }
+        if let line = RouteTheme.lineColor(route: entry.route, operators: companies) { return line }
         if let first = companies.first, let op = operators.op(first), !op.isFerry {
             return op.brandHex
         }

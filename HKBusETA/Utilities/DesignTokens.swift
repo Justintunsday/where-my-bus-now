@@ -1,51 +1,49 @@
 import SwiftUI
 import UIKit
 
-/// Warm Minimal design system for HK Bus ETA.
-///
-/// Documented in `docs/brand-spec.md`. One warm coral accent, warm neutrals,
-/// SF Rounded for numerals and route codes, 8pt spacing grid.
+/// Warm Minimal colors with native, scalable typography and transit hierarchy.
 enum DesignTokens {
     // MARK: Colors
 
-    /// Primary accent — warm coral. Interactive states, selection, links.
-    static let accent = Color(hex: "E85D3A")
+    /// Original Warm Coral. Operator route colors remain independent.
+    static let accent = TransitBrand.coral
     /// Soft accent background for selections and badges.
-    static let accentSoft = Color(light: "FBE9E2", dark: "3B241C")
+    static let accentSoft = TransitBrand.softAccent
     /// Text/icon color on top of the accent.
     static let onAccent = Color.white
 
-    // Warm neutrals
-    static let background = Color(light: "FAF9F7", dark: "1C1C1E")
-    static let surface = Color(light: "FFFFFF", dark: "2C2C2E")
-    static let surfaceMuted = Color(light: "F2EFEB", dark: "242426")
-    static let textPrimary = Color(light: "1A1A1A", dark: "F2F2F7")
-    static let textSecondary = Color(light: "6B6862", dark: "9A9A9E")
-    static let textTertiary = Color(light: "9A968F", dark: "6E6E73")
-    static let divider = Color(light: "E9E5E0", dark: "38383A")
+    // Original adaptive warm neutrals; shared with the Lock Screen presentation.
+    static let background = TransitBrand.background
+    static let surface = TransitBrand.surface
+    static let surfaceMuted = TransitBrand.mutedSurface
+    static let textPrimary = TransitBrand.primaryText
+    static let textSecondary = TransitBrand.secondaryText
+    static let textTertiary = TransitBrand.tertiaryText
+    static let divider = TransitBrand.divider
 
-    // Functional tints layered on top of the warm base
+    // Functional status tints
     static let success = Color(light: "2E8B57", dark: "4CD07D")
     static let warning = Color(light: "B26A00", dark: "FFB340")
 
     // MARK: Typography
 
-    /// Display numerals — route numbers, countdowns. Warm and friendly.
-    static let displayNumerals = Font.system(size: 44, weight: .bold, design: .rounded)
-    static let display = Font.system(size: 28, weight: .bold, design: .rounded)
-    static let displaySmall = Font.system(size: 22, weight: .bold, design: .rounded)
+    /// Rounded, tabular route and arrival numerals.
+    static let displayNumerals = Font.system(.largeTitle, design: .rounded, weight: .bold)
+    static let display = Font.system(.title, design: .default, weight: .bold)
+    static let displaySmall = Font.system(.title2, design: .default, weight: .bold)
 
-    static let heading = Font.system(size: 18, weight: .semibold, design: .default)
-    static let subheading = Font.system(size: 16, weight: .medium, design: .default)
-    static let body = Font.system(size: 15, weight: .regular, design: .default)
-    static let bodyMedium = Font.system(size: 15, weight: .medium, design: .default)
-    static let caption = Font.system(size: 12, weight: .regular, design: .default)
-    static let captionMedium = Font.system(size: 12, weight: .medium, design: .default)
-    static let footnote = Font.system(size: 11, weight: .regular, design: .default)
+    static let heading = Font.headline
+    static let subheading = Font.subheadline.weight(.medium)
+    static let body = Font.body
+    static let bodyMedium = Font.body.weight(.medium)
+    static let caption = Font.caption
+    static let captionMedium = Font.caption.weight(.medium)
+    static let footnote = Font.footnote
 
     /// Monospaced digits for aligned ETA columns.
     static func tabular(_ size: CGFloat, weight: Font.Weight = .semibold) -> Font {
-        .system(size: size, weight: weight, design: .rounded).monospacedDigit()
+        .system(size >= 20 ? .title2 : (size >= 17 ? .headline : .subheadline),
+                design: .rounded, weight: weight).monospacedDigit()
     }
 
     // MARK: Spacing (8pt grid)

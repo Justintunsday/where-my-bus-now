@@ -19,6 +19,26 @@ struct TransitRegion: Identifiable, Hashable, Sendable {
     let centerLat: Double
     let centerLng: Double
 
+    var localizedName: String {
+        guard L10n.language == .en else { return L10n.display(name) }
+        switch id {
+        case "hk": return "Hong Kong"
+        case "cl-014": return "Shenzhen"
+        case "cl-040": return "Guangzhou"
+        case "cl-034": return "Shanghai"
+        case "cl-027": return "Beijing"
+        case "cl-006": return "Tianjin"
+        case "cl-003": return "Chongqing"
+        case "cl-007": return "Chengdu"
+        case "cl-019": return "Foshan"
+        case "cl-009": return "Qingdao"
+        case "cl-035": return "Shenyang"
+        case "cl-018": return "Nanjing"
+        case "cl-076": return "Xi’an"
+        default: return name
+        }
+    }
+
     var timeZone: TimeZone {
         switch backend {
         case .hongKong: return TimeZone(identifier: "Asia/Hong_Kong")!

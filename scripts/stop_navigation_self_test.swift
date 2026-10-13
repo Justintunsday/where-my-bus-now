@@ -48,6 +48,16 @@ struct StopNavigationSelfTest {
         let invalid = StopLocation(lat: 91, lng: 114, coordinateSystem: .gcj02)
         precondition(StopNavigationURLBuilder.makeAMapURL(for: invalid, localizedName: "Invalid") == nil)
 
+        let joint = RouteEntry(route: "1", co: ["kmb", "ctb"], orig: Terminal(en: "A", zh: "甲"),
+            dest: Terminal(en: "A", zh: "甲"), fares: nil, faresHoliday: nil, freq: nil, jt: nil,
+            seq: 0, serviceType: FlexibleString("1"), stops: ["ctb": ["x", "y", "x"], "kmb": ["a", "b", "a"]],
+            bound: ["kmb": "O", "ctb": "O"], gtfsId: nil, nlbId: nil)
+        precondition(joint.canonicalStops == ["a", "b", "a"])
+        precondition(joint.canonicalSequence(for: "a", preferredSequence: 2) == 2, "Loop occurrence must survive")
+        precondition(joint.canonicalSequence(for: "x", preferredSequence: 2) == 2, "Legacy operator identity must survive")
+        precondition(joint.canonicalSequence(for: "b", preferredSequence: 0) == 1, "Moved stop must recover by ID")
+        precondition(joint.canonicalSequence(for: "deleted", preferredSequence: 1) == nil, "Never silently open a different stop")
+
         print("STOP NAVIGATION SELF-TEST OK")
     }
 }

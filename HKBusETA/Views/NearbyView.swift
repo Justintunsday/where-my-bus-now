@@ -1,220 +1,188 @@
 import CoreLocation
+import MapKit
 import SwiftUI
-import UIKit
 
 struct NearbyView: View {
     @Environment(AppState.self) private var app
-    @State private var results: [NearbyStop] = []
-    @State private var mainlandStops: [MainlandNearbyStop] = []
-    @State private var isLoadingMainland = false
-    @State private var mainlandError: String?
+    @Environment(\.transitReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var stops: [NearbyDisplayStop] = []
+    @State private var selection: String?
+    @State private var camera: MapCameraPosition = .automatic
+    @State private var isLoading = false
+    @State private var error: String?
+    @State private var loadGeneration = 0
+    @State private var path = NavigationPath()
 
-    private var language: AppLanguage { L10n.language }
-
-    var body: some View {
-        NavigationStack {
-            DataGate {
-                content
-            }
-            .navigationTitle(L10n.t("nearby.title"))
-            .navigationDestination(for: StopTarget.self) { target in
-                StopEtaView(stopId: target.stopId)
-            }
-            .navigationDestination(for: RouteEtaTarget.self) { target in
-                RouteEtaView(routeKey: target.routeKey, seq: target.seq)
-            }
-            .navigationDestination(for: MainlandLineTarget.self) { target in
-                MainlandLineLoaderView(
-                    lineId: target.lineId,
-                    title: target.title,
-                    seq: target.seq,
-                    modeHint: target.modeHint,
-                    origin: target.origin,
-                    destination: target.destination,
-                    firstDeparture: target.firstDeparture,
-                    lastDeparture: target.lastDeparture,
-                    fare: target.fare
-                )
-            }
-            .navigationDestination(for: MainlandStopTarget.self) { target in
-                MainlandStopBoardView(
-                    stopID: target.stopID,
-                    namesakeStopID: target.namesakeStopID,
-                    title: target.title,
-                    location: target.location
-                )
-            }
-        }
-        .task {
-            app.location.startUpdating()
-            recompute()
-        }
-        .task(id: app.region.id) {
-            recompute()
-        }
-        .onChange(of: app.location.location) {
-            recompute()
-        }
-        .onChange(of: app.location.authorizationStatus) {
-            recompute()
-        }
+    /// Quantized location prevents tiny GPS movements from launching overlapping network calls.
+    private var requestID: String {
+        guard let location = app.location.location else { return app.region.id }
+        return "\(app.region.id)|\(Int(location.coordinate.latitude * 1000))|\(Int(location.coordinate.longitude * 1000))"
     }
 
-    @ViewBuilder
-    private var content: some View {
+    var body: some View {
+        NavigationStack(path: $path) {
+            DataGate { content }
+                .navigationTitle(L10n.t("nearby.title"))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { TransitAppToolbar() }
+                .transitDestinations()
+                .navigationDestination(for: MainlandStopTarget.self) { target in
+                    MainlandStopBoardView(stopID: target.stopID, namesakeStopID: target.namesakeStopID,
+                                          title: target.title, location: target.location)
+                }
+                .navigationDestination(for: MainlandLineTarget.self) { target in
+                    MainlandLineLoaderView(lineId: target.lineId, title: target.title, seq: target.seq,
+                        modeHint: target.modeHint, origin: target.origin, destination: target.destination,
+                        firstDeparture: target.firstDeparture, lastDeparture: target.lastDeparture, fare: target.fare)
+                }
+        }
+        .task(id: requestID) { await load() }
+        .task { app.location.startUpdating() }
+        .onChange(of: app.data.lastLoaded) { Task { await load() } }
+        .sensoryFeedback(.selection, trigger: selection)
+    }
+
+    @ViewBuilder private var content: some View {
         if app.location.isDenied {
             ContentUnavailableView {
                 Label(L10n.t("nearby.denied.title"), systemImage: "location.slash")
-            } description: {
-                Text(L10n.t("nearby.denied.message"))
-            } actions: {
-                Button(L10n.t("nearby.openSettings")) {
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                        UIApplication.shared.open(url)
-                    }
-                }
-                .buttonStyle(.borderedProminent)
+            } description: { Text(L10n.t("nearby.denied.message")) } actions: {
+                Link(L10n.t("nearby.openSettings"), destination: URL(string: UIApplication.openSettingsURLString)!)
             }
         } else if !app.location.isAuthorized {
             ContentUnavailableView {
                 Label(L10n.t("nearby.permission.title"), systemImage: "location")
-            } description: {
-                Text(L10n.t("nearby.permission.message"))
-            } actions: {
-                Button(L10n.t("nearby.permission.button")) {
-                    app.location.requestAuthorization()
-                }
-                .buttonStyle(.borderedProminent)
+            } description: { Text(L10n.t("nearby.permission.message")) } actions: {
+                Button(L10n.t("nearby.permission.button")) { app.location.requestAuthorization() }.buttonStyle(.borderedProminent)
             }
-        } else if app.mainlandProvider != nil {
-            mainlandContent
-        } else if app.location.location == nil || results.isEmpty {
-            VStack(spacing: DesignTokens.Spacing.m) {
-                ProgressView()
-                    .tint(DesignTokens.accent)
-                Text(L10n.t("nearby.locating"))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+        } else if app.location.location == nil || (isLoading && stops.isEmpty) {
+            ProgressView(L10n.t("nearby.locating")).frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if stops.isEmpty {
+            ContentUnavailableView {
+                Label(L10n.t("nearby.empty"), systemImage: "mappin.slash")
+            } description: { Text(error ?? L10n.t("nearby.emptyHint")) } actions: {
+                Button(L10n.t("common.retry")) { Task { await load() } }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            List(results) { entry in
-                NavigationLink(value: StopTarget(stopId: entry.item.id)) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(language.isChinese ? L10n.display(entry.item.nameZh) : entry.item.nameEn)
-                            let count = app.data.routeCount(at: entry.item.id)
-                            if count > 0 {
-                                Text("\(count) \(L10n.t("unit.routes"))")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+            VStack(spacing: 0) {
+                if !typeSize.isAccessibilitySize, stops.contains(where: { $0.coordinate != nil }) {
+                    Map(position: $camera, selection: $selection) {
+                        UserAnnotation()
+                        ForEach(stops) { stop in
+                            if let coordinate = stop.coordinate {
+                                Marker(stop.name, systemImage: "bus.fill", coordinate: coordinate).tag(stop.id)
                             }
                         }
-                        Spacer()
-                        Text(GeoUtils.distanceString(entry.distance, language: language))
-                            .font(.caption)
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
+                    }
+                    .mapControls { MapUserLocationButton(); MapCompass() }
+                    .frame(height: 230)
+                    .accessibilityLabel(L10n.t("nearby.map"))
+                }
+                ScrollViewReader { proxy in
+                    List {
+                        if let error { Section { Label(error, systemImage: "wifi.exclamationmark").font(.caption) } }
+                        Section(L10n.t("search.section.stops")) {
+                            ForEach(stops) { stop in
+                                HStack(spacing: 8) {
+                                    Button { select(stop) } label: {
+                                        HStack(alignment: .top, spacing: 12) {
+                                            Image(systemName: stop.id == selection ? "mappin.circle.fill" : "mappin.circle")
+                                                .foregroundStyle(DesignTokens.accent).font(.title3)
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(stop.name).font(.headline).foregroundStyle(.primary)
+                                                    .fixedSize(horizontal: false, vertical: true)
+                                                if let subtitle = stop.subtitle {
+                                                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
+                                                }
+                                            }
+                                            Spacer(minLength: 0)
+                                            if let distance = stop.distance {
+                                                Text(GeoUtils.distanceString(distance, language: L10n.language))
+                                                    .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                                            }
+                                        }.frame(minHeight: 44).contentShape(Rectangle())
+                                    }.buttonStyle(.plain)
+                                    Button {
+                                        if app.mainlandProvider != nil {
+                                            path.append(MainlandStopTarget(stopID: stop.id, namesakeStopID: stop.namesakeID,
+                                                title: stop.name, location: stop.location))
+                                        } else { path.append(StopTarget(stopId: stop.id)) }
+                                    } label: { Image(systemName: "arrow.up.right").frame(minWidth: 44, minHeight: 44) }
+                                    .buttonStyle(.plain).foregroundStyle(DesignTokens.accent)
+                                    .accessibilityLabel("\(L10n.t("route.fullEta")) · \(stop.name)")
+                                }
+                                .accessibilityElement(children: .contain)
+                                .accessibilityAddTraits(stop.id == selection ? [.isSelected] : [])
+                                .listRowBackground(stop.id == selection ? DesignTokens.accentSoft : DesignTokens.surface)
+                                .id(stop.id)
+                            }
+                        }
+                    }
+                    .listStyle(.plain).transitListSurface()
+                    .refreshable { await load() }
+                    .onChange(of: selection) { _, id in
+                        guard let id else { return }
+                        withAnimation(TransitMotion.selection(reduced: reduceMotion)) { proxy.scrollTo(id, anchor: .center) }
                     }
                 }
             }
         }
     }
 
-    @ViewBuilder
-    private var mainlandContent: some View {
-        if app.location.location == nil || (isLoadingMainland && mainlandStops.isEmpty) {
-            VStack(spacing: DesignTokens.Spacing.m) {
-                ProgressView()
-                    .tint(DesignTokens.accent)
-                Text(L10n.t("nearby.locating"))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+    private func select(_ stop: NearbyDisplayStop) {
+        withAnimation(TransitMotion.selection(reduced: reduceMotion)) {
+            selection = stop.id
+            if let coordinate = stop.coordinate {
+                camera = .region(MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.006, longitudeDelta: 0.006)))
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if let mainlandError {
-            ContentUnavailableView {
-                Label(L10n.t("error.mainland.requestFailed"), systemImage: "wifi.exclamationmark")
-            } description: {
-                Text(mainlandError)
-            } actions: {
-                Button(L10n.t("common.retry")) { recompute() }
-            }
-        } else if mainlandStops.isEmpty {
-            ContentUnavailableView {
-                Label(L10n.t("nearby.title"), systemImage: "mappin.slash")
-            } description: {
-                Text(L10n.t("nearby.locating"))
-            } actions: {
-                Button(L10n.t("common.retry")) {
-                    recompute()
-                }
-            }
-        } else {
-            List(mainlandStops) { stop in
-                NavigationLink(value: MainlandStopTarget(
-                    stopID: stop.stopID,
-                    namesakeStopID: stop.namesakeStopID,
-                    title: stop.name,
-                    location: stop.location.map { StopLocation($0) }
-                )) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(stop.name)
-                                .font(.body)
-                            if !stop.arrivals.isEmpty {
-                                Text(arrivalSummary(stop.arrivals))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                            }
-                        }
-                        Spacer()
-                        if let distance = stop.distanceMeters {
-                            Text("\(Int(distance.rounded())) m")
-                                .font(.caption)
-                                .monospacedDigit()
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            .refreshable { recompute() }
         }
     }
 
-    private func arrivalSummary(_ arrivals: [MainlandNearbyArrival]) -> String {
-        arrivals.map { arrival in
-            if let minutes = arrival.minutes {
-                return "\(arrival.lineName) \(minutes)\(L10n.t("unit.minutes"))"
-            }
-            return arrival.lineName
-        }
-        .joined(separator: " · ")
-    }
-
-    private func recompute() {
-        guard let location = app.location.location, app.data.db != nil else { return }
-
-        if let provider = app.mainlandProvider {
-            isLoadingMainland = mainlandStops.isEmpty
-            Task {
-                do {
-                    let stops = try await provider.nearby(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude, limit: 20)
-                    guard !Task.isCancelled else { return }
-                    mainlandStops = stops
-                    mainlandError = nil
-                } catch is CancellationError {
-                    return
-                } catch {
-                    mainlandStops = []
-                    mainlandError = MainlandErrorPresentation.message(for: error)
+    private func load() async {
+        guard let location = app.location.location else { return }
+        loadGeneration += 1
+        let generation = loadGeneration
+        let data = app.data
+        let provider = app.mainlandProvider
+        let regionID = app.region.id
+        isLoading = true
+        defer { if generation == loadGeneration { isLoading = false } }
+        do {
+            try await data.ensureLoaded()
+            let result: [NearbyDisplayStop]
+            if let provider {
+                result = try await provider.nearby(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude, limit: 20).map {
+                    NearbyDisplayStop(id: $0.stopID, namesakeID: $0.namesakeStopID, name: $0.name,
+                        subtitle: $0.arrivals.map(\.lineName).joined(separator: " · "),
+                        distance: $0.distanceMeters, location: $0.location.map { StopLocation($0) })
                 }
-                isLoadingMainland = false
+            } else {
+                result = data.nearestStops(to: location, limit: 30).map {
+                    NearbyDisplayStop(id: $0.item.id, namesakeID: nil,
+                        name: L10n.language.isChinese ? L10n.display($0.item.nameZh) : $0.item.nameEn,
+                        subtitle: "\(data.routeCount(at: $0.item.id)) \(L10n.t("unit.routes"))",
+                        distance: $0.distance, location: $0.item.location)
+                }
             }
-            return
+            guard !Task.isCancelled, regionID == app.region.id, generation == loadGeneration else { return }
+            stops = result; error = nil
+        } catch {
+            guard !Task.isCancelled, regionID == app.region.id, generation == loadGeneration else { return }
+            self.error = MainlandErrorPresentation.message(for: error)
         }
+    }
+}
 
-        results = app.data.nearestStops(to: location, limit: 40)
+private struct NearbyDisplayStop: Identifiable {
+    let id: String
+    let namesakeID: String?
+    let name: String
+    let subtitle: String?
+    let distance: Double?
+    let location: StopLocation?
+    var coordinate: CLLocationCoordinate2D? {
+        guard let location, location.isValid, location.coordinateSystem == .wgs84 else { return nil }
+        return CLLocationCoordinate2D(latitude: location.lat, longitude: location.lng)
     }
 }

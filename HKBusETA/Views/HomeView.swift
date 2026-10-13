@@ -1,0 +1,198 @@
+import SwiftUI
+
+struct HomeView: View {
+    @Environment(AppState.self) private var app
+    @Environment(\.transitReduceMotion) private var reduceMotion
+    @Namespace private var trackingIdentity
+    let openSearch: () -> Void
+
+    private var boardingTargets: [BusTrackingTarget] {
+        app.boarding.targets.filter { !app.activities.isTracking($0) }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Button(action: openSearch) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "magnifyingglass").accessibilityHidden(true)
+                            Text(L10n.t("search.placeholder")).fixedSize(horizontal: false, vertical: true)
+                        }
+                        .foregroundStyle(.secondary).frame(minHeight: 44)
+                    }
+                }
+                if !app.activities.activeTargets.isEmpty {
+                    Section(L10n.t("home.tracking")) {
+                        ForEach(app.activities.activeTargets) { target in
+                            trackingCard(target)
+                                .listRowBackground(Color.clear)
+                                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                        }
+                    }
+                }
+                if !boardingTargets.isEmpty || app.boarding.targets.isEmpty {
+                Section {
+                    if app.boarding.targets.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Image(systemName: "bus.fill").font(.largeTitle).foregroundStyle(DesignTokens.accent)
+                            Text(L10n.t("home.empty.title")).font(.title2.bold())
+                            Text(L10n.t("home.empty.message")).font(.subheadline).foregroundStyle(.secondary)
+                            Button(L10n.t("tab.search"), action: openSearch).buttonStyle(.bordered)
+                        }
+                        .padding(.vertical, 16)
+                    } else {
+                        ForEach(boardingTargets) { target in
+                            BoardingTripRow(target: target)
+                                .environment(\.routeTheme, target.resolvedTheme)
+                                .tint(target.resolvedTheme.accent)
+                                .swipeActions {
+                                    Button(role: .destructive) { app.boarding.remove(target) } label: {
+                                        Label(L10n.t("common.remove"), systemImage: "pin.slash")
+                                    }
+                                }
+                        }
+                    }
+                } header: {
+                    HStack { Text(L10n.t("home.boarding")); Spacer(); Image(systemName: "pin.fill") }
+                }
+                }
+                if !app.bookmarks.favoriteRoutes.isEmpty {
+                    Section(L10n.t("favorites.routes")) {
+                        ForEach(app.bookmarks.favoriteRoutes.prefix(6)) { favorite in
+                            NavigationLink(value: SavedRouteTarget(RegionalFavoriteRoute(regionID: app.region.id, favorite: favorite))) {
+                                HStack(spacing: 16) {
+                                    RouteBadge(route: favorite.route, entry: app.data.entry(favorite.routeKey))
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(L10n.language.isChinese ? L10n.display(favorite.destZh) : favorite.destEn)
+                                            .font(.headline)
+                                        Text(L10n.t("boarding.choose")).font(.caption).foregroundStyle(.secondary)
+                                    }
+                                }.padding(.vertical, 8)
+                            }
+                        }
+                    }
+                }
+                if !app.bookmarks.recentStops.isEmpty {
+                    Section(L10n.t("home.frequentStops")) {
+                        ForEach(app.bookmarks.recentStops.prefix(4)) { stop in
+                            NavigationLink(value: SavedStopTarget(regionID: app.region.id, recent: stop)) {
+                                Label(L10n.language.isChinese ? L10n.display(stop.nameZh) : stop.nameEn, systemImage: "mappin.circle")
+                                    .padding(.vertical, 8)
+                            }
+                        }
+                    }
+                }
+            }
+            .listStyle(.insetGrouped).transitListSurface()
+            .navigationTitle(L10n.t("home.title"))
+            .toolbar { TransitAppToolbar() }
+            .transitDestinations()
+            .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: app.activities.activeTargets.map(\.id))
+        }
+    }
+
+    @ViewBuilder private func trackingCard(_ target: BusTrackingTarget) -> some View {
+        if #available(iOS 26, *) {
+            GlassEffectContainer {
+                HomeTrackingCard(target: target)
+                    .glassEffectID("active-trip", in: trackingIdentity)
+                    .glassEffectTransition(reduceMotion ? .identity : .materialize)
+            }
+        } else {
+            HomeTrackingCard(target: target).transition(.opacity)
+        }
+    }
+}
+
+/// The badge moves between compact and expanded boarding detail in the same hierarchy.
+/// The full ETA push remains system-interactive; iOS 18+ adds native zoom continuity.
+private struct BoardingTripRow: View {
+    @Environment(AppState.self) private var app
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.transitReduceMotion) private var reduceMotion
+    let target: BusTrackingTarget
+    @State private var expanded = false
+    @Namespace private var identity
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Button {
+                withAnimation(TransitMotion.selection(reduced: reduceMotion)) { expanded.toggle() }
+            } label: {
+                HStack(alignment: .center, spacing: 16) {
+                    if !expanded { badge.matchedGeometryEffect(id: "route", in: identity) }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(target.destination).font(.headline).foregroundStyle(.primary)
+                        Text(target.stopName).font(.subheadline).foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.down").font(.caption.bold())
+                        .rotationEffect(.degrees(expanded ? 180 : 0)).foregroundStyle(.secondary)
+                }
+                .frame(minHeight: 44).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("boarding.toggle")
+            .accessibilityValue(L10n.t(expanded ? "common.expanded" : "common.collapsed"))
+            if expanded {
+                HStack {
+                    badge.matchedGeometryEffect(id: "route", in: identity)
+                    Text(RegionCatalog.region(for: target.regionID)?.localizedName ?? target.regionID).font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
+            }
+            if let session = app.arrivals.session(for: target, app: app) {
+                BoardingArrivalSummary(session: session, expanded: expanded)
+                    .task(id: scenePhase) {
+                        guard scenePhase == .active else { return }
+                        while !Task.isCancelled {
+                            await session.refresh()
+                            do { try await Task.sleep(for: .seconds(30)) } catch { break }
+                        }
+                    }
+            }
+            NavigationLink(value: target) {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.up.right").accessibilityHidden(true)
+                    Text(L10n.t("route.fullEta")).fixedSize(horizontal: false, vertical: true)
+                }
+                .font(.subheadline.weight(.semibold)).frame(minHeight: 44)
+            }
+            .accessibilityIdentifier("boarding.open")
+        }
+        .padding(.vertical, 8)
+        .sensoryFeedback(.selection, trigger: expanded)
+    }
+
+    private var badge: some View {
+        Text(target.route).font(.title3.bold()).fontDesign(.rounded).monospacedDigit()
+            .foregroundStyle(target.resolvedTheme.accent).padding(10)
+            .background(target.resolvedTheme.identity.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+private struct BoardingArrivalSummary: View {
+    @Environment(\.routeTheme) private var theme
+    let session: ArrivalSession
+    let expanded: Bool
+    var body: some View {
+        if expanded { ArrivalHero(state: session.activityState) }
+        else {
+            TimelineView(.periodic(from: .now, by: 30)) { context in
+                let state = session.activityState
+                HStack(spacing: 8) {
+                    Image(systemName: state.isFresh(at: context.date) ? "clock.fill" : "clock.badge.exclamationmark")
+                    if let minutes = state.remainingMinutes(at: context.date), let arrival = state.arrival {
+                        Text("\(minutes) \(L10n.t("unit.minutes"))").monospacedDigit()
+                        Text("·")
+                        Text(arrival, style: .time).monospacedDigit()
+                    } else { Text(L10n.t(session.isRefreshing ? "status.loading" : "arrival.stale")) }
+                }
+                .font(.subheadline.weight(.medium)).foregroundStyle(theme.accent)
+            }
+        }
+        if expanded { FreshnessLabel(updatedAt: session.updatedAt, error: session.error) }
+    }
+}

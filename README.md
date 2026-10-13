@@ -1,4 +1,4 @@
-# Where My Bus Now (WMBN) · 1.9.0
+# Where My Bus Now (WMBN) · 2.0.0
 
 ![Build](https://github.com/Justintunsday/where-my-bus-now/actions/workflows/build.yml/badge.svg)
 
@@ -28,9 +28,11 @@ official base data when configured. This is not an official app.
   any stop with a valid coordinate
 - Stop departure boards with aligned tabular ETA columns
 - Nearby stops with distance, favorites for whole routes and stops, recents
+- Commute-first Today tab: save a route, direction and boarding stop to see its next arrival immediately
+- Lock Screen Live Activities and all Dynamic Island presentations, with whole-minute countdowns, stale-state disclosure, deep links and an end action
 - ETA display modes (clock time / minutes / both), scheduled-trip markers
 - Traditional Chinese, Simplified Chinese and English
-- iPhone and iPad, dark mode, iOS 26 Liquid Glass
+- iPhone and iPad, dark mode, classic iOS 17–18 and native iOS 26 Liquid Glass
 
 ## Architecture
 
@@ -55,9 +57,7 @@ official base data when configured. This is not an official app.
 - Query-mode lines are synthesized into standard `RouteEntry` values and
   registered in `DataStore`, so the map / timeline / ETA screens are fully
   reused across regions
-- **Liquid Glass**: built with the Xcode 26 / iOS 26 SDK, standard controls
-  adopt Liquid Glass automatically on iOS 26+; custom controls use the
-  `glassEffect` API (compiler-gated so Xcode 16 still builds)
+- **Liquid Glass**: native bars and a restrained `.glassProminent` primary action on iOS 26; semantic opaque controls on older systems and with Reduce Transparency
 - Xcode 16 synchronized folders (`PBXFileSystemSynchronizedRootGroup`) — new
   files need no `project.pbxproj` changes
 - `HKBusETA/Models` — EtaDB, TransitOperator, TransitRegion
@@ -65,12 +65,23 @@ official base data when configured. This is not an official app.
   protocols/routers, AMapClient/AMapTransitProvider, hosted CheLaile client,
   DataStore, ETA services, bookmarks, location
 - `HKBusETA/Views` — search, route, ETA, nearby, favorites, settings
-- `docs/brand-spec.md` — Warm Minimal design system
+- `Shared` — typed activity identity, Unix-timestamp content state, shared Lock Screen layout and end intent
+- `BusArrivalWidget` — embedded Widget Extension; no networking or location access
+- `docs/brand-spec.md` and `docs/native-transit-design.md` — native design system and interaction contract
+
+## Track a departure
+
+Save a route, choose its direction, then select a stop in the timeline. On its arrival screen, use **Save boarding point** for Today or **Start tracking** for the Lock Screen. Manage/end the activity in the same sheet, Settings, or its system end button. Tapping an activity resolves the complete regional/provider identity before opening ETA.
+
+Live Activities have a deployable **APNs push-to-update service** in [server/live-activities](server/live-activities). It monitors supported Hong Kong operators and hosted CheLaile bus predictions independently of the app. Configure `LIVE_ACTIVITY_SERVER_URL`, deploy the service and sign with Push Notifications to enable background predictions. Without configuration, tracking explicitly remains foreground-only. Predictions expire after at most 90 seconds or arrival; a ticking countdown does not extend freshness. [Deployment and verification gates](docs/live-activities-apns.md) distinguish implementation tests from real APNs delivery.
+
+The Warm Minimal brand palette is retained, with route-aware Lock Screen and compact/minimal/expanded Island designs. Today uses a native Liquid Glass tracking navigation/control surface on iOS 26, native material on iOS 17–18, and an opaque accessible fallback with Reduce Transparency. [Activity design and states](docs/activity-design.md) document the system surfaces, native update motion and truthful freshness.
+
+Existing bookmark files and region namespaces are preserved. Boarding points use a separate additive preferences key.
 
 ## Build
 
-Requirements: macOS + Xcode 26 (iOS 26 SDK for Liquid Glass; Xcode 16 also
-builds, without the glass material).
+Requirements: macOS + Xcode 26 with the iOS 26 SDK. The app and widget run on iOS 17 or newer. Xcode 26 remains the required build toolchain.
 
 ```bash
 git clone https://github.com/Justintunsday/where-my-bus-now.git
@@ -78,9 +89,9 @@ cd where-my-bus-now
 open HKBusETA.xcodeproj
 ```
 
-GitHub Actions (`macos-26` / Xcode 26.6) runs the offline fixture self-tests
-and a non-blocking hosted API reachability probe, then builds the simulator
-app, an unsigned device archive and an IPA on every push.
+GitHub Actions uses Xcode 26 for the simulator, navigation UI tests and unsigned device archive; separate phone/iPad jobs capture the screenshot matrix. Packaging verifies both the archive and the IPA ZIP: app/extension executables, bundle identities, matching versions, Live Activities, URL scheme and iOS 17 minimum. Screenshot jobs run the exact Xcode 26 simulator app on iOS 17, 18 and 26; they require the requested runtime and never substitute a different generation. Hosted API reachability remains non-blocking; offline provider, navigation, bookmark, localization and ActivityKit contract tests are required.
+
+`TransitPreviewGallery.swift` provides isolated fixtures for SwiftUI previews and simulator screenshots; production storage and provider requests are bypassed in this debug-only path. `BusArrivalWidget.swift` includes Lock Screen, compact, expanded and minimal WidgetKit previews. In-app activity screenshots show the shared content layout, not a signed-device Lock Screen capture.
 
 ## Data Sources
 
@@ -121,3 +132,9 @@ time. All arrival data is for reference only — always check with the operator.
 
 [GPL-3.0](LICENSE), matching the upstream
 [hk-independent-bus-eta](https://github.com/hkbus/hk-independent-bus-eta) project.
+
+### Whole-minute Live Activity policy
+
+iOS 18+ uses the built-in system minute-precision timer with ceil compensation, shared with the app's rounding policy. It displays whole minutes from the prediction/current-time difference and cannot become negative. ActivityKit staleness invalidates it after at most 90 seconds or at predicted arrival. iOS 17 retains explicitly timestamped minutes at last update, marked `*`; that fallback does not tick continuously. Scheduled predictions remain explicit. Only new provider content can select another bus. See [the route-aware ETA redesign](docs/route-eta-redesign.md) for theme serialization, contrast, digit stability and validation.
+
+An unsigned IPA is a build artifact, not an installable or push-enabled release. Sign both targets with your team and compatible provisioning before device installation. APNs needs Push Notifications signing plus the separately documented authenticated registration service and worker.

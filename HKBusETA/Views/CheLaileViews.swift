@@ -7,6 +7,7 @@ struct MainlandLineLoaderView: View {
     let lineId: String
     let title: String
     let seq: Int?
+    let stopID: String?
     let modeHint: MainlandTransitMode
     let origin: String?
     let destination: String?
@@ -21,6 +22,7 @@ struct MainlandLineLoaderView: View {
         lineId: String,
         title: String,
         seq: Int? = nil,
+        stopID: String? = nil,
         modeHint: MainlandTransitMode = .bus,
         origin: String? = nil,
         destination: String? = nil,
@@ -31,6 +33,7 @@ struct MainlandLineLoaderView: View {
         self.lineId = lineId
         self.title = title
         self.seq = seq
+        self.stopID = stopID
         self.modeHint = modeHint
         self.origin = origin
         self.destination = destination
@@ -42,8 +45,16 @@ struct MainlandLineLoaderView: View {
     var body: some View {
         Group {
             if let routeKey {
-                if let seq {
-                    RouteEtaView(routeKey: routeKey, seq: seq)
+                if let seq, let entry = app.data.entry(routeKey) {
+                    if let stopID {
+                        if let resolved = entry.canonicalSequence(for: stopID, preferredSequence: seq) {
+                            RouteEtaView(routeKey: routeKey, seq: resolved)
+                        } else {
+                            RouteDetailView(routeKey: routeKey)
+                        }
+                    } else {
+                        RouteEtaView(routeKey: routeKey, seq: seq)
+                    }
                 } else {
                     RouteDetailView(routeKey: routeKey)
                 }
@@ -181,6 +192,7 @@ struct MainlandMetroInfoView: View {
                 }
             }
         }
+        .transitListSurface()
         .navigationTitle(name)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -273,6 +285,7 @@ struct MainlandStopBoardView: View {
                         }
                     }
                 }
+                .transitListSurface()
                 .refreshable { await load() }
             }
         }
@@ -323,32 +336,41 @@ struct MainlandStopBoardView: View {
 
 struct MainlandBoardRowView: View {
     let row: MainlandBoardLine
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.transitReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: DesignTokens.Spacing.s) {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+            : AnyLayout(HStackLayout(spacing: DesignTokens.Spacing.s))
+        return layout {
             RouteBadge(route: row.lineName, entry: nil, colorHex: MainlandProviderPalette.color(for: row.lineName))
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(L10n.t("route.to")) \(row.destination)")
                     .font(.body)
-                    .lineLimit(1)
+                    .lineLimit(typeSize.isAccessibilitySize ? nil : 2)
                 if let status = row.status, !status.isEmpty {
                     Text(status)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
             }
-            Spacer(minLength: DesignTokens.Spacing.s)
+            if !typeSize.isAccessibilitySize { Spacer(minLength: DesignTokens.Spacing.s) }
             VStack(alignment: .trailing, spacing: 2) {
                 if row.minutes.isEmpty {
                     Text(L10n.t("eta.noEta"))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 } else {
+                    // These are ranked prediction slots, not bus identities. A slot
+                    // keeps its identity while the provider revises its minute value.
                     ForEach(Array(row.minutes.prefix(3).enumerated()), id: \.offset) { index, minutes in
                         HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text("\(minutes)")
+                            Text("\(max(0, minutes))")
                                 .font(DesignTokens.tabular(17, weight: .bold))
                                 .foregroundStyle(index == 0 ? DesignTokens.accent : Color.primary)
+                                .contentTransition(reduceMotion ? .identity : .numericText(countsDown: true))
+                                .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: minutes)
                             Text(L10n.t("unit.minutes"))
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)

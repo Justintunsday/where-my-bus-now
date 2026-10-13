@@ -1,0 +1,14 @@
+services:
+  live-activities:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    ports: ["127.0.0.1:8080:8080"]
+    volumes:
+      - subscriptions:/data
+      - ./secrets/AuthKey.p8:/run/secrets/AuthKey.p8:ro
+    environment:
+      APNS_KEY_PATH: /run/secrets/AuthKey.p8
+    stop_grace_period: 45s
+volumes:
+  subscriptions:

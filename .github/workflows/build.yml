@@ -5,19 +5,95 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      preview_only:
+        description: 'Build a test IPA first (compile only; skip simulator validation)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: build-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: true
+
+env:
+  LIVE_ACTIVITY_SERVER_URL: ${{ vars.LIVE_ACTIVITY_SERVER_URL }}
+  LIVE_ACTIVITY_DEVELOPMENT_SERVER_URL: ${{ vars.LIVE_ACTIVITY_DEVELOPMENT_SERVER_URL }}
 
 jobs:
+  push-service:
+    name: Live Activity push service
+    if: ${{ !inputs.preview_only }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.15.0'
+      - name: Test durable subscriptions, provider adapters and APNs HTTP/2 contract
+        working-directory: server/live-activities
+        run: npm test
+      - name: Generate server ContentState fixture for Swift decoding
+        run: node server/live-activities/scripts/generate-contract-fixture.mjs "$RUNNER_TEMP/server-content-state.json"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: Server-ActivityKit-contract
+          path: ${{ runner.temp }}/server-content-state.json
+          if-no-files-found: error
+      - name: Build deployable service image
+        run: docker build --tag busnow-live-activities:test server/live-activities
+
+  preview:
+    name: Preview IPA (compile only)
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.preview_only }}
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - run: xcodebuild -version
+      - name: Archive and package test IPA
+        run: bash scripts/build_unsigned_ipa.sh
+      - uses: actions/upload-artifact@v5
+        with:
+          name: HKBusETA-unsigned-ipa
+          path: ${{ runner.temp }}/HKBusETA-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
+
   build:
     name: Build iOS app
+    needs: push-service
+    if: ${{ !inputs.preview_only }}
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
       - name: Show Xcode version
-        run: xcodebuild -version
+        run: |
+          xcodebuild -version
+          xcodebuild -version | head -1 | grep -E '^Xcode 26\.'
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: Server-ActivityKit-contract
+          path: ${{ runner.temp }}/server-contract
+
+      - name: Live Activity contract and resource tests
+        run: |
+          python3 scripts/check_transit_resources.py
+          xcrun swiftc -parse-as-library -O -D BUS_CONTRACT_TESTS \
+            Shared/RouteTheme.swift Shared/BusActivityAttributes.swift Shared/BusActivityPreviewData.swift \
+            scripts/activity_contract_self_test.swift -o "$RUNNER_TEMP/activity_contract_test"
+          "$RUNNER_TEMP/activity_contract_test" "$RUNNER_TEMP/server-contract/server-content-state.json"
+          xcrun swiftc -parse-as-library -O -D BUS_CONTRACT_TESTS \
+            Shared/RouteTheme.swift Shared/BusActivityAttributes.swift Shared/BusActivityPreviewData.swift \
+            HKBusETA/Services/BusActivityPushRegistration.swift scripts/activity_push_self_test.swift \
+            -o "$RUNNER_TEMP/activity_push_test"
+          "$RUNNER_TEMP/activity_push_test"
+          xcrun swiftc -parse-as-library -O Shared/SystemMinuteCountdown.swift scripts/system_countdown_self_test.swift -o "$RUNNER_TEMP/system_countdown_test"
+          "$RUNNER_TEMP/system_countdown_test"
 
       - name: Offline mainland provider self-test
         run: |
@@ -38,6 +114,7 @@ jobs:
       - name: Offline hosted CheLaile API self-test
         run: |
           xcrun swiftc -parse-as-library -O \
+            Shared/RouteTheme.swift \
             HKBusETA/Utilities/ChineseConverter.swift \
             HKBusETA/Utilities/Localization.swift \
             HKBusETA/Models/EtaDB.swift \
@@ -76,11 +153,13 @@ jobs:
             -o "$RUNNER_TEMP/bookmark_region_self_test"
           "$RUNNER_TEMP/bookmark_region_self_test"
 
-      - name: Hosted CheLaile API reachability (allowed to fail)
-        continue-on-error: true
+      - name: Hosted CheLaile API diagnostics (not a compilation check)
         run: |
-          curl -fsS --max-time 20 "https://ts-api.tundrey.com/v1/health"
-          curl -fsS --max-time 20 "https://chelaile-api-server.vercel.app/v1/health"
+          for url in https://ts-api.tundrey.com/v1/health https://chelaile-api-server.vercel.app/v1/health; do
+            if ! curl -fsS --max-time 20 "$url"; then
+              echo "::warning::Upstream health unavailable: $url (offline provider tests remain required)"
+            fi
+          done
 
       - name: Build for iOS Simulator
         run: |
@@ -89,10 +168,12 @@ jobs:
               -project HKBusETA.xcodeproj \
               -scheme HKBusETA \
               -configuration Debug \
+              -derivedDataPath "$RUNNER_TEMP/BusDerived" \
               -sdk iphonesimulator \
               -destination 'generic/platform=iOS Simulator' \
               -resultBundlePath "$RUNNER_TEMP/HKBusETA.xcresult" \
               CODE_SIGNING_ALLOWED=NO \
+              LIVE_ACTIVITY_SERVER_URL="${LIVE_ACTIVITY_DEVELOPMENT_SERVER_URL:-}" \
               "$@"
           }
           for attempt in 1 2 3; do
@@ -114,6 +195,15 @@ jobs:
           xcrun xcresulttool get log --path "$RUNNER_TEMP/HKBusETA.xcresult" --type console 2>&1 | tail -300 || true
           exit 1
 
+      - name: Upload Xcode 26 simulator app for OS compatibility evidence
+        run: |
+          ditto -c -k --keepParent "$RUNNER_TEMP/BusDerived/Build/Products/Debug-iphonesimulator/HKBusETA.app" "$RUNNER_TEMP/simulator-app.zip"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: Xcode26-simulator-app
+          path: ${{ runner.temp }}/simulator-app.zip
+          if-no-files-found: error
+
       - name: Archive for iOS device (unsigned)
         run: |
           for attempt in 1 2 3; do
@@ -125,6 +215,7 @@ jobs:
               -destination 'generic/platform=iOS' \
               -archivePath "$RUNNER_TEMP/HKBusETA.xcarchive" \
               CODE_SIGNING_ALLOWED=NO \
+              LIVE_ACTIVITY_SERVER_URL="${LIVE_ACTIVITY_SERVER_URL:-}" \
               archive; then
               exit 0
             fi
@@ -136,11 +227,14 @@ jobs:
 
       - name: Package unsigned IPA
         run: |
+          test -d "$RUNNER_TEMP/HKBusETA.xcarchive/Products/Applications/HKBusETA.app/PlugIns/BusArrivalWidget.appex"
+          /usr/libexec/PlistBuddy -c 'Print NSSupportsLiveActivities' "$RUNNER_TEMP/HKBusETA.xcarchive/Products/Applications/HKBusETA.app/Info.plist" | grep true
           cd "$RUNNER_TEMP"
           rm -rf Payload HKBusETA-unsigned.ipa
           mkdir -p Payload
           cp -R HKBusETA.xcarchive/Products/Applications/HKBusETA.app Payload/
           zip -qry HKBusETA-unsigned.ipa Payload
+          python3 "$GITHUB_WORKSPACE/scripts/verify_unsigned_ipa.py" HKBusETA-unsigned.ipa
           ls -lh HKBusETA-unsigned.ipa
 
       - name: Upload unsigned IPA
@@ -150,3 +244,93 @@ jobs:
           path: ${{ runner.temp }}/HKBusETA-unsigned.ipa
           if-no-files-found: error
           retention-days: 30
+
+      - name: Native navigation UI tests
+        run: |
+          bash scripts/prepare_simulator.sh phone
+          device=$(cat "$RUNNER_TEMP/bus-simulator-id")
+          xcodebuild test -project HKBusETA.xcodeproj -scheme HKBusETA \
+            -configuration Debug -destination "platform=iOS Simulator,id=$device" \
+            -derivedDataPath "$RUNNER_TEMP/BusDerived" \
+            -resultBundlePath "$RUNNER_TEMP/TransitUITests.xcresult" \
+            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO \
+            LIVE_ACTIVITY_SERVER_URL="${LIVE_ACTIVITY_DEVELOPMENT_SERVER_URL:-}"
+
+      - name: Upload UI test results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: Native-transit-ui-tests
+          path: ${{ runner.temp }}/TransitUITests.xcresult
+          if-no-files-found: warn
+
+      - name: Export actual UI test screenshot attachments
+        if: always()
+        run: |
+          if test -d "$RUNNER_TEMP/TransitUITests.xcresult"; then
+            xcrun xcresulttool export attachments --path "$RUNNER_TEMP/TransitUITests.xcresult" \
+              --output-path "$RUNNER_TEMP/interaction-screenshots"
+          fi
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: Native-transit-interaction-screenshots
+          path: ${{ runner.temp }}/interaction-screenshots
+          if-no-files-found: warn
+
+      - name: Collect ActivityKit rendering diagnostics
+        if: always()
+        run: python3 scripts/collect_activity_diagnostics.py
+      - name: Upload ActivityKit rendering diagnostics
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: ActivityKit-rendering-diagnostics
+          path: ${{ runner.temp }}/activity-rendering.log
+          if-no-files-found: warn
+
+
+  screenshots:
+    name: UI evidence (iOS ${{ matrix.ios }}, ${{ matrix.device }})
+    needs: build
+    if: ${{ !inputs.preview_only }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { ios: '17', device: phone, runner: macos-14, xcode: '16.2' }
+          - { ios: '18', device: phone, runner: macos-14, xcode: '16.2' }
+          - { ios: '26', device: phone, runner: macos-26, xcode: '26' }
+          - { ios: '26', device: ipad, runner: macos-26, xcode: '26' }
+    env:
+      BUS_IOS_MAJOR: ${{ matrix.ios }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Select classic simulator toolchain
+        if: matrix.ios != '26'
+        run: |
+          sudo xcode-select -s "/Applications/Xcode_${{ matrix.xcode }}.app"
+          xcodebuild -version
+      - uses: actions/download-artifact@v5
+        with:
+          name: Xcode26-simulator-app
+          path: ${{ runner.temp }}
+      - name: Install the exact app compiled by Xcode 26
+        run: |
+          mkdir -p "$RUNNER_TEMP/BusDerived/Build/Products/Debug-iphonesimulator"
+          ditto -x -k "$RUNNER_TEMP/simulator-app.zip" "$RUNNER_TEMP/BusDerived/Build/Products/Debug-iphonesimulator"
+      - name: Capture UI layouts
+        timeout-minutes: 22
+        run: bash scripts/capture_simulator_screenshots.sh "${{ matrix.device }}"
+      - name: Capture original interface for comparison
+        if: matrix.device == 'phone' && matrix.ios == '26'
+        run: bash scripts/capture_baseline_screenshot.sh
+      - name: Upload screenshots and runtime inventory
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: Native-transit-screenshots-iOS${{ matrix.ios }}-${{ matrix.device }}
+          path: ${{ runner.temp }}/bus-screenshots
+          if-no-files-found: error
