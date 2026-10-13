@@ -51,6 +51,9 @@ struct ActivityPreviewGallery: View {
                         Image(systemName: display.symbol).foregroundStyle(TransitBrand.coral)
                             .frame(width: 38, height: 38).background(.black, in: Circle())
                     }.foregroundStyle(.white).environment(\.colorScheme, .dark)
+                        // Match the finite system compact surface; expanded and
+                        // Lock Screen layouts retain the user's full text size.
+                        .dynamicTypeSize(...DynamicTypeSize.large)
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .top) {
                             BusIslandRoute(target: target)
