@@ -42,6 +42,12 @@ import XCTest
         let collapsed = expectation(for: NSPredicate(format: "value == %@", "已收起"), evaluatedWith: stop)
         wait(for: [collapsed], timeout: 5)
         screenshot("timeline-reduced-effects")
+        stop.tap()
+        let eta = app.descendants(matching: .any)["route.eta.0"]
+        for _ in 0..<3 where !eta.isHittable { app.swipeUp() }
+        XCTAssertTrue(eta.waitForExistence(timeout: 5))
+        eta.tap()
+        XCTAssertTrue(app.buttons["tracking.open"].waitForExistence(timeout: 5), "Only the explicit ETA link navigates")
     }
 
     func testEmptyAndNetworkFailureAreVisible() {

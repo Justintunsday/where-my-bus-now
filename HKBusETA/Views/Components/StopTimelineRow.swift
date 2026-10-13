@@ -1,9 +1,6 @@
 import SwiftUI
 
 struct StopTimelineRow: View {
-    @Environment(AppState.self) private var app
-    @Environment(\.transitReduceMotion) private var reduceMotion
-    let entry: RouteEntry
     let point: RouteStopPoint
     let isLast: Bool
     let isSelected: Bool
@@ -33,10 +30,6 @@ struct StopTimelineRow: View {
                 .accessibilityIdentifier("route.stop.\(point.seq)")
                 .accessibilityValue(L10n.t(isExpanded ? "common.expanded" : "common.collapsed"))
                 .accessibilityAddTraits(isSelected ? [.isSelected] : [])
-                if isExpanded {
-                    StopEtaInlineView(entry: entry, seq: point.seq)
-                        .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
-                }
             }
         }
         .padding(.vertical, 4)
@@ -63,7 +56,8 @@ struct StopEtaInlineView: View {
                 NavigationLink(value: RouteEtaTarget(routeKey: entry.routeKey, seq: seq)) {
                     Label(L10n.t("route.fullEta"), systemImage: "clock.arrow.circlepath")
                         .frame(minHeight: 44)
-                }.buttonStyle(.bordered)
+                }.buttonStyle(.borderless)
+                    .accessibilityIdentifier("route.eta.\(seq)")
                 if let stop = app.data.stop(target.stopID), stop.location.isValid {
                     StopNavigationButton(stopName: stop.name.name(L10n.language), location: stop.location) {
                         Label(L10n.t("navigation.navigate"), systemImage: "figure.walk").frame(minHeight: 44)

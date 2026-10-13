@@ -70,7 +70,7 @@ struct RouteDetailView: View {
                 }
                 Section {
                     ForEach(points) { point in
-                        StopTimelineRow(entry: entry, point: point, isLast: point.seq == points.last?.seq,
+                        StopTimelineRow(point: point, isLast: point.seq == points.last?.seq,
                             isSelected: selectedSeq == point.seq, isExpanded: selectedSeq == point.seq) {
                                 mapSelection = nil
                                 withAnimation(TransitMotion.selection(reduced: reduceMotion)) {
@@ -79,6 +79,17 @@ struct RouteDetailView: View {
                             }
                             .id(point.seq)
                             .listRowSeparator(.hidden)
+                        if selectedSeq == point.seq {
+                            // Keep navigation in a separate List row: iOS 17 otherwise
+                            // promotes an inline link into the station header's tap area.
+                            HStack(alignment: .top, spacing: 16) {
+                                Rectangle().fill(point.seq == points.last?.seq ? Color.clear : DesignTokens.divider)
+                                    .frame(width: 2).frame(width: 24)
+                                StopEtaInlineView(entry: entry, seq: point.seq)
+                            }
+                            .listRowSeparator(.hidden)
+                            .buttonStyle(.borderless)
+                        }
                     }
                 } header: {
                     Text("\(L10n.t("route.section.stops")) · \(points.count)")
