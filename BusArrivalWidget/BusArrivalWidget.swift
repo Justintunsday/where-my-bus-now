@@ -4,32 +4,10 @@ import SwiftUI
 import WidgetKit
 
 @main
-enum BusArrivalWidgetEntry {
-    // WidgetConfiguration and WidgetBundleBuilder cannot erase two configuration
-    // types across availability. Choose the public Widget.main entry point instead.
-    static func main() {
-        if #available(iOS 18.0, *) { SupplementedBusArrivalWidget.main() }
-        else { BusArrivalWidget.main() }
-    }
-}
-
-@available(iOS 18.0, *)
-private struct SupplementedBusArrivalWidget: Widget {
-    var body: some WidgetConfiguration {
-        BusArrivalWidget().body.supplementalActivityFamilies([.small, .medium])
-    }
-}
-
 struct BusArrivalWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: BusActivityAttributes.self) { context in
-            Group {
-                if #available(iOS 18.0, *) { AdaptiveBusActivity(context: context) }
-                else {
-                    BusLockScreenView(target: context.attributes.target, state: context.state,
-                                      isStale: context.isStale, activityID: context.activityID)
-                }
-            }
+            AdaptiveBusActivity(context: context)
             .activityBackgroundTint(TransitBrand.surface)
             .activitySystemActionForegroundColor(.primary)
             .widgetURL(context.attributes.target.deepLink)
@@ -59,10 +37,10 @@ struct BusArrivalWidget: Widget {
             .widgetURL(context.attributes.target.deepLink)
             .keylineTint(TransitBrand.coral)
         }
+        .supplementalActivityFamilies([.small, .medium])
     }
 }
 
-@available(iOS 18.0, *)
 private struct AdaptiveBusActivity: View {
     @Environment(\.activityFamily) private var family
     let context: ActivityViewContext<BusActivityAttributes>

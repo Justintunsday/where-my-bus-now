@@ -36,7 +36,7 @@ official base data when configured. This is not an official app.
 
 ## Architecture
 
-- SwiftUI + `@Observable` (iOS 17+), no third-party dependencies
+- SwiftUI + `@Observable` (iOS 18+), no third-party dependencies
 - **`TransitProvider` protocol**: everything region-specific (data source,
   time zone, operators, calendars, fares, colors, ETA fetching) lives behind
   one interface
@@ -90,7 +90,7 @@ cd where-my-bus-now
 open HKBusETA.xcodeproj
 ```
 
-GitHub Actions uses Xcode 26 for the simulator, navigation UI tests and unsigned device archive; separate phone/iPad jobs capture the screenshot matrix. Packaging asserts that `BusArrivalWidget.appex` is embedded before generating the unsigned IPA. A separate Xcode 16.4 job installs an iOS 17.5 runtime and runs compatibility UI tests. Hosted API reachability remains non-blocking; offline provider, navigation, bookmark, localization and ActivityKit contract tests are required.
+GitHub Actions uses Xcode 26 for the simulator, navigation UI tests and unsigned device archive; separate phone/iPad jobs capture the screenshot matrix. Packaging asserts that `BusArrivalWidget.appex` is embedded before generating the unsigned IPA. A separate Xcode 16.4 job uses an iOS 18.5 runtime and runs compatibility UI tests. Hosted API reachability remains non-blocking; offline provider, navigation, bookmark, localization and ActivityKit contract tests are required.
 
 `TransitPreviewGallery.swift` provides isolated fixtures for SwiftUI previews and simulator screenshots; production storage and provider requests are bypassed in this debug-only path. `BusArrivalWidget.swift` includes Lock Screen, compact, expanded and minimal WidgetKit previews. In-app activity screenshots show the shared content layout, not a signed-device Lock Screen capture.
 

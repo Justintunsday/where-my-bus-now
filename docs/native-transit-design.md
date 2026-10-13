@@ -27,7 +27,7 @@ Original adaptive warm backgrounds and semantic text tokens, Warm Coral #E85D3A 
 | --- | --- | --- |
 | Boarding selection | Retargetable 0.32s, low-bounce spring; route detail owns selected sequence; map camera follows a list selection; only map-originated selections scroll the timeline, so tapping an expanded stop never moves its own disclosure button | Immediate selection/camera and scroll |
 | Saved trip expansion | matchedGeometryEffect within a single hierarchy; one source badge per trip; native navigation from the expanded preview to route detail/ETA | Immediate expansion |
-| Route push on iOS 18+ | Native source-linked zoom, system interactive back | System push when Reduce Motion is enabled or iOS 17 |
+| Route push on iOS 18+ | Native source-linked zoom, system interactive back | System push when Reduce Motion is enabled |
 | ETA changes | numericText + scoped smooth animation; arrival slots retain identity while timestamps change | Immediate text update |
 | Favorite / tracking commit | Discrete symbol bounce and selection/success sensory feedback | Symbol effects removed; state and labels still update |
 | Sheet | Native interactive detents, cancellation owned by sheet item | System accessibility behavior |
