@@ -56,7 +56,7 @@ struct RootView: View {
                                 Button(L10n.t("common.done")) { app.presentation = nil }
                             }
                         }
-                }
+                }.tint(target.resolvedTheme.accent)
             }
         }
         .onOpenURL { url in

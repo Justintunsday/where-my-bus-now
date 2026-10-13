@@ -76,7 +76,6 @@ struct ArrivalScreen: View {
             #endif
         }
         .listStyle(.insetGrouped).listSectionSpacing(.compact).transitListSurface()
-        .environment(\.routeTheme, theme).tint(theme.accent)
         .navigationTitle(target.route).navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
@@ -112,6 +111,7 @@ struct ArrivalScreen: View {
                 do { try await Task.sleep(for: .seconds(30)) } catch { break }
             }
         }
+        .environment(\.routeTheme, theme).tint(theme.accent)
     }
 
     private var trackingAction: some View {
@@ -122,6 +122,7 @@ struct ArrivalScreen: View {
                 .padding(.vertical, 4)
         }
         .transitPrimaryAction().controlSize(.regular)
+        .frame(minHeight: 44).contentShape(Rectangle())
         .foregroundStyle(theme.onAccent)
         .accessibilityIdentifier("tracking.open").accessibilityFocused($trackingFocused)
     }

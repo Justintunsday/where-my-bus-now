@@ -29,8 +29,6 @@ struct RouteDetailView: View {
                     }
                 }
                 .background(DesignTokens.background)
-                .environment(\.routeTheme, RouteTheme.resolve(route: entry.route, operators: entry.co, providerHex: app.provider.routeColorHex(entry: entry)))
-                .tint(RouteTheme.resolve(route: entry.route, operators: entry.co, providerHex: app.provider.routeColorHex(entry: entry)).accent)
                 .navigationTitle(entry.route).navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     if let opposite = app.data.oppositeEntry(for: entry) {
@@ -48,6 +46,8 @@ struct RouteDetailView: View {
                     .transitIndependentToolbarItem()
                 }
                 .sensoryFeedback(.selection, trigger: selectedSeq)
+                .environment(\.routeTheme, RouteTheme.resolve(route: entry.route, operators: entry.co, providerHex: app.provider.routeColorHex(entry: entry)))
+                .tint(RouteTheme.resolve(route: entry.route, operators: entry.co, providerHex: app.provider.routeColorHex(entry: entry)).accent)
             } else { ContentUnavailableView(L10n.t("route.notFound"), systemImage: "questionmark.circle") }
         }
     }
