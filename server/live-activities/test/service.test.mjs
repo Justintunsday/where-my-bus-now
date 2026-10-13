@@ -140,18 +140,20 @@ test('Hong Kong adapter uses operator-specific stops, direction, occurrence and 
   await assert.rejects(() => providers.validate({ ...target, stopID: 'WRONG' }, now), TargetError);
 });
 test('CheLaile adapter resolves physicalStId to line-station sId with WGS-84 coordinates', async () => {
-  const t = { ...target, regionID: 'mainland-gz', providerID: 'mainland-440100', operators: ['mainland'],
-    source: 'chelaileAPI', mode: 'bus', lineID: 'LINE', realtimeCityID: '126', stopID: 'PHYSICAL' };
+  const t = { ...target, regionID: 'cl-040', providerID: 'mainland-440100', operators: [],
+    source: 'chelaileAPI', mode: 'bus', lineID: 'LINE', realtimeCityID: '040', stopID: 'PHYSICAL' };
   const providers = new Providers({ fetcher: async url => {
     const u = new URL(url);
-    if (u.pathname.endsWith('detail')) return Response.json({ stations: [{ sId: 'LINE-STATION', physicalStId: 'PHYSICAL', order: 1, wgsLat: 23.1, wgsLng: 113.2 }] });
-    assert.equal(u.searchParams.get('station_id'), 'LINE-STATION'); assert.equal(u.searchParams.get('city_id'), '126');
+    if (u.pathname.endsWith('detail')) return Response.json({ line: { lineId: 'LINE', name: '1A' }, stations: [{ sId: 'LINE-STATION', physicalStId: 'PHYSICAL', order: 1, wgsLat: 23.1, wgsLng: 113.2 }] });
+    assert.equal(u.searchParams.get('station_id'), 'LINE-STATION'); assert.equal(u.searchParams.get('city_id'), '040');
     assert.equal(u.searchParams.get('lat'), '23.1');
     return Response.json({ buses: [{ eta: { arrivalTime: (now + 120) * 1000 } }, { eta: { travelTime: '180' } }] });
   } });
   await providers.validate(t, now); const rows = await providers.fetch(t, now);
   assert.deepEqual(rows.map(r => r.epoch), [now + 120, now + 180]);
   assert.throws(() => validateTarget({ ...t, mode: 'metro' }), TargetError);
+  assert.throws(() => validateTarget({ ...t, regionID: 'cl-014' }), TargetError);
+  await assert.rejects(() => providers.validate({ ...t, route: 'WRONG' }, now), TargetError);
 });
 test('MTR, NLB, GMB, MTR Bus and Light Rail normalize their distinct response shapes', async () => {
   for (const [op, route, stop, bound, response, expected] of [
@@ -161,7 +163,7 @@ test('MTR, NLB, GMB, MTR Bus and Light Rail normalize their distinct response sh
     ['lrtfeeder', '506', '506-D010', 'O', { busStop: [{ busStopId: '506-D010', bus: [{ arrivalTimeInSecond: '108000', departureTimeInSecond: '120' }] }] }, now + 120],
     ['lightRail', '505', 'LR920', 'O', { platform_list: [{ route_list: [{ route_no: '505', dest_ch: '兆康', stop: 0, time_en: '3 min' }] }] }, now + 180]
   ]) {
-    const t = { ...target, route, operators: [op], stopID: stop, directions: { [op]: bound } };
+    const t = { ...target, route, operators: [op], stopID: stop, directions: { [op]: bound }, lineID: '1234' };
     const entry = { route, co: [op], serviceType: 1, stops: { [op]: [stop] }, bound: { [op]: bound }, nlbId: '37', gtfsId: '1234', dest: { zh: '兆康' } };
     const providers = new Providers({ fetcher: async (url, init) => {
       if (String(url).includes('routeFareList')) return Response.json({ routeList: { '1A-key': entry } });

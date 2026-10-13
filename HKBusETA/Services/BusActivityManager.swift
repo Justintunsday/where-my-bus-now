@@ -154,7 +154,7 @@ final class BusActivityManager {
             let systemState = activity.content.state
             // A resumed app must not overwrite a newer remote snapshot or mark a fresh
             // server prediction offline merely because its own request failed.
-            if systemState.shouldPreserve(over: state, at: Date()) { continue }
+            if !session.identityInvalid && systemState.shouldPreserve(over: state, at: Date()) { continue }
             // An empty board is not proof that service has ended; keep monitoring.
             if (state.isTerminal && state.status != .noService) || session.identityInvalid {
                 push?.end(activityID: activity.id)

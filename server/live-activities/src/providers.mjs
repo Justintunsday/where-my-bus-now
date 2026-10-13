@@ -11,15 +11,16 @@ export function validateTarget(t) {
   for (const key of ['regionID', 'providerID', 'routeKey', 'route', 'serviceType', 'stopID', 'language'])
     requireValue(typeof t[key] === 'string' && t[key].length > 0 && t[key].length <= 300, `Invalid ${key}`);
   requireValue(Number.isInteger(t.stopSequence) && t.stopSequence >= 0 && t.stopSequence < 2000, 'Invalid sequence');
-  requireValue(Array.isArray(t.operators) && t.operators.length > 0 && t.operators.length <= 4 &&
+  requireValue(Array.isArray(t.operators) && t.operators.length <= 4 &&
     t.operators.every(op => typeof op === 'string'), 'Invalid operators');
   requireValue(t.directions && typeof t.directions === 'object' && !Array.isArray(t.directions), 'Invalid directions');
   requireValue(['en', 'zh', 'zhHans'].includes(t.language), 'Invalid language');
   if (t.providerID === 'hk') {
-    requireValue(t.regionID === 'hk' && t.operators.every(op => HK_OPERATORS.has(op)), 'No remote adapter for this Hong Kong service');
+    requireValue(t.regionID === 'hk' && t.operators.length > 0 && t.operators.every(op => HK_OPERATORS.has(op)), 'No remote adapter for this Hong Kong service');
   } else {
     requireValue(/^(chelaile-api|mainland)-\d+$/.test(t.providerID) && /^\d{1,8}$/.test(t.realtimeCityID ?? '') && t.mode !== 'metro' && t.source === 'chelaileAPI' &&
       typeof t.lineID === 'string' && t.lineID.length > 0 && t.lineID.length <= 200, 'No remote adapter for this provider');
+    requireValue(t.regionID === `cl-${t.realtimeCityID}`, 'Region and realtime city do not match');
   }
   return t;
 }
@@ -62,7 +63,8 @@ export class Providers {
       JSON.stringify([...entry.co].sort()) === JSON.stringify([...t.operators].sort()) &&
       Object.keys(entry.bound).length === Object.keys(t.directions).length &&
       Object.entries(entry.bound).every(([op, bound]) => t.directions[op] === bound) &&
-      stops?.[t.stopSequence] === t.stopID, 'Boarding identity no longer matches the Hong Kong database');
+      stops?.[t.stopSequence] === t.stopID && String(entry.gtfsId ?? '') === String(t.lineID ?? '') &&
+      t.source == null && t.mode == null, 'Boarding identity no longer matches the Hong Kong database');
     return entry;
   }
   async chelaile(path, params) {
@@ -76,8 +78,12 @@ export class Providers {
     const city_id = t.realtimeCityID;
     const detail = await this.cached(`${city_id}/${t.lineID}`, now,
       () => this.chelaile('lines/detail', { city_id, line_id: t.lineID }));
-    const station = detail.stations?.find(s => s.physicalStId === t.stopID || s.sId === t.stopID);
-    requireValue(station?.sId && Number(station.order) === t.stopSequence + 1 &&
+    const stations = (detail.stations ?? []).filter(s => s.physicalStId)
+      .sort((a, b) => Number(a.order ?? Infinity) - Number(b.order ?? Infinity));
+    const station = stations[t.stopSequence];
+    requireValue(detail.line && (detail.line.lineId ?? t.lineID) === t.lineID &&
+      (detail.line.name?.trim() || t.lineID) === t.route &&
+      station?.physicalStId === t.stopID && station.sId && Number(station.order) > 0 &&
       station.wgsLat != null && station.wgsLng != null && Number.isFinite(Number(station.wgsLat)) &&
       Number.isFinite(Number(station.wgsLng)), 'CheLaile boarding station no longer matches');
     requireValue(!detail.line?.isSubway, 'Metro realtime is unsupported');

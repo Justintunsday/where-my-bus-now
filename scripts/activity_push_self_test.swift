@@ -3,10 +3,12 @@ import Foundation
 @MainActor private final class FakeRegistrar: BusActivityPushRegistering {
     let scopeID = "test-installation"
     var tokens: [String] = []
+    var versions: [Int] = []
     var removed: [String] = []
     var failsRevocation = false
     func register(activityID: String, token: String, tokenVersion: Int, target: BusTrackingTarget, startedAt: Date) async throws {
         tokens.append(token)
+        versions.append(tokenVersion)
     }
     func revoke(activityID: String) async throws {
         if failsRevocation { throw URLError(.notConnectedToInternet) }
@@ -25,6 +27,7 @@ import Foundation
         coordinator.receive(token: Data([0x02, 0xbe]), activityID: "trip", target: .preview, startedAt: .now)
         for _ in 0..<20 { await Task.yield() }
         precondition(registrar.tokens == ["02be"], "Rotation cancels registration of the obsolete token")
+        precondition(registrar.versions == [2], "The upload version orders token rotation independently of network arrival")
         precondition(!defaults.dictionaryRepresentation().values.contains { String(describing: $0).contains("02be") }, "Tokens aren't persisted in preferences")
         registrar.failsRevocation = true
         coordinator.end(activityID: "trip")
