@@ -5,9 +5,24 @@ import WidgetKit
 
 @main
 struct BusArrivalWidget: Widget {
+    @WidgetConfigurationBuilder
     var body: some WidgetConfiguration {
+        if #available(iOS 18.0, *) {
+            configuration.supplementalActivityFamilies([.small, .medium])
+        } else {
+            configuration
+        }
+    }
+
+    private var configuration: some WidgetConfiguration {
         ActivityConfiguration(for: BusActivityAttributes.self) { context in
-            AdaptiveBusActivity(context: context)
+            Group {
+                if #available(iOS 18.0, *) { AdaptiveBusActivity(context: context) }
+                else {
+                    BusLockScreenView(target: context.attributes.target, state: context.state,
+                                      isStale: context.isStale, activityID: context.activityID)
+                }
+            }
             .activityBackgroundTint(TransitBrand.surface)
             .activitySystemActionForegroundColor(.primary)
             .widgetURL(context.attributes.target.deepLink)
@@ -20,6 +35,10 @@ struct BusArrivalWidget: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     BusIslandExpandedArrival(display: display)
+                }
+                DynamicIslandExpandedRegion(.center) {
+                    Text("\(display.copy("to")) \(context.attributes.target.destination)")
+                        .font(.headline).lineLimit(1).minimumScaleFactor(0.8)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     BusIslandExpandedDetails(display: display)
@@ -37,10 +56,10 @@ struct BusArrivalWidget: Widget {
             .widgetURL(context.attributes.target.deepLink)
             .keylineTint(TransitBrand.coral)
         }
-        .supplementalActivityFamilies([.small, .medium])
     }
 }
 
+@available(iOS 18.0, *)
 private struct AdaptiveBusActivity: View {
     @Environment(\.activityFamily) private var family
     let context: ActivityViewContext<BusActivityAttributes>

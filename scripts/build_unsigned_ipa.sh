@@ -12,4 +12,5 @@ mkdir -p "$RUNNER_TEMP/Payload"
 cp -R "$app" "$RUNNER_TEMP/Payload/"
 cd "$RUNNER_TEMP"
 zip -qry HKBusETA-unsigned.ipa Payload
+python3 "$GITHUB_WORKSPACE/scripts/verify_unsigned_ipa.py" HKBusETA-unsigned.ipa
 ls -lh HKBusETA-unsigned.ipa

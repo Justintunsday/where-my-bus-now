@@ -20,6 +20,7 @@ struct BusActivityDisplay {
         case .unavailable: return "unavailable"
         case .live, .scheduled:
             guard fresh else { return "stale" }
+            if state.status == .scheduled { return "scheduled" }
             if state.change == .nextBus { return "nextBus" }
             if state.change == .adjusted { return "adjusted" }
             if let arrival = state.arrival, arrival.timeIntervalSince(now) <= 60 { return "approaching" }
@@ -79,7 +80,10 @@ struct BusLockScreenView: View {
                     BusActivityCountdown(target: target, state: state, isStale: isStale)
                         .font(typeSize.isAccessibilitySize ? .title2.bold() : .largeTitle.bold())
                         .fontDesign(.rounded).foregroundStyle(accent)
-                    if display.fresh { Text(display.copy("timer")).font(.caption2.weight(.medium)).foregroundStyle(.secondary) }
+                    if display.fresh {
+                        if #available(iOS 18.0, *) { Text(display.copy("remaining")).font(.caption2).foregroundStyle(.secondary) }
+                        else { Text(display.copy("asOf")).font(.caption2).foregroundStyle(.secondary) }
+                    }
                 }
                 .frame(maxWidth: typeSize.isAccessibilitySize ? 130 : 110, alignment: .trailing)
             }
@@ -177,7 +181,8 @@ struct BusActivityFooter: View {
                 Text(display.copy(display.statusKey)).fontWeight(.medium)
                     .contentTransition(reduceMotion || dimmed ? .identity : .opacity)
                 HStack(spacing: 4) {
-                    Text(display.copy("updated"))
+                    if #available(iOS 18.0, *) { Text(display.copy("updated")) }
+                    else { Text("* \(display.copy("asOf"))") }
                     Text(display.state.updatedAt, style: .time).monospacedDigit()
                 }.foregroundStyle(.secondary)
             }
@@ -204,15 +209,28 @@ struct BusActivityCountdown: View {
     private var display: BusActivityDisplay { .init(target: target, state: state, isStale: isStale) }
 
     var body: some View {
-        if display.fresh, let arrival = state.arrival, arrival > state.updatedAt {
-            // Only the system advances this text; a countdown is not a fresh provider response.
-            Text(timerInterval: state.updatedAt...arrival, countsDown: true, showsHours: false)
+        if display.fresh {
+            countdown
                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.75)
                 .contentTransition(reduceMotion || dimmed ? .identity : .numericText(countsDown: true))
                 .accessibilityLabel(display.copy("remaining"))
-                .accessibilityValue(Text(timerInterval: state.updatedAt...arrival, countsDown: true, showsHours: false))
         } else {
             Image(systemName: display.symbol).accessibilityLabel(display.copy(display.statusKey))
+        }
+    }
+
+    @ViewBuilder private var countdown: some View {
+        if #available(iOS 18.0, *) {
+            // The system owns minute boundaries and the exact stale boundary, even
+            // while the host is suspended. No Timer or TimelineView in the extension.
+            Text(.currentDate, format: BusArrivalMinuteFormatStyle(state: state, language: target.language))
+                .accessibilityValue(Text(.currentDate, format: BusArrivalMinuteFormatStyle(
+                    state: state, language: target.language, spoken: true)))
+        } else if let minutes = state.remainingMinutes(at: state.updatedAt) {
+            // iOS 17 cannot schedule this exact format. The asterisk explicitly
+            // refers to the footer's successful update time, never a ticking ETA.
+            Text("\(minutes) \(display.copy("minutes"))*")
+                .accessibilityValue("\(minutes) \(display.copy("minutes")) · \(display.copy("asOf")) \(state.updatedAt.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: target.locale, timeZone: target.timeZone)))")
         }
     }
 }
@@ -263,8 +281,6 @@ struct BusIslandExpandedDetails: View {
     }
     private var standardDetails: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text("\(display.copy("to")) \(display.target.destination)").font(.headline).lineLimit(1)
-                .minimumScaleFactor(0.8)
             Label(display.target.stopName, systemImage: "mappin.circle.fill")
                 .font(.caption.weight(.medium)).lineLimit(1)
             if !typeSize.isAccessibilitySize, let second = display.state.secondArrival {

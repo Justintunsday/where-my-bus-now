@@ -100,7 +100,24 @@ struct BusArrivalState: Codable, Hashable, Sendable {
     }
 
     func isFresh(at date: Date) -> Bool {
-        date.timeIntervalSince1970 < validUntilEpoch && (status == .live || status == .scheduled)
+        guard let arrivalEpoch, arrivalEpoch.isFinite, updatedEpoch.isFinite,
+              validUntilEpoch.isFinite, date.timeIntervalSince1970.isFinite else { return false }
+        return date.timeIntervalSince1970 >= updatedEpoch
+            && date.timeIntervalSince1970 < min(validUntilEpoch, arrivalEpoch)
+            && (status == .live || status == .scheduled)
+    }
+
+    /// Round positive fractions up: 60 seconds = 1 min, 61 seconds = 2 min.
+    /// Absolute timestamps make hour/day/time-zone boundaries irrelevant.
+    static func remainingMinutes(arrival: Date, now: Date) -> Int? {
+        let seconds = arrival.timeIntervalSince(now)
+        guard seconds.isFinite else { return nil }
+        return Int(exactly: ceil(max(0, seconds) / 60))
+    }
+
+    func remainingMinutes(at date: Date) -> Int? {
+        guard isFresh(at: date), let arrival else { return nil }
+        return Self.remainingMinutes(arrival: arrival, now: date)
     }
 
     /// A prediction is no longer a live prediction after its arrival time.
@@ -150,6 +167,44 @@ struct BusArrivalState: Codable, Hashable, Sendable {
     }
 }
 
+/// iOS 18+ lets the system schedule discrete Text updates in a Live Activity.
+/// This formats time, never fetches data or promotes the second bus by itself.
+@available(iOS 18.0, macOS 15.0, *)
+struct BusArrivalMinuteFormatStyle: DiscreteFormatStyle {
+    let state: BusArrivalState
+    let language: String
+    var spoken = false
+
+    func format(_ value: Date) -> AttributedString {
+        guard let minutes = state.remainingMinutes(at: value) else {
+            return AttributedString(spoken ? BusActivityCopy.text("stale", language: language) : "—")
+        }
+        return AttributedString("\(minutes) \(BusActivityCopy.text("minutes", language: language))")
+    }
+
+    func discreteInput(after input: Date) -> Date? {
+        guard input.timeIntervalSince1970.isFinite else { return nil }
+        if input < state.updatedAt { return state.updatedAt }
+        guard let minutes = state.remainingMinutes(at: input), let arrival = state.arrival else { return nil }
+        let boundary = arrival.addingTimeInterval(-Double(max(0, minutes - 1)) * 60)
+        return min(boundary, state.staleDate)
+    }
+
+    func discreteInput(before input: Date) -> Date? {
+        guard input.timeIntervalSince1970.isFinite, let arrival = state.arrival,
+              arrival.timeIntervalSince1970.isFinite, state.updatedEpoch.isFinite,
+              state.validUntilEpoch.isFinite, input > state.updatedAt else { return nil }
+        let expiry = min(arrival, state.staleDate)
+        if input >= expiry {
+            guard expiry > state.updatedAt else { return nil }
+            return Date(timeIntervalSince1970: expiry.timeIntervalSince1970.nextDown)
+        }
+        guard let minutes = state.remainingMinutes(at: input) else { return nil }
+        let boundary = max(state.updatedAt, arrival.addingTimeInterval(-Double(minutes) * 60))
+        return Date(timeIntervalSince1970: boundary.timeIntervalSince1970.nextDown)
+    }
+}
+
 #if canImport(ActivityKit) && !BUS_CONTRACT_TESTS
 struct BusActivityAttributes: ActivityAttributes {
     typealias ContentState = BusArrivalState
@@ -174,6 +229,7 @@ enum BusActivityCopy {
             "end": ["End tracking", "停止追蹤", "停止跟踪"],
             "foreground": ["Updates while app is open", "App 開啟時更新", "App 打开时更新"],
             "minutes": ["min", "分鐘", "分钟"],
+            "asOf": ["At last update", "上次更新時", "上次更新时"],
             "to": ["To", "往", "往"],
             "next": ["Next", "下一班", "下一班"],
             "following": ["Following", "後續班次", "后续班次"],

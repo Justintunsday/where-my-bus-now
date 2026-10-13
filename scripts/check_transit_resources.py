@@ -19,7 +19,10 @@ assert host["NSSupportsLiveActivities"] is True
 assert "busnow" in host["CFBundleURLTypes"][0]["CFBundleURLSchemes"]
 widget = plistlib.loads((root / "BusArrivalWidget/Info.plist").read_bytes())
 assert widget["NSExtension"]["NSExtensionPointIdentifier"] == "com.apple.widgetkit-extension"
+project = (root / "HKBusETA.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
+targets = re.findall(r"IPHONEOS_DEPLOYMENT_TARGET = ([\d.]+);", project)
+assert len(targets) == 6 and set(targets) == {"17.0"}, f"App, extension and tests must all support iOS 17: {targets}"
 for file in (root / "BusArrivalWidget").glob("*.swift"):
     source = file.read_text(encoding="utf-8")
     assert "URLSession" not in source and "CLLocationManager" not in source
-print(f"PASS: {len(keys)} literal UI keys in three languages; host/extension plists; no extension networking")
+print(f"PASS: {len(keys)} literal UI keys in three languages; host/extension plists; iOS 17 minimum; no extension networking")

@@ -8,9 +8,10 @@ private struct CircularToolbarControl: ViewModifier {
         #if compiler(>=6.2)
         if #available(iOS 26.0, *), !reduceTransparency {
             control(content).glassEffect(.regular.interactive(), in: Circle())
-        } else { opaqueControl(content) }
+        } else if #available(iOS 26.0, *) { opaqueControl(content) }
+        else { classicControl(content) }
         #else
-        opaqueControl(content)
+        classicControl(content)
         #endif
     }
 
@@ -23,6 +24,12 @@ private struct CircularToolbarControl: ViewModifier {
     private func opaqueControl(_ content: Content) -> some View {
         control(content).background(DesignTokens.surface, in: Circle())
             .overlay(Circle().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5))
+    }
+
+    private func classicControl(_ content: Content) -> some View {
+        content.buttonStyle(.automatic).labelStyle(.iconOnly)
+            .foregroundStyle(DesignTokens.accent)
+            .frame(minWidth: 44, minHeight: 44)
     }
 }
 

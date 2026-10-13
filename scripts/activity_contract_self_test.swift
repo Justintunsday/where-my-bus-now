@@ -15,15 +15,48 @@ import Foundation
         precondition(BusTrackingTarget.decode(url: URL(string: "busnow://eta?target=invalid")!) == nil)
         precondition(BusTrackingTarget.decode(url: URL(string: "busnow://wrong?target=YWJj")!) == nil)
         let now = Date(timeIntervalSince1970: 1_800_000_000)
+        for (seconds, expected) in [(-120.0, 0), (0, 0), (0.01, 1), (59, 1), (60, 1), (60.01, 2), (360, 6), (86460, 1441)] {
+            precondition(BusArrivalState.remainingMinutes(arrival: now.addingTimeInterval(seconds), now: now) == expected)
+        }
+        precondition(BusArrivalState.remainingMinutes(arrival: Date(timeIntervalSince1970: .infinity), now: now) == nil)
+        let iso = ISO8601DateFormatter()
+        for (start, end, expected) in [
+            ("2026-10-13T07:54:00+08:00", "2026-10-13T08:00:00+08:00", 6),
+            ("2026-10-13T07:57:00+08:00", "2026-10-13T08:00:00+08:00", 3),
+            ("2026-10-13T07:59:00+08:00", "2026-10-13T08:00:00+08:00", 1),
+            ("2026-10-13T23:57:00+08:00", "2026-10-14T00:03:00+08:00", 6),
+            ("2026-10-13T23:57:00+08:00", "2026-10-13T16:03:00Z", 6),
+            ("2026-11-01T01:57:00-04:00", "2026-11-01T01:03:00-05:00", 6)
+        ] {
+            precondition(BusArrivalState.remainingMinutes(arrival: iso.date(from: end)!, now: iso.date(from: start)!) == expected)
+        }
         let prediction = BusArrivalState.prediction(arrival: now.addingTimeInterval(420), updatedAt: now, scheduled: false)
         precondition(prediction.isFresh(at: now.addingTimeInterval(89)))
         precondition(!prediction.isFresh(at: now.addingTimeInterval(90)), "Never present old data as live")
+        precondition(prediction.remainingMinutes(at: now.addingTimeInterval(90)) == nil)
+        if #available(macOS 15.0, iOS 18.0, *) {
+            let format = BusArrivalMinuteFormatStyle(state: prediction, language: "en")
+            precondition(String(format.format(now).characters) == "7 min")
+            precondition(format.discreteInput(after: now) == now.addingTimeInterval(60))
+            precondition(String(format.format(now.addingTimeInterval(60)).characters) == "6 min")
+            precondition(format.discreteInput(after: now.addingTimeInterval(60)) == now.addingTimeInterval(90))
+            precondition(String(format.format(now.addingTimeInterval(90)).characters) == "—")
+            precondition(format.discreteInput(after: now.addingTimeInterval(90)) == nil)
+            let before = format.discreteInput(before: now.addingTimeInterval(60))!
+            precondition(before < now.addingTimeInterval(60) && String(format.format(before).characters) == "7 min")
+            let expiryBefore = format.discreteInput(before: now.addingTimeInterval(120))!
+            precondition(expiryBefore < prediction.staleDate && String(format.format(expiryBefore).characters) == "6 min")
+            let encodedFormat = try JSONEncoder().encode(format)
+            let decodedFormat = try JSONDecoder().decode(BusArrivalMinuteFormatStyle.self, from: encodedFormat)
+            precondition(decodedFormat == format, "System text formatter survives widget serialization")
+        }
         let short = BusArrivalState.prediction(arrival: now.addingTimeInterval(20), updatedAt: now, scheduled: false)
         precondition(short.staleDate == now.addingTimeInterval(20), "Stale by predicted arrival")
         let adjusted = BusArrivalState.prediction(arrival: now.addingTimeInterval(600), updatedAt: now.addingTimeInterval(30), scheduled: false)
         precondition(adjusted.arrival! > prediction.arrival!, "Provider adjustments are accepted")
         let cancelled = BusArrivalState.unavailable(at: now, message: "Cancelled", cancelled: true)
         precondition(cancelled.status == .cancelled && cancelled.arrival == nil && !cancelled.isFresh(at: now))
+        precondition(cancelled.remainingMinutes(at: now) == nil)
         let unavailable = BusArrivalState.unavailable(at: now)
         precondition(unavailable.arrival == nil && unavailable.status == .unavailable)
         let stateData = try JSONEncoder().encode(prediction)
@@ -77,6 +110,6 @@ import Foundation
         fields["stopSequence"] = -1
         let invalid = try JSONDecoder().decode(BusTrackingTarget.self, from: JSONSerialization.data(withJSONObject: fields))
         precondition(BusTrackingTarget.decode(url: invalid.deepLink!) == nil, "Reject invalid stop sequence")
-        print("PASS: Live Activity identity, legacy decoding, second departure, revisions, next bus, terminal states, offline timestamp retention, deep links and APNs contract")
+        print("PASS: whole-minute rounding, hour/day/time-zone/DST boundaries, discrete system text and expiration, state serialization, Live Activity identity, revisions, terminal states, offline retention, deep links and APNs contract")
     }
 }

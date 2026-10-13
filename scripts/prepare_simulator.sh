@@ -2,12 +2,13 @@
 set -euo pipefail
 kind="${1:-phone}"
 xcrun simctl list devices available --json > "$RUNNER_TEMP/sim-devices.json"
-device=$(python3 - "$RUNNER_TEMP/sim-devices.json" "$kind" <<'PY'
+device=$(python3 - "$RUNNER_TEMP/sim-devices.json" "$kind" "${BUS_IOS_MAJOR:-26}" <<'PY'
 import json,sys
 kind='iPad' if sys.argv[2]=='ipad' else 'iPhone'
+major=sys.argv[3]
 candidates=[(runtime,d) for runtime,ds in json.load(open(sys.argv[1]))['devices'].items()
-            if 'iOS' in runtime for d in ds if kind in d['name']]
-assert candidates, 'No compatible simulator runtime'
+            if f'iOS-{major}-' in runtime for d in ds if kind in d['name']]
+assert candidates, f'No iOS {major} {kind} runtime: cannot substitute another OS for visual evidence'
 # Choose an actual Dynamic Island iPhone, not an alphabetically earlier 16e.
 # Keep iPad mini for a useful narrow regular-width canvas.
 preferred=['iPhone 17','iPhone 16','iPhone 15 Pro','iPhone 17 Pro']

@@ -29,14 +29,14 @@ official base data when configured. This is not an official app.
 - Stop departure boards with aligned tabular ETA columns
 - Nearby stops with distance, favorites for whole routes and stops, recents
 - Commute-first Today tab: save a route, direction and boarding stop to see its next arrival immediately
-- Lock Screen Live Activities and all Dynamic Island presentations, with native countdowns, stale-state disclosure, deep links and an end action
+- Lock Screen Live Activities and all Dynamic Island presentations, with whole-minute countdowns, stale-state disclosure, deep links and an end action
 - ETA display modes (clock time / minutes / both), scheduled-trip markers
 - Traditional Chinese, Simplified Chinese and English
-- iPhone and iPad, dark mode, iOS 26 Liquid Glass
+- iPhone and iPad, dark mode, classic iOS 17–18 and native iOS 26 Liquid Glass
 
 ## Architecture
 
-- SwiftUI + `@Observable` (iOS 26+), no third-party dependencies
+- SwiftUI + `@Observable` (iOS 17+), no third-party dependencies
 - **`TransitProvider` protocol**: everything region-specific (data source,
   time zone, operators, calendars, fares, colors, ETA fetching) lives behind
   one interface
@@ -81,7 +81,7 @@ Existing bookmark files and region namespaces are preserved. Boarding points use
 
 ## Build
 
-Requirements: macOS + Xcode 26 with the iOS 26 SDK. The app and widget require iOS 26 or newer.
+Requirements: macOS + Xcode 26 with the iOS 26 SDK. The app and widget run on iOS 17 or newer. Xcode 26 remains the required build toolchain.
 
 ```bash
 git clone https://github.com/Justintunsday/where-my-bus-now.git
@@ -89,7 +89,7 @@ cd where-my-bus-now
 open HKBusETA.xcodeproj
 ```
 
-GitHub Actions uses Xcode 26 for the simulator, navigation UI tests and unsigned device archive; separate phone/iPad jobs capture the screenshot matrix. Packaging asserts that `BusArrivalWidget.appex` is embedded before generating the unsigned IPA. The supported runtime is iOS 26 and newer. Hosted API reachability remains non-blocking; offline provider, navigation, bookmark, localization and ActivityKit contract tests are required.
+GitHub Actions uses Xcode 26 for the simulator, navigation UI tests and unsigned device archive; separate phone/iPad jobs capture the screenshot matrix. Packaging verifies both the archive and the IPA ZIP: app/extension executables, bundle identities, matching versions, Live Activities, URL scheme and iOS 17 minimum. Screenshot jobs run the exact Xcode 26 simulator app on iOS 17, 18 and 26; they require the requested runtime and never substitute a different generation. Hosted API reachability remains non-blocking; offline provider, navigation, bookmark, localization and ActivityKit contract tests are required.
 
 `TransitPreviewGallery.swift` provides isolated fixtures for SwiftUI previews and simulator screenshots; production storage and provider requests are bypassed in this debug-only path. `BusArrivalWidget.swift` includes Lock Screen, compact, expanded and minimal WidgetKit previews. In-app activity screenshots show the shared content layout, not a signed-device Lock Screen capture.
 
@@ -132,3 +132,9 @@ time. All arrival data is for reference only — always check with the operator.
 
 [GPL-3.0](LICENSE), matching the upstream
 [hk-independent-bus-eta](https://github.com/hkbus/hk-independent-bus-eta) project.
+
+### Whole-minute Live Activity policy
+
+iOS 18 and later use system-scheduled `Text(.currentDate, format:)` with a shared `DiscreteFormatStyle`: positive partial minutes round up, exactly 60 seconds is 1 minute, and the formatter changes to a dash at the earlier of prediction expiry and arrival. It never chooses another bus without a new provider snapshot. iOS 17 shows minutes at the last successful update, marked with `*` and a matching timestamp/footer; this is an explicitly labeled fallback, not a continuously ticking countdown. ActivityKit stale content replaces the fallback with a refresh indication. Both paths distinguish scheduled predictions and expire after at most 90 seconds without new data.
+
+An unsigned IPA is a build artifact, not an installable or push-enabled release. Sign both targets with your team and compatible provisioning before device installation. APNs needs Push Notifications signing plus the separately documented authenticated registration service and worker.

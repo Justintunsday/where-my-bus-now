@@ -57,6 +57,7 @@ struct ActivityPreviewGallery: View {
                             Spacer(minLength: 12)
                             BusIslandExpandedArrival(display: display)
                         }
+                        Text("\(display.copy("to")) \(target.destination)").font(.headline).lineLimit(1)
                         BusIslandExpandedDetails(display: display)
                     }.padding(14).foregroundStyle(.white)
                         .background(.black, in: RoundedRectangle(cornerRadius: 32))
