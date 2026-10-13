@@ -70,7 +70,15 @@ import XCTest
         wait(for: [dismissed], timeout: 10)
         XCTAssertFalse(app.descendants(matching: .any)["tracking.error"].exists)
         XCUIDevice.shared.press(.home)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        XCTAssertTrue(springboard.wait(for: .runningForeground, timeout: 5))
+        // Home's closing animation outlives the accessibility foreground event.
+        Thread.sleep(forTimeInterval: 2)
         screenshot("activity-system-compact")
+        let hierarchy = XCTAttachment(string: springboard.debugDescription)
+        hierarchy.name = "system-activity-accessibility-tree"
+        hierarchy.lifetime = .keepAlways
+        add(hierarchy)
         app.activate()
         open.tap()
         let end = app.buttons["tracking.end"]

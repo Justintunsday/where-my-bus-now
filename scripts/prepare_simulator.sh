@@ -8,8 +8,12 @@ kind='iPad' if sys.argv[2]=='ipad' else 'iPhone'
 candidates=[(runtime,d) for runtime,ds in json.load(open(sys.argv[1]))['devices'].items()
             if 'iOS' in runtime for d in ds if kind in d['name']]
 assert candidates, 'No compatible simulator runtime'
-# Smaller native canvas also exercises compact route width. Avoid expensive Pro Max/13-inch boots.
-candidates.sort(key=lambda x: ('iOS-26' not in x[0], 'mini' not in x[1]['name'] if kind=='iPad' else 'Pro' in x[1]['name'], x[1]['name']))
+# Choose an actual Dynamic Island iPhone, not an alphabetically earlier 16e.
+# Keep iPad mini for a useful narrow regular-width canvas.
+preferred=['iPhone 17','iPhone 16','iPhone 15 Pro','iPhone 17 Pro']
+candidates.sort(key=lambda x: ('iOS-26' not in x[0],
+    ('mini' not in x[1]['name']) if kind=='iPad' else (preferred.index(x[1]['name']) if x[1]['name'] in preferred else 99),
+    'Max' in x[1]['name'], x[1]['name']))
 print(candidates[0][1]['udid'])
 PY
 )
