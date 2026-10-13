@@ -14,7 +14,7 @@ struct TrackingSheet: View {
                                       isStale: !session.activityState.isFresh(at: Date()))
                         .background(DesignTokens.surface, in: RoundedRectangle(cornerRadius: 24))
                         .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(DesignTokens.divider, lineWidth: 0.5))
-                    Label(L10n.t(app.activities.supportsRemoteUpdates ? "tracking.remoteNotice" : "tracking.foregroundNotice"), systemImage: "info.circle")
+                    Label(L10n.t(app.activities.supportsRemoteUpdates(for: target) ? "tracking.remoteNotice" : "tracking.foregroundNotice"), systemImage: "info.circle")
                         .font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("tracking.disclosure")
                     if let error = app.activities.error {

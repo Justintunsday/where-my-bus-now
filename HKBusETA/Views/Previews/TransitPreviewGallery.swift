@@ -101,6 +101,17 @@ struct TransitPreviewGallery: View {
             case "saved": FavoritesView()
             case "settings": SettingsView()
             case "region": RegionPickerView()
+            case let value where value.hasPrefix("home-tracking"):
+                HomeView(openSearch: {})
+                    .task {
+                        let entry = TransitPreviewData.entry(for: TransitPreviewData.sample(in: screen))
+                        if let target = BusTrackingTarget(app: app, routeKey: entry.routeKey, seq: 2),
+                           let session = app.arrivals.session(for: target, app: app) {
+                            var state = session.activityState
+                            if value.contains("stale") { state.validUntilEpoch = Date().addingTimeInterval(-1).timeIntervalSince1970 }
+                            app.activities.seedPreviewTracking(target: target, state: state)
+                        }
+                    }
             case let value where value.hasPrefix("activity"):
                 ActivityPreviewGallery(initialScenario: BusArrivalPreview(rawValue: String(value.dropFirst("activity-".count))) ?? .normal,
                                        initialLongRoute: value == "activity-long",
@@ -130,6 +141,9 @@ struct TransitPreviewGallery: View {
 #Preview("EAL • Activity") { TransitPreviewGallery(screen: "activity-eal") }
 #Preview("Citybus • Activity dark") { TransitPreviewGallery(screen: "activity-ctb").preferredColorScheme(.dark) }
 #Preview("Today") { TransitPreviewGallery(screen: "home") }
+#Preview("Today • EAL tracking") { TransitPreviewGallery(screen: "home-tracking-eal") }
+#Preview("Today • Citybus dark") { TransitPreviewGallery(screen: "home-tracking-ctb").preferredColorScheme(.dark) }
+#Preview("Today • Stale reduced effects") { TransitPreviewGallery(screen: "home-tracking-stale").environment(\.previewReducedEffects, true) }
 #Preview("Route • Dark") { TransitPreviewGallery(screen: "route").preferredColorScheme(.dark) }
 #Preview("ETA • Accessibility") { TransitPreviewGallery(screen: "eta").environment(\.dynamicTypeSize, .accessibility3) }
 #Preview("Empty") { TransitPreviewGallery(screen: "empty") }

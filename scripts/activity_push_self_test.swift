@@ -5,7 +5,7 @@ import Foundation
     var tokens: [String] = []
     var removed: [String] = []
     var failsRevocation = false
-    func register(activityID: String, token: String, target: BusTrackingTarget, startedAt: Date) async throws {
+    func register(activityID: String, token: String, tokenVersion: Int, target: BusTrackingTarget, startedAt: Date) async throws {
         tokens.append(token)
     }
     func revoke(activityID: String) async throws {

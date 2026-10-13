@@ -13,7 +13,7 @@ Three structural alternatives were considered: search-first (fast for unfamiliar
 - Nearby: map and list synchronized by selection, walking/navigation action, explicit permission and empty/error states. Coordinates retain their declared reference system.
 - Saved: nationwide region sections, route and stop favorites, editing and a direct path to choosing a boarding stop.
 - Route: fixed map above an independently scrolling timeline on iPhone; map/timeline side by side in regular width. Direction and service variant remain explicit. Selected stop expands inline; full ETA is a native push.
-- ETA: route/destination → boarding stop → next arrival → subsequent services → freshness/status. Tracking is a native sheet with a real WidgetKit layout preview and an explicit foreground-update disclosure.
+- ETA: route/destination → boarding stop → next arrival → subsequent services → freshness/status. Tracking is a native sheet with a real WidgetKit layout preview and a disclosure matching the configured update capability.
 - Settings: native Form, searchable region sheet, language and arrival display preferences, data source information.
 - iPad: native NavigationSplitView sidebar; iPhone: native TabView and independent NavigationStacks. System sheets retain swipe dismissal and detents.
 

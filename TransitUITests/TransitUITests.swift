@@ -173,6 +173,28 @@ import XCTest
         screenshot("arrival-accessibility-audit")
     }
 
+    func testTodayTrackingSurfaceNavigatesAndRemainsReadableWithReducedEffects() throws {
+        let app = launch("home-tracking-eal", reduced: true)
+        let open = app.buttons["home.tracking.open"]
+        XCTAssertTrue(open.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["home.tracking.menu"].exists)
+        try app.performAccessibilityAudit(for: [.sufficientElementDescription, .textClipped])
+        screenshot("today-tracking-reduced-effects")
+        open.tap()
+        XCTAssertTrue(app.navigationBars["EAL"].waitForExistence(timeout: 5))
+    }
+
+    func testTodayTrackingUsesNativeGlassAndShowsStaleState() {
+        let app = launch("home-tracking-eal")
+        XCTAssertTrue(app.buttons["home.tracking.open"].waitForExistence(timeout: 10))
+        screenshot("today-tracking-native-glass")
+        app.terminate()
+        let stale = launch("home-tracking-stale")
+        XCTAssertTrue(stale.buttons["home.tracking.open"].waitForExistence(timeout: 10))
+        XCTAssertTrue(stale.staticTexts["預測已過期"].exists)
+        screenshot("today-tracking-stale")
+    }
+
     private func screenshot(_ name: String) {
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name

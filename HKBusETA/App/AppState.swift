@@ -35,7 +35,7 @@ final class AppState {
         bookmarks = BookmarkStore(regionID: region.id, storageURL: bookmarkURL)
         boarding = BoardingStore(defaults: defaults)
         location = LocationService()
-        activities = BusActivityManager(registrar: activityRegistrar)
+        activities = BusActivityManager(registrar: activityRegistrar ?? BusActivityRemoteConfiguration.registrar())
         RegionClock.timeZone = provider.timeZone
     }
 

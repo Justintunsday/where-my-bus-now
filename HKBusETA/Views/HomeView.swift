@@ -2,6 +2,8 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(AppState.self) private var app
+    @Environment(\.transitReduceMotion) private var reduceMotion
+    @Namespace private var trackingIdentity
     let openSearch: () -> Void
 
     var body: some View {
@@ -16,10 +18,9 @@ struct HomeView: View {
                 if !app.activities.activeTargets.isEmpty {
                     Section(L10n.t("home.tracking")) {
                         ForEach(app.activities.activeTargets) { target in
-                            NavigationLink(value: target) {
-                                Label("\(target.route) · \(target.stopName)", systemImage: "wave.3.right.circle.fill")
-                                    .font(.headline)
-                            }
+                            trackingCard(target)
+                                .listRowBackground(Color.clear)
+                                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                         }
                     }
                 }
@@ -77,6 +78,19 @@ struct HomeView: View {
             .navigationTitle(L10n.t("home.title"))
             .toolbar { TransitAppToolbar() }
             .transitDestinations()
+            .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: app.activities.activeTargets.map(\.id))
+        }
+    }
+
+    @ViewBuilder private func trackingCard(_ target: BusTrackingTarget) -> some View {
+        if #available(iOS 26, *) {
+            GlassEffectContainer {
+                HomeTrackingCard(target: target)
+                    .glassEffectID("active-trip", in: trackingIdentity)
+                    .glassEffectTransition(reduceMotion ? .identity : .materialize)
+            }
+        } else {
+            HomeTrackingCard(target: target).transition(.opacity)
         }
     }
 }

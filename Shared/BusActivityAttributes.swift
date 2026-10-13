@@ -24,6 +24,8 @@ struct BusTrackingTarget: Codable, Hashable, Identifiable, Sendable {
     var timeZoneIdentifier: String? = nil
     // Optional to decode existing activities, bookmarks and deep links unchanged.
     var theme: RouteTheme? = nil
+    // CheLaile citycode differs from the stable mainland provider's administrative adcode.
+    var realtimeCityID: String? = nil
 
     var resolvedTheme: RouteTheme {
         if let theme { return theme }
@@ -95,6 +97,12 @@ struct BusArrivalState: Codable, Hashable, Sendable {
     var staleDate: Date { Date(timeIntervalSince1970: validUntilEpoch) }
     var secondArrival: Date? { secondArrivalEpoch.map(Date.init(timeIntervalSince1970:)) }
     var isTerminal: Bool { [.cancelled, .noService, .arrived, .departed, .ended].contains(status) }
+
+    /// Foreground reconciliation must preserve a newer system-delivered snapshot.
+    func shouldPreserve(over candidate: Self, at date: Date) -> Bool {
+        updatedEpoch > candidate.updatedEpoch ||
+            ((candidate.status == .networkError || candidate.status == .unavailable) && isFresh(at: date))
+    }
 
     /// Only unambiguous stop/service statements. “Departed from terminal” and
     /// “已開出” can mean an NLB bus is on its way; they must not end this trip.

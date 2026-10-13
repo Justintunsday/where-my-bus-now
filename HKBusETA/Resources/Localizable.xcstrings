@@ -1,6 +1,138 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+"tracking.stale": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "ETA out of date"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "預測已過期"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "预测已过期"
+        }
+      }
+    }
+  },
+"tracking.foreground": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Updates while app is open"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "App 開啟時更新"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "App 打开时更新"
+        }
+      }
+    }
+  },
+  "tracking.remotePending": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Connecting background updates…"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "正在連接背景更新…"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "正在连接后台更新…"
+        }
+      }
+    }
+  },
+  "tracking.remoteRegistered": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Background updates connected"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已連接背景更新"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已连接后台更新"
+        }
+      }
+    }
+  },
+  "tracking.remoteReceived": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Receiving background predictions"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "正在接收背景預測"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "正在接收后台预测"
+        }
+      }
+    }
+  },
+  "tracking.remoteFailed": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Background connection failed · reopen to retry"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "背景連接失敗 · 重新開啟以重試"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "后台连接失败 · 重新打开以重试"
+        }
+      }
+    }
+  },
 
   "arrival.live": {
     "localizations": {

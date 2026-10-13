@@ -22,7 +22,8 @@ extension BusTrackingTarget {
                   source: metadata?.source.rawValue, language: L10n.language.rawValue,
                   timeZoneIdentifier: app.region.timeZone.identifier,
                   theme: .resolve(route: entry.route, operators: entry.co,
-                                  providerHex: app.provider.routeColorHex(entry: entry)))
+                                  providerHex: app.provider.routeColorHex(entry: entry)),
+                  realtimeCityID: app.mainlandProvider?.city.citycode)
     }
 
     func matches(entry: RouteEntry, providerID: String, source: String?, mode: String?) -> Bool {
@@ -79,9 +80,19 @@ final class ArrivalSession {
     /// Restore the system's last received snapshot before the first foreground request.
     /// A cold-start network failure must not erase an existing activity's clock history.
     func restore(_ state: BusArrivalState) {
-        guard lastSuccessfulState == nil else { return }
+        guard lastSuccessfulState == nil || (state.updatedEpoch >= (lastSuccessfulState?.updatedEpoch ?? 0)
+            && state != lastSuccessfulState) else { return }
         lastSuccessfulState = state
         updatedAt = state.updatedAt
+        error = nil
+        isNetworkFailure = false
+        if state.updateSource == .push {
+            etas = [state.arrival, state.secondArrival].compactMap { $0 }.map {
+                Eta(eta: RegionClock.isoString(from: $0),
+                    remark: Terminal(en: state.status == .scheduled ? "Scheduled" : "", zh: state.status == .scheduled ? "預定班次" : ""),
+                    dest: Terminal(en: target.destination, zh: target.destination), co: target.operators.first ?? "")
+            }
+        }
         if state.status == .networkError || state.status == .unavailable {
             isNetworkFailure = state.status == .networkError
             error = state.message.isEmpty
@@ -189,7 +200,12 @@ final class ArrivalStore {
 
     func session(for target: BusTrackingTarget, app: AppState) -> ArrivalSession? {
         let cacheKey = "\(target.id)|language:\(target.language)"
-        if let session = sessions[cacheKey] { return session }
+        if let session = sessions[cacheKey] {
+            if let activity = Activity<BusActivityAttributes>.activities.first(where: { $0.attributes.target.id == target.id }) {
+                session.restore(activity.content.state)
+            }
+            return session
+        }
         guard let region = RegionCatalog.region(for: target.regionID) else { return nil }
         let data: DataStore
         if app.region.id == target.regionID { data = app.data }

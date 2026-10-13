@@ -24,7 +24,7 @@ The Lock Screen adapts warm white/charcoal surfaces to appearance. The Island's 
 | Operator explicitly reports arrived/departed | Distinct check/arrow status; no live countdown | End with a short dismissal interval unless a new future service is already available |
 | Explicit cancellation | Cancellation symbol/text; remove arrival | End with a short dismissal interval |
 | Successful response has no future departures | “No further departures” | End with a short dismissal interval |
-| Transport failure | Offline status; retain last clock times and the last successful timestamp | Mark stale, retry only while foreground |
+| Transport failure | Offline status; retain last clock times and the last successful timestamp | Mark stale; configured server retries independently of the app |
 | API/data failure | Prediction unavailable; preserve last clock history when available | Mark stale, no fabricated ETA |
 | No new snapshot before stale date / predicted arrival | “Open app to refresh”; countdown becomes invalid | No local inference that the bus physically arrived |
 | User ends | End immediately | App, Settings or Lock Screen intent |

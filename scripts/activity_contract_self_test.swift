@@ -2,7 +2,33 @@ import Foundation
 
 @main enum ActivityContractSelfTest {
     static func main() throws {
+        if CommandLine.arguments.count > 1 {
+            struct Push: Decodable {
+                struct APS: Decodable {
+                    let timestamp: Int
+                    let event: String
+                    let contentState: BusArrivalState
+                    let staleDate: Int
+                    enum CodingKeys: String, CodingKey {
+                        case timestamp, event, contentState = "content-state", staleDate = "stale-date"
+                    }
+                }
+                let aps: APS
+            }
+            let push = try JSONDecoder().decode(Push.self, from: Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1])))
+            precondition(push.aps.event == "update" && push.aps.contentState.updateSource == .push)
+            precondition(push.aps.contentState.remainingMinutes(at: Date(timeIntervalSince1970: Double(push.aps.timestamp))) == 2)
+            precondition(push.aps.staleDate == Int(push.aps.contentState.validUntilEpoch))
+            print("PASS: actual Node server payload decodes into the shipping Swift ContentState")
+        }
         let target = BusTrackingTarget.preview
+        let resumedAt = Date(timeIntervalSince1970: 1791849600)
+        var remote = BusArrivalState.prediction(arrival: resumedAt.addingTimeInterval(180), updatedAt: resumedAt, scheduled: false)
+        remote.updateSource = .push
+        let olderLocal = BusArrivalState.prediction(arrival: resumedAt.addingTimeInterval(120), updatedAt: resumedAt.addingTimeInterval(-30), scheduled: false)
+        precondition(remote.shouldPreserve(over: olderLocal, at: resumedAt))
+        precondition(remote.shouldPreserve(over: .failed(previous: remote, at: resumedAt.addingTimeInterval(5), network: true, message: ""), at: resumedAt.addingTimeInterval(5)))
+        precondition(!remote.shouldPreserve(over: .prediction(arrival: resumedAt.addingTimeInterval(240), updatedAt: resumedAt.addingTimeInterval(30), scheduled: false), at: resumedAt.addingTimeInterval(30)))
         let eal = RouteTheme.resolve(route: "EAL", operators: ["mtr"])
         precondition(eal.colorHex == 0x5EB7E8)
         precondition(RouteTheme.resolve(route: "TWL", operators: ["mtr"]).colorHex == 0xE60012)
