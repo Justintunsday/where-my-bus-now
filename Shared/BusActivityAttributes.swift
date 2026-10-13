@@ -25,7 +25,12 @@ struct BusTrackingTarget: Codable, Hashable, Identifiable, Sendable {
     // Optional to decode existing activities, bookmarks and deep links unchanged.
     var theme: RouteTheme? = nil
 
-    var resolvedTheme: RouteTheme { theme ?? .resolve(route: route, operators: operators) }
+    var resolvedTheme: RouteTheme {
+        if let theme { return theme }
+        let mainland = providerID.hasPrefix("mainland-") || providerID.hasPrefix("chelaile") || providerID.hasPrefix("amap-")
+        return .resolve(route: route, operators: operators,
+                        providerHex: mainland ? RouteTheme.mainlandColor(for: route) : nil)
+    }
 
     var timeZone: TimeZone {
         TimeZone(identifier: timeZoneIdentifier ?? "Asia/Hong_Kong") ?? TimeZone(secondsFromGMT: 28_800)!

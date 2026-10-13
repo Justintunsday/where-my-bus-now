@@ -26,6 +26,12 @@ import Foundation
         legacyFields.removeValue(forKey: "theme")
         let legacyTarget = try JSONDecoder().decode(BusTrackingTarget.self, from: JSONSerialization.data(withJSONObject: legacyFields))
         precondition(legacyTarget.resolvedTheme.colorHex == 0xFF4747, "Legacy activities use known operator metadata")
+        legacyFields["providerID"] = "mainland-440100"
+        legacyFields["operators"] = [] as [String]
+        legacyFields["route"] = "123路"
+        let mainlandTarget = try JSONDecoder().decode(BusTrackingTarget.self, from: JSONSerialization.data(withJSONObject: legacyFields))
+        precondition(mainlandTarget.resolvedTheme.colorHex == RouteTheme.mainlandColor(for: "123路"),
+                     "Legacy mainland targets retain the existing provider palette")
         precondition(target.timeZone.secondsFromGMT(for: Date(timeIntervalSince1970: 0)) == 28_800,
                      "Legacy boarding records retain their transit time zone")
         var regional = target

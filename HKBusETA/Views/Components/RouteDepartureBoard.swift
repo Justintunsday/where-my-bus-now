@@ -15,10 +15,13 @@ struct RouteDepartureBoard: View {
             let state = session.activityState
             let fresh = state.isFresh(at: context.date)
             VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 10) {
+                let headerLayout = typeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6))
+                    : AnyLayout(HStackLayout(spacing: 10))
+                headerLayout {
                     RouteBadge(route: entry.route, entry: entry, fontSize: 21)
                     Text(operatorName).font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
-                    Spacer(minLength: 4)
+                    if !typeSize.isAccessibilitySize { Spacer(minLength: 4) }
                     if fresh { predictionStatus(scheduled: state.status == .scheduled) }
                 }
                 let layout = typeSize.isAccessibilitySize
@@ -107,7 +110,7 @@ struct RouteDepartureBoard: View {
                 Text(L10n.t(eta.isScheduled ? "eta.scheduled" : (fresh ? "arrival.live" : "arrival.cached")))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Spacer(minLength: 4)
+            if !typeSize.isAccessibilitySize { Spacer(minLength: 4) }
             if fresh, let arrival = eta.date,
                let minutes = BusArrivalState.remainingMinutes(arrival: arrival, now: date) {
                 Text("\(minutes) \(L10n.t("unit.minutes"))")

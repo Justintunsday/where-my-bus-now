@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(SwiftUI) && !BUS_CONTRACT_TESTS
+#if canImport(SwiftUI) && canImport(UIKit) && !BUS_CONTRACT_TESTS
 import SwiftUI
 import UIKit
 #endif
@@ -38,6 +38,14 @@ struct RouteTheme: Codable, Hashable, Sendable {
          "sunferry": 0xFF4747, "fortuneferry": 0xFF4747, "hkkf": 0xFF4747][id]
     }
 
+    /// Existing deterministic mainland provider palette, also available to legacy activities.
+    static func mainlandColor(for line: String) -> UInt32 {
+        let palette: [UInt32] = [0x2F6FED, 0x0E9F6E, 0xE0245E, 0xF08C00, 0x7C3AED, 0x0E7490]
+        var hash: UInt32 = 0
+        for scalar in line.unicodeScalars { hash = hash &* 31 &+ scalar.value }
+        return palette[Int(hash % UInt32(palette.count))]
+    }
+
     static func luminance(_ hex: UInt32) -> Double {
         func linear(_ channel: UInt32) -> Double {
             let c = Double(channel) / 255
@@ -72,7 +80,7 @@ struct RouteTheme: Codable, Hashable, Sendable {
     }
 }
 
-#if canImport(SwiftUI) && !BUS_CONTRACT_TESTS
+#if canImport(SwiftUI) && canImport(UIKit) && !BUS_CONTRACT_TESTS
 extension RouteTheme {
     private static func color(_ hex: UInt32) -> Color {
         Color(.sRGB, red: Double((hex >> 16) & 255) / 255,

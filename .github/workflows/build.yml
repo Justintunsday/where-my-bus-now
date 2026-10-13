@@ -82,6 +82,7 @@ jobs:
       - name: Offline hosted CheLaile API self-test
         run: |
           xcrun swiftc -parse-as-library -O \
+            Shared/RouteTheme.swift \
             HKBusETA/Utilities/ChineseConverter.swift \
             HKBusETA/Utilities/Localization.swift \
             HKBusETA/Models/EtaDB.swift \

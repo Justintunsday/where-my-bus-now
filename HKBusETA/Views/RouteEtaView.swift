@@ -75,7 +75,7 @@ struct ArrivalScreen: View {
             }
             #endif
         }
-        .listStyle(.insetGrouped).transitListSurface()
+        .listStyle(.insetGrouped).listSectionSpacing(.compact).transitListSurface()
         .environment(\.routeTheme, theme).tint(theme.accent)
         .navigationTitle(target.route).navigationBarTitleDisplayMode(.inline)
         .toolbar {
