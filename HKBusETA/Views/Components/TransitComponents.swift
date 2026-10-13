@@ -70,8 +70,7 @@ struct ArrivalHero: View {
         TimelineView(.periodic(from: .now, by: 15)) { context in
             VStack(alignment: .leading, spacing: 12) {
                 Text(L10n.t("arrival.next")).font(.subheadline).foregroundStyle(.secondary)
-                if state.isFresh(at: context.date), let arrival = state.arrival {
-                    let minutes = max(0, Int(ceil(arrival.timeIntervalSince(context.date) / 60)))
+                if let minutes = state.remainingMinutes(at: context.date), let arrival = state.arrival {
                     ViewThatFits(in: .horizontal) {
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             number(minutes)

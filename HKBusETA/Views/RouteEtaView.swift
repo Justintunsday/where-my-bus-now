@@ -23,6 +23,7 @@ struct ArrivalScreen: View {
     let target: BusTrackingTarget
     let session: ArrivalSession
     @State private var showsTracking = false
+    @AccessibilityFocusState private var trackingFocused: Bool
 
     private var realtimeAllowed: Bool {
         MainlandRealtimePolicy.allowsRequest(modeHint: target.mode.flatMap(MainlandTransitMode.init(rawValue:)))
@@ -65,6 +66,7 @@ struct ArrivalScreen: View {
                     }
                     .transitPrimaryAction().listRowBackground(Color.clear).listRowInsets(EdgeInsets())
                     .accessibilityIdentifier("tracking.open")
+                    .accessibilityFocused($trackingFocused)
                     Button {
                         if !app.bookmarks.isFavoriteRoute(target.routeKey) {
                             app.bookmarks.toggleFavoriteRoute(entry: entry, routeKey: target.routeKey, modeRawValue: target.mode)
@@ -112,7 +114,7 @@ struct ArrivalScreen: View {
             .transitIndependentToolbarItem()
         }
         .refreshable { await refresh() }
-        .sheet(isPresented: $showsTracking) {
+        .sheet(isPresented: $showsTracking, onDismiss: { trackingFocused = true }) {
             TrackingSheet(target: target, session: session)
                 .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
         }

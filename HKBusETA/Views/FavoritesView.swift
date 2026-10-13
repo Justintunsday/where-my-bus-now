@@ -19,7 +19,7 @@ struct FavoritesView: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             Group {
-                if routeSections.isEmpty && stopSections.isEmpty {
+                if showsStops ? stopSections.isEmpty : routeSections.isEmpty {
                     emptyState
                 } else {
                     List {

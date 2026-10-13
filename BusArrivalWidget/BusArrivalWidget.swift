@@ -5,24 +5,10 @@ import WidgetKit
 
 @main
 struct BusArrivalWidget: Widget {
-    @WidgetConfigurationBuilder
     var body: some WidgetConfiguration {
-        if #available(iOS 18.0, *) {
-            configuration.supplementalActivityFamilies([.small, .medium])
-        } else {
-            configuration
-        }
-    }
-
-    private var configuration: some WidgetConfiguration {
         ActivityConfiguration(for: BusActivityAttributes.self) { context in
-            Group {
-                if #available(iOS 18.0, *) { AdaptiveBusActivity(context: context) }
-                else {
-                    BusLockScreenView(target: context.attributes.target, state: context.state,
-                                      isStale: context.isStale, activityID: context.activityID)
-                }
-            }
+            BusLockScreenView(target: context.attributes.target, state: context.state,
+                              isStale: context.isStale, activityID: context.activityID)
             .activityBackgroundTint(TransitBrand.surface)
             .activitySystemActionForegroundColor(.primary)
             .widgetURL(context.attributes.target.deepLink)
@@ -55,20 +41,6 @@ struct BusArrivalWidget: Widget {
             }
             .widgetURL(context.attributes.target.deepLink)
             .keylineTint(TransitBrand.coral)
-        }
-    }
-}
-
-@available(iOS 18.0, *)
-private struct AdaptiveBusActivity: View {
-    @Environment(\.activityFamily) private var family
-    let context: ActivityViewContext<BusActivityAttributes>
-    var body: some View {
-        if family == .small {
-            BusSmallActivityView(display: .init(target: context.attributes.target, state: context.state, isStale: context.isStale))
-        } else {
-            BusLockScreenView(target: context.attributes.target, state: context.state,
-                              isStale: context.isStale, activityID: context.activityID)
         }
     }
 }
