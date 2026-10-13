@@ -22,6 +22,7 @@ struct RouteStopPoint: Identifiable {
 }
 
 struct RouteMapSection: View {
+    @Environment(\.routeTheme) private var theme
     @Environment(\.transitReduceMotion) private var reduceMotion
     @Environment(\.transitReduceTransparency) private var reduceTransparency
     @Environment(AppState.self) private var app
@@ -78,11 +79,11 @@ struct RouteMapSection: View {
             withAnimation(TransitMotion.selection(reduced: reduceMotion)) { selectedSeq = isSelected ? nil : point.seq }
         } label: { ZStack {
             ZStack {
-                Circle().fill(isSelected ? DesignTokens.accent : lineColor)
+                Circle().fill(isSelected ? theme.accent : lineColor)
                 Circle().stroke(.white, lineWidth: 1.5)
                 Text("\(point.seq + 1)")
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(isSelected ? DesignTokens.onAccent : RouteStyle.info(for: entry, provider: app.provider).foreground)
+                    .foregroundStyle(isSelected ? theme.onAccent : RouteStyle.info(for: entry, provider: app.provider).foreground)
             }
             .frame(width: isSelected ? 24 : 19, height: isSelected ? 24 : 19)
 

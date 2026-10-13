@@ -41,6 +41,7 @@ struct FavoriteRouteButton: View {
 }
 
 struct RouteIdentityHeader: View {
+    @Environment(\.routeTheme) private var theme
     @Environment(AppState.self) private var app
     let entry: RouteEntry
     var stopName: String?
@@ -62,7 +63,7 @@ struct RouteIdentityHeader: View {
             }
             if let stopName {
                 Label(stopName, systemImage: "mappin.circle.fill")
-                    .font(.headline).foregroundStyle(DesignTokens.accent)
+                    .font(.headline).foregroundStyle(theme.accent)
                     .accessibilityLabel("\(L10n.t("eta.currentStop")) \(stopName)")
             }
         }
@@ -73,6 +74,7 @@ struct RouteIdentityHeader: View {
 
 /// Value-only view: timeline ticks invalidate this small subtree, not the route or map.
 struct ArrivalHero: View {
+    @Environment(\.routeTheme) private var theme
     let state: BusArrivalState
     @Environment(\.transitReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .largeTitle) private var numeralSize: CGFloat = 64
@@ -132,7 +134,7 @@ struct ArrivalHero: View {
     private func number(_ minutes: Int) -> some View {
         Text("\(minutes)")
             .font(.system(size: numeralSize, weight: .bold, design: .rounded)).monospacedDigit()
-            .foregroundStyle(DesignTokens.accent)
+            .foregroundStyle(theme.accent)
             .contentTransition(.identity)
             .transaction { $0.animation = nil; $0.disablesAnimations = true }
     }

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ETALineView: View {
+    @Environment(\.routeTheme) private var theme
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.transitReduceMotion) private var reduceMotion
     @Environment(AppState.self) private var app
@@ -60,7 +61,7 @@ struct ETALineView: View {
             case .exact:
                 Text(RegionClock.timeString(eta.eta))
                     .font(DesignTokens.tabular(17, weight: highlight ? .bold : .medium))
-                    .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
+                    .foregroundStyle(highlight ? theme.accent : Color.primary)
             case .diff:
                 if isArriving(minutes) {
                     arrivingText
@@ -93,7 +94,7 @@ struct ETALineView: View {
         Text(L10n.t("eta.arriving"))
             .font(DesignTokens.subheading)
             .fontWeight(.semibold)
-            .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
+            .foregroundStyle(highlight ? theme.accent : Color.primary)
     }
 
     private func minutesWithUnit(_ minutes: Int) -> some View {
@@ -106,7 +107,7 @@ struct ETALineView: View {
                 .font(DesignTokens.footnote)
                 .foregroundStyle(.tertiary)
         }
-        .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
+        .foregroundStyle(highlight ? theme.accent : Color.primary)
     }
 
     private func isArriving(_ minutes: Int) -> Bool {
@@ -120,6 +121,7 @@ struct ETALineView: View {
 
 /// Single-line compact ETA used by the stop departure board.
 struct ETACompactLineView: View {
+    @Environment(\.routeTheme) private var theme
     @Environment(\.transitReduceMotion) private var reduceMotion
     @Environment(AppState.self) private var app
     let eta: Eta
@@ -147,13 +149,13 @@ struct ETACompactLineView: View {
                     Text(L10n.t("eta.arriving"))
                         .font(DesignTokens.caption)
                         .fontWeight(.semibold)
-                        .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
+                        .foregroundStyle(highlight ? theme.accent : Color.primary)
                 } else {
                     Text("\(minutes)")
                         .font(DesignTokens.tabular(18, weight: .bold))
                         .contentTransition(reduceMotion ? .identity : .numericText(countsDown: true))
                         .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: minutes)
-                        .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
+                        .foregroundStyle(highlight ? theme.accent : Color.primary)
                     Text(L10n.t("unit.minutes"))
                         .font(DesignTokens.footnote)
                         .foregroundStyle(.tertiary)

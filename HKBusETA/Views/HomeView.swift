@@ -35,6 +35,7 @@ struct HomeView: View {
                     } else {
                         ForEach(app.boarding.targets) { target in
                             BoardingTripRow(target: target)
+                                .environment(\.routeTheme, target.resolvedTheme)
                                 .swipeActions {
                                     Button(role: .destructive) { app.boarding.remove(target) } label: {
                                         Label(L10n.t("common.remove"), systemImage: "pin.slash")
@@ -140,12 +141,13 @@ private struct BoardingTripRow: View {
 
     private var badge: some View {
         Text(target.route).font(.title3.bold()).fontDesign(.rounded).monospacedDigit()
-            .foregroundStyle(DesignTokens.accent).padding(10)
-            .background(DesignTokens.accentSoft, in: RoundedRectangle(cornerRadius: 10))
+            .foregroundStyle(target.resolvedTheme.accent).padding(10)
+            .background(target.resolvedTheme.identity.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
     }
 }
 
 private struct BoardingArrivalSummary: View {
+    @Environment(\.routeTheme) private var theme
     let session: ArrivalSession
     let expanded: Bool
     var body: some View {
@@ -161,7 +163,7 @@ private struct BoardingArrivalSummary: View {
                         Text(arrival, style: .time).monospacedDigit()
                     } else { Text(L10n.t(session.isRefreshing ? "status.loading" : "arrival.stale")) }
                 }
-                .font(.subheadline.weight(.medium)).foregroundStyle(DesignTokens.accent)
+                .font(.subheadline.weight(.medium)).foregroundStyle(theme.accent)
             }
         }
         if expanded { FreshnessLabel(updatedAt: session.updatedAt, error: session.error) }

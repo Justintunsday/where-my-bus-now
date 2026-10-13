@@ -2,6 +2,7 @@ import SwiftUI
 
 /// A genuinely circular toolbar surface, independent of the bar's shared capsule.
 private struct CircularToolbarControl: ViewModifier {
+    @Environment(\.routeTheme) private var theme
     @Environment(\.transitReduceTransparency) private var reduceTransparency
 
     @ViewBuilder func body(content: Content) -> some View {
@@ -17,7 +18,7 @@ private struct CircularToolbarControl: ViewModifier {
 
     private func control(_ content: Content) -> some View {
         content.buttonStyle(.plain).labelStyle(.iconOnly)
-            .foregroundStyle(DesignTokens.accent)
+            .foregroundStyle(theme.accent)
             .frame(width: 44, height: 44).contentShape(Circle())
     }
 
@@ -28,7 +29,7 @@ private struct CircularToolbarControl: ViewModifier {
 
     private func classicControl(_ content: Content) -> some View {
         content.buttonStyle(.automatic).labelStyle(.iconOnly)
-            .foregroundStyle(DesignTokens.accent)
+            .foregroundStyle(theme.accent)
             .frame(minWidth: 44, minHeight: 44)
     }
 }

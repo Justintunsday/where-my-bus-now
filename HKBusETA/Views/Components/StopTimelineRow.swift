@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct StopTimelineRow: View {
+    @Environment(\.routeTheme) private var theme
     let point: RouteStopPoint
     let isLast: Bool
     let isSelected: Bool
@@ -11,7 +12,7 @@ struct StopTimelineRow: View {
         HStack(alignment: .top, spacing: 16) {
             VStack(spacing: 0) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                    .font(.body.weight(.bold)).foregroundStyle(DesignTokens.accent)
+                    .font(.body.weight(.bold)).foregroundStyle(theme.accent)
                     .frame(width: 24, height: 44)
                 if !isLast { Rectangle().fill(DesignTokens.divider).frame(width: 2).frame(maxHeight: .infinity) }
             }.accessibilityHidden(true)
