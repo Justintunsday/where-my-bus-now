@@ -54,6 +54,12 @@ struct BusLockScreenView: View {
     private var accent: Color { dimmed || contrast == .increased ? .primary : TransitBrand.coral }
 
     var body: some View {
+        if typeSize.isAccessibilitySize {
+            BusActivityAccessibleBoard(display: display, activityID: activityID)
+        } else { standardBoard }
+    }
+
+    private var standardBoard: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 5) {
@@ -86,6 +92,55 @@ struct BusLockScreenView: View {
         .padding(14)
         .environment(\.timeZone, target.timeZone).environment(\.locale, target.locale)
         .foregroundStyle(.primary)
+    }
+}
+
+/// Large-text composition gives the boarding stop a full line. Metadata moves
+/// into the status symbol's spoken description rather than squeezing two columns.
+struct BusActivityAccessibleBoard: View {
+    let display: BusActivityDisplay
+    var activityID: String? = nil
+    var showHeader = true
+    @Environment(\.transitLuminanceReduced) private var dimmed
+    private var clock: Date.FormatStyle {
+        Date.FormatStyle(locale: display.target.locale, timeZone: display.target.timeZone)
+            .hour(.twoDigits(amPM: .omitted)).minute(.twoDigits)
+    }
+    private var spokenStatus: String {
+        let stamp = display.state.updatedAt.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened,
+            locale: display.target.locale, timeZone: display.target.timeZone))
+        return "\(display.copy(display.statusKey)) · \(display.copy("updated")) \(stamp)"
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if showHeader {
+                HStack(spacing: 8) {
+                    Text(display.target.route).font(.caption2.bold()).fontDesign(.rounded)
+                        .accessibilityLabel("\(display.target.route) · \(display.copy("to")) \(display.target.destination)")
+                    Spacer(minLength: 4)
+                    BusActivityCountdown(target: display.target, state: display.state, isStale: display.isStale)
+                        .font(.caption.bold()).fontDesign(.rounded)
+                }.foregroundStyle(dimmed ? Color.primary : TransitBrand.coral)
+            }
+            Text(display.target.stopName).font(.caption2.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                .accessibilityLabel("\(display.copy("boarding")) \(display.target.stopName)")
+            HStack(spacing: 4) {
+                Image(systemName: display.symbol).accessibilityLabel(spokenStatus)
+                if let arrival = display.state.arrival {
+                    Text(display.copy(display.fresh ? "arrival" : "lastKnown")).lineLimit(1).minimumScaleFactor(0.7)
+                    Text(arrival, format: clock).monospacedDigit().fixedSize()
+                } else {
+                    Text(display.copy(display.statusKey)).lineLimit(1).minimumScaleFactor(0.7)
+                }
+                Spacer(minLength: 0)
+                if let activityID {
+                    Button(intent: EndBusTrackingIntent(activityID: activityID)) {
+                        Image(systemName: "stop.circle").frame(width: 44, height: 44)
+                    }.buttonStyle(.plain).accessibilityLabel(display.copy("end"))
+                }
+            }.font(.caption2)
+        }.padding(showHeader ? 8 : 0)
+            .environment(\.locale, display.target.locale).environment(\.timeZone, display.target.timeZone)
     }
 }
 
@@ -166,25 +221,27 @@ struct BusActivityCountdown: View {
 struct BusIslandRoute: View {
     let target: BusTrackingTarget
     var compact = false
+    @Environment(\.dynamicTypeSize) private var typeSize
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            Text(target.route).font(compact ? .headline : .title2.bold())
+            Text(target.route).font(typeSize.isAccessibilitySize ? .caption2.bold() : (compact ? .headline : .title2.bold()))
                 .fontDesign(.rounded).fixedSize()
             Text(target.route).font(.caption2.bold()).fontDesign(.rounded).fixedSize()
             Image(systemName: "bus.fill").font(.headline)
         }
         .foregroundStyle(TransitBrand.coral)
-        .accessibilityLabel(target.route)
+        .accessibilityLabel("\(target.route) · \(BusActivityCopy.text("to", language: target.language)) \(target.destination)")
     }
 }
 
 struct BusIslandExpandedArrival: View {
     let display: BusActivityDisplay
+    @Environment(\.dynamicTypeSize) private var typeSize
     var body: some View {
         VStack(alignment: .trailing, spacing: 2) {
             BusActivityCountdown(target: display.target, state: display.state, isStale: display.isStale)
-                .font(.title.bold()).fontDesign(.rounded)
-            if let arrival = display.state.arrival {
+                .font(typeSize.isAccessibilitySize ? .caption.bold() : .title.bold()).fontDesign(.rounded)
+            if !typeSize.isAccessibilitySize, let arrival = display.state.arrival {
                 HStack(spacing: 4) {
                     Text(display.copy(display.fresh ? "arrival" : "lastKnown"))
                     Text(arrival, style: .time).monospacedDigit()
@@ -200,6 +257,11 @@ struct BusIslandExpandedDetails: View {
     var activityID: String? = nil
     @Environment(\.dynamicTypeSize) private var typeSize
     var body: some View {
+        if typeSize.isAccessibilitySize {
+            BusActivityAccessibleBoard(display: display, activityID: activityID, showHeader: false)
+        } else { standardDetails }
+    }
+    private var standardDetails: some View {
         VStack(alignment: .leading, spacing: 5) {
             Text("\(display.copy("to")) \(display.target.destination)").font(.headline).lineLimit(1)
                 .minimumScaleFactor(0.8)

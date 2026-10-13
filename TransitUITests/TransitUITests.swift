@@ -35,10 +35,12 @@ import XCTest
         XCTAssertTrue(stop.waitForExistence(timeout: 10))
         stop.tap()
         XCTAssertTrue(app.buttons["route.stop.0"].waitForExistence(timeout: 5))
-        XCTAssertEqual(stop.value as? String, "已展開")
+        let expanded = expectation(for: NSPredicate(format: "value == %@", "已展開"), evaluatedWith: stop)
+        wait(for: [expanded], timeout: 5)
         stop.tap()
         XCTAssertTrue(stop.exists)
-        XCTAssertEqual(stop.value as? String, "已收起")
+        let collapsed = expectation(for: NSPredicate(format: "value == %@", "已收起"), evaluatedWith: stop)
+        wait(for: [collapsed], timeout: 5)
         screenshot("timeline-reduced-effects")
     }
 
