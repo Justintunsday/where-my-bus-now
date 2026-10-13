@@ -148,6 +148,17 @@ import XCTest
         let revise = app.buttons["eta.test.revise"]
         for _ in 0..<3 where !revise.isHittable { app.swipeUp() }
         revise.tap()
+        let ten = expectation(for: NSPredicate(format: "label == %@", "10"), evaluatedWith: digits)
+        wait(for: [ten], timeout: 5)
+        let unit = app.staticTexts["eta.primary-unit"]
+        let unitPosition = unit.frame.minX
+        screenshot("eta-ten-minutes")
+        revise.tap()
+        let nine = expectation(for: NSPredicate(format: "label == %@", "9"), evaluatedWith: digits)
+        wait(for: [nine], timeout: 5)
+        XCTAssertEqual(unit.frame.minX, unitPosition, accuracy: 0.5, "10 to 9 must not shift the arrival column")
+        screenshot("eta-nine-minutes")
+        revise.tap()
         let revised = expectation(for: NSPredicate(format: "label == %@", "3"), evaluatedWith: digits)
         wait(for: [revised], timeout: 5)
         XCTAssertEqual(app.staticTexts.matching(identifier: "eta.primary-minutes").count, 1,

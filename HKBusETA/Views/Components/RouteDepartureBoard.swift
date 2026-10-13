@@ -72,6 +72,7 @@ struct RouteDepartureBoard: View {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     DepartureMinuteDigits(minutes: minutes)
                     Text(L10n.t("unit.minutes")).font(.subheadline.weight(.medium))
+                        .accessibilityIdentifier("eta.primary-unit")
                 }.foregroundStyle(theme.accent)
                 if let arrival = state.arrival {
                     Text(arrival, style: .time).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
@@ -158,7 +159,9 @@ struct DepartureMinuteDigits: View {
     @ScaledMetric(relativeTo: .largeTitle) private var size: CGFloat = 46
     var body: some View {
         Text("\(minutes)").font(.system(size: size, weight: .bold, design: .rounded))
-            .monospacedDigit().contentTransition(.identity)
+            .monospacedDigit().lineLimit(1).minimumScaleFactor(0.5)
+            .frame(width: size * 1.35, alignment: .trailing)
+            .contentTransition(.identity)
             .transaction { $0.animation = nil; $0.disablesAnimations = true }
             .accessibilityIdentifier("eta.primary-minutes")
     }

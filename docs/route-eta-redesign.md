@@ -26,9 +26,9 @@ On iOS 17, minutes remain an explicitly marked snapshot at the last successful u
 
 ## Digit stability and motion
 
-The previous primary numeral used numericText plus an implicit smooth animation during timeline/provider updates. Rolling text intentionally composites old and new digit layers; it is a poor fit for this high-priority reading surface and can resemble ghosting while other layout changes occur. DepartureMinuteDigits keeps one stable Text, monospaced numerals, identity content transition and a transaction that disables inherited animation. It does not change view identity to restart a transition. Upcoming rows likewise update text without rolling layers. Other contextual navigation/map/selection animations remain native, scoped and Reduce Motion aware.
+The previous primary numeral used numericText plus an implicit smooth animation during timeline/provider updates. Rolling text intentionally composites old and new digit layers; it is a poor fit for this high-priority reading surface and can resemble ghosting while other layout changes occur. DepartureMinuteDigits keeps one stable Text, monospaced numerals, a scaled fixed-width numeral field, identity content transition and a transaction that disables inherited animation. The numeral field keeps the unit and destination column stable across 10-to-9 changes; longer values scale within it. It does not change view identity to restart a transition. Upcoming rows likewise update text without rolling layers. Other contextual navigation/map/selection animations remain native, scoped and Reduce Motion aware.
 
-A debug-only revision fixture deliberately wraps an ETA update in a parent spring. UI tests check the new minute value and one stable identified numeral, alongside pin/favorite reversibility. This verifies state and hierarchy; screenshots do not establish frame-rate or hardware performance measurements.
+A debug-only revision fixture deliberately wraps an ETA update in a parent spring. UI tests check revised 10/9/3 minute values, the unit column position across 10-to-9, and one stable identified numeral, alongside pin/favorite reversibility. This verifies state and hierarchy; screenshots do not establish frame-rate or hardware performance measurements.
 
 ## References and verification
 

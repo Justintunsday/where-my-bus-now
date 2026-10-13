@@ -24,6 +24,9 @@ struct ArrivalScreen: View {
     let target: BusTrackingTarget
     let session: ArrivalSession
     @State private var showsTracking = false
+    #if DEBUG
+    @State private var revisionIndex = 0
+    #endif
     @AccessibilityFocusState private var trackingFocused: Bool
 
     private var realtimeAllowed: Bool {
@@ -70,7 +73,9 @@ struct ArrivalScreen: View {
             if ProcessInfo.processInfo.arguments.contains("--eta-motion-test") {
                 Button("Revise fixture ETA") {
                     withAnimation(.spring()) {
-                        session.seed(etas: [180, 540].map { seconds in
+                        let seconds = [600, 540, 180][min(revisionIndex, 2)]
+                        revisionIndex += 1
+                        session.seed(etas: [seconds, seconds + 360].map { seconds in
                             Eta(eta: RegionClock.isoString(from: Date().addingTimeInterval(Double(seconds))),
                                 remark: Terminal(en: "", zh: ""), dest: entry.dest, co: entry.co.first ?? "kmb")
                         }, updatedAt: Date())
