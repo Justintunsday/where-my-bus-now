@@ -92,11 +92,20 @@ import XCTest
         XCTAssertTrue(springboard.wait(for: .runningForeground, timeout: 5))
         // Home's closing animation outlives the accessibility foreground event.
         Thread.sleep(forTimeInterval: 2)
+        XCTAssertTrue(springboard.staticTexts["1A"].waitForExistence(timeout: 20),
+                      "ActivityKit must render the route in the actual system Island")
         screenshot("activity-system-compact")
         let hierarchy = XCTAttachment(string: springboard.debugDescription)
         hierarchy.name = "system-activity-accessibility-tree"
         hierarchy.lifetime = .keepAlways
         add(hierarchy)
+        let island = springboard.otherElements.matching(NSPredicate(
+            format: "identifier BEGINSWITH %@", "jindo-container-view:")).firstMatch
+        XCTAssertTrue(island.exists)
+        island.press(forDuration: 1.2)
+        XCTAssertTrue(springboard.staticTexts["彌敦道"].waitForExistence(timeout: 10),
+                      "Expanded Island must show the selected boarding stop")
+        screenshot("activity-system-expanded")
         app.activate()
         open.tap()
         let end = app.buttons["tracking.end"]

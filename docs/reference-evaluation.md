@@ -45,7 +45,5 @@ The current Apple documentation identifies
 [TimeDataSource](https://developer.apple.com/documentation/swiftui/timedatasource)
 as system-updating input for Text in Live Activities and
 [DiscreteFormatStyle](https://developer.apple.com/documentation/foundation/discreteformatstyle)
-as a way to schedule output boundaries. Both start at iOS 18. Their documented
-contracts informed the minute formatter and its serialization/boundary tests.
-iOS 17 therefore uses the explicitly timestamped fallback rather than a widget Timer.
+as a way to schedule output boundaries. Both start at iOS 18. A custom formatter passed compilation and JSON tests, but actual simulator logs showed that WidgetKit could not decode the extension-defined formatter in its remote process (`Errors.noType`). The experiment is removed. All versions ship the explicitly timestamped whole-minute fallback rather than a widget Timer. Native timer text was rejected because it introduces seconds, contrary to the requested primary whole-minute display.
 See [activity design](activity-design.md) and [APNs deployment](live-activities-apns.md).

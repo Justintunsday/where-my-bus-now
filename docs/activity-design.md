@@ -5,7 +5,7 @@
 | Surface | Hierarchy and behavior |
 | --- | --- |
 | Compact leading | Full rounded route code, then a smaller full code if needed; an identifiable bus symbol for unusually long route names. No ellipsis through a route identifier. Coral is an accent on the system's black background. |
-| Compact trailing | System-rendered whole minutes on iOS 18+; iOS 17 uses minutes at the last update with an explicit asterisk. A status symbol replaces an invalid countdown. Monospaced digits and no unnecessary surrounding label preserve width. |
+| Compact trailing | Whole minutes at the last successful update with an explicit asterisk on all supported versions. A status symbol replaces an invalid countdown. Monospaced digits and no unnecessary surrounding label preserve width. |
 | Minimal | One recognizable bus/status symbol. The full route and status remain in its accessibility label. No destination or competing tiny numbers. |
 | Expanded | Route and dominant countdown form the top row. Actual ETA clock sits beneath the countdown. Destination occupies the expanded center region; boarding stop and optional second departure and status/update timestamp form the lower region. Long top content may move below the sensor region using the system placement API. |
 | Lock Screen | A horizontal departure board: route/destination/stop on the left, countdown on the right. Clock times form a separate line; status/update timestamp and the native end intent form the footer. This is structurally different from the expanded Island. |
@@ -45,8 +45,6 @@ Primary specifications: [Apple Live Activities HIG](https://developer.apple.com/
 
 ## Exact minute rendering
 
-On iOS 18+, `TimeDataSource.currentDate` and `BusArrivalMinuteFormatStyle` schedule discrete whole-minute changes and the exact stale/arrival boundary in the system renderer. Positive fractional minutes round up. The output becomes a dash after expiry, even before another activity render; ActivityKit context staleness supplies the explanatory refresh status. This changes the presentation of an existing timestamp, not the underlying prediction. A second bus is never promoted by time alone.
-
-On iOS 17 the exact whole-minute format cannot be scheduled with that API. The fallback displays minutes calculated at `updatedAt`, marked `*`; the footer and VoiceOver identify the successful update time. It never pretends to be continuously refreshed. The ActivityKit stale date removes it after at most 90 seconds (earlier at arrival). Scheduled status takes precedence over revised/next-bus metadata, so scheduled data never appears to be a real-time update.
+Whole minutes use `ceil(max(0, arrival - updatedAt) / 60)`, marked `*`; the footer and VoiceOver identify the successful update time. The custom `DiscreteFormatStyle` experiment compiled and passed JSON/boundary tests, but the actual WidgetKit remote renderer rejected the extension-defined type with `Errors.noType`. It is removed. The shipping fallback is used on iOS 17, 18 and 26 and never claims a continuously refreshed minute clock. ActivityKit's stale date replaces the snapshot after at most 90 seconds (earlier at arrival). Scheduled status takes precedence over revised/next-bus metadata. A second bus is never promoted by time alone. Actual system Island rendering is a required UI test, and renderer type-decoding errors fail CI.
 
 Primary API references: [TimeDataSource](https://developer.apple.com/documentation/swiftui/timedatasource) and [DiscreteFormatStyle](https://developer.apple.com/documentation/foundation/discreteformatstyle).

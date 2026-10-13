@@ -81,8 +81,7 @@ struct BusLockScreenView: View {
                         .font(typeSize.isAccessibilitySize ? .title2.bold() : .largeTitle.bold())
                         .fontDesign(.rounded).foregroundStyle(accent)
                     if display.fresh {
-                        if #available(iOS 18.0, *) { Text(display.copy("remaining")).font(.caption2).foregroundStyle(.secondary) }
-                        else { Text(display.copy("asOf")).font(.caption2).foregroundStyle(.secondary) }
+                        Text(display.copy("asOf")).font(.caption2).foregroundStyle(.secondary)
                     }
                 }
                 .frame(maxWidth: typeSize.isAccessibilitySize ? 130 : 110, alignment: .trailing)
@@ -181,8 +180,7 @@ struct BusActivityFooter: View {
                 Text(display.copy(display.statusKey)).fontWeight(.medium)
                     .contentTransition(reduceMotion || dimmed ? .identity : .opacity)
                 HStack(spacing: 4) {
-                    if #available(iOS 18.0, *) { Text(display.copy("updated")) }
-                    else { Text("* \(display.copy("asOf"))") }
+                    Text("* \(display.copy("asOf"))")
                     Text(display.state.updatedAt, style: .time).monospacedDigit()
                 }.foregroundStyle(.secondary)
             }
@@ -220,15 +218,10 @@ struct BusActivityCountdown: View {
     }
 
     @ViewBuilder private var countdown: some View {
-        if #available(iOS 18.0, *) {
-            // The system owns minute boundaries and the exact stale boundary, even
-            // while the host is suspended. No Timer or TimelineView in the extension.
-            Text(.currentDate, format: BusArrivalMinuteFormatStyle(state: state, language: target.language))
-                .accessibilityValue(Text(.currentDate, format: BusArrivalMinuteFormatStyle(
-                    state: state, language: target.language, spoken: true)))
-        } else if let minutes = state.remainingMinutes(at: state.updatedAt) {
-            // iOS 17 cannot schedule this exact format. The asterisk explicitly
-            // refers to the footer's successful update time, never a ticking ETA.
+        if let minutes = state.remainingMinutes(at: state.updatedAt) {
+            // Custom DiscreteFormatStyle types cannot be decoded by the remote
+            // WidgetKit renderer (verified in CI). Use a timestamped snapshot on
+            // every OS; context.isStale replaces it when the prediction expires.
             Text("\(minutes) \(display.copy("minutes"))*")
                 .accessibilityValue("\(minutes) \(display.copy("minutes")) · \(display.copy("asOf")) \(state.updatedAt.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: target.locale, timeZone: target.timeZone)))")
         }

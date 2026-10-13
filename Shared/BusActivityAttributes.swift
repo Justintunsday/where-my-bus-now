@@ -167,44 +167,6 @@ struct BusArrivalState: Codable, Hashable, Sendable {
     }
 }
 
-/// iOS 18+ lets the system schedule discrete Text updates in a Live Activity.
-/// This formats time, never fetches data or promotes the second bus by itself.
-@available(iOS 18.0, macOS 15.0, *)
-struct BusArrivalMinuteFormatStyle: DiscreteFormatStyle {
-    let state: BusArrivalState
-    let language: String
-    var spoken = false
-
-    func format(_ value: Date) -> AttributedString {
-        guard let minutes = state.remainingMinutes(at: value) else {
-            return AttributedString(spoken ? BusActivityCopy.text("stale", language: language) : "—")
-        }
-        return AttributedString("\(minutes) \(BusActivityCopy.text("minutes", language: language))")
-    }
-
-    func discreteInput(after input: Date) -> Date? {
-        guard input.timeIntervalSince1970.isFinite else { return nil }
-        if input < state.updatedAt { return state.updatedAt }
-        guard let minutes = state.remainingMinutes(at: input), let arrival = state.arrival else { return nil }
-        let boundary = arrival.addingTimeInterval(-Double(max(0, minutes - 1)) * 60)
-        return min(boundary, state.staleDate)
-    }
-
-    func discreteInput(before input: Date) -> Date? {
-        guard input.timeIntervalSince1970.isFinite, let arrival = state.arrival,
-              arrival.timeIntervalSince1970.isFinite, state.updatedEpoch.isFinite,
-              state.validUntilEpoch.isFinite, input > state.updatedAt else { return nil }
-        let expiry = min(arrival, state.staleDate)
-        if input >= expiry {
-            guard expiry > state.updatedAt else { return nil }
-            return Date(timeIntervalSince1970: expiry.timeIntervalSince1970.nextDown)
-        }
-        guard let minutes = state.remainingMinutes(at: input) else { return nil }
-        let boundary = max(state.updatedAt, arrival.addingTimeInterval(-Double(minutes) * 60))
-        return Date(timeIntervalSince1970: boundary.timeIntervalSince1970.nextDown)
-    }
-}
-
 #if canImport(ActivityKit) && !BUS_CONTRACT_TESTS
 struct BusActivityAttributes: ActivityAttributes {
     typealias ContentState = BusArrivalState

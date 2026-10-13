@@ -17,3 +17,6 @@ with output.open("w", encoding="utf-8") as log:
         log.write("\nDiagnostic capture reached its 30-second limit. Build and UI tests are separate required checks.\n")
         print("::warning::Optional ActivityKit diagnostics reached the 30-second limit")
 print(f"Saved diagnostic output: {output.name}")
+rendering = output.read_text(encoding="utf-8")
+if "Errors.noType" in rendering and "BusArrival" in rendering:
+    raise SystemExit("ActivityKit remote renderer failed to decode the bus activity view; see activity-rendering.log")
