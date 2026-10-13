@@ -216,6 +216,7 @@ struct BusActivityCountdown: View {
         if display.fresh {
             countdown
                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.75)
+                .multilineTextAlignment(.trailing)
                 .contentTransition(.identity)
                 .accessibilityLabel(display.copy("remaining"))
         } else {
