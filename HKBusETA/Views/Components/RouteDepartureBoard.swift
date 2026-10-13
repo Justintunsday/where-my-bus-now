@@ -50,7 +50,6 @@ struct RouteDepartureBoard: View {
             }
             .padding(.vertical, 4)
         }
-        .accessibilityIdentifier("eta.departure-board")
     }
 
     private var operatorName: String {
@@ -124,10 +123,13 @@ struct RouteDepartureBoard: View {
     }
 
     private func predictionStatus(scheduled: Bool) -> some View {
-        Label(L10n.t(scheduled ? "eta.scheduled" : "arrival.live"),
-              systemImage: scheduled ? "calendar" : "dot.radiowaves.left.and.right")
-            .font(.caption2.weight(.medium)).foregroundStyle(theme.accent)
-            .lineLimit(1).fixedSize()
+        HStack(spacing: 4) {
+            Image(systemName: scheduled ? "calendar" : "dot.radiowaves.left.and.right")
+                .accessibilityHidden(true)
+            Text(L10n.t(scheduled ? "eta.scheduled" : "arrival.live")).fixedSize()
+        }
+        .font(.caption2.weight(.medium)).foregroundStyle(theme.accent)
+        .accessibilityElement(children: .combine)
     }
 
     private func statusKey(_ state: BusArrivalState) -> String {

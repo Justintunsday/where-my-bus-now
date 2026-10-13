@@ -19,6 +19,7 @@ struct ArrivalScreen: View {
     @Environment(AppState.self) private var app
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.transitReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     let entry: RouteEntry
     let target: BusTrackingTarget
     let session: ArrivalSession
@@ -39,10 +40,10 @@ struct ArrivalScreen: View {
                 RouteDepartureBoard(entry: entry, target: target, session: session, realtimeAllowed: realtimeAllowed)
                     .listRowInsets(EdgeInsets(top: 14, leading: 16, bottom: 10, trailing: 16))
                 if realtimeAllowed {
-                    ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 12) { trackingAction; pinAction }
-                        VStack(alignment: .leading, spacing: 8) { trackingAction; pinAction }
-                    }
+                    let actions = typeSize.isAccessibilitySize
+                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+                        : AnyLayout(HStackLayout(spacing: 12))
+                    actions { trackingAction; pinAction }
                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 12, trailing: 16))
                     .listRowSeparator(.hidden)
                 }
@@ -59,6 +60,9 @@ struct ArrivalScreen: View {
                     }
                     if let fare = app.provider.fare(entry: entry, at: target.stopSequence, db: app.data.db ?? .empty, at: Date()) {
                         LabeledContent(L10n.t("route.fare"), value: "$\(fare)")
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(L10n.t("route.fare"))
+                            .accessibilityValue("$\(fare)")
                     }
                 }
             }
@@ -116,14 +120,17 @@ struct ArrivalScreen: View {
 
     private var trackingAction: some View {
         Button { showsTracking = true } label: {
-            Label(L10n.t(app.activities.isTracking(target) ? "arrival.trackingActive" : "tracking.start"),
-                  systemImage: app.activities.isTracking(target) ? "checkmark.circle.fill" : "wave.3.right.circle")
-                .font(.subheadline.weight(.semibold))
-                .padding(.vertical, 4)
+            HStack(spacing: 6) {
+                Image(systemName: app.activities.isTracking(target) ? "checkmark.circle.fill" : "wave.3.right.circle")
+                    .accessibilityHidden(true)
+                Text(L10n.t(app.activities.isTracking(target) ? "arrival.trackingActive" : "tracking.start"))
+                    .fixedSize(horizontal: false, vertical: true)
+            }.font(.subheadline.weight(.semibold)).padding(.vertical, 4)
         }
         .transitPrimaryAction().controlSize(.regular)
         .frame(minHeight: 44).contentShape(Rectangle())
         .foregroundStyle(theme.onAccent)
+        .accessibilityLabel(L10n.t(app.activities.isTracking(target) ? "arrival.trackingActive" : "tracking.start"))
         .accessibilityIdentifier("tracking.open").accessibilityFocused($trackingFocused)
     }
 
@@ -132,11 +139,15 @@ struct ArrivalScreen: View {
             if isPinned { app.boarding.remove(target) }
             else { app.boarding.save(target) }
         } label: {
-            Label(L10n.t(isPinned ? "boarding.saved" : "boarding.save"), systemImage: isPinned ? "pin.fill" : "pin")
-                .font(.subheadline).padding(.vertical, 4)
+            HStack(spacing: 6) {
+                Image(systemName: isPinned ? "pin.fill" : "pin").accessibilityHidden(true)
+                Text(L10n.t(isPinned ? "boarding.saved" : "boarding.save"))
+                    .fixedSize(horizontal: false, vertical: true)
+            }.font(.subheadline).padding(.vertical, 4)
         }
         .buttonStyle(.borderless).frame(minHeight: 44)
         .accessibilityIdentifier("eta.pin")
+        .accessibilityLabel(L10n.t(isPinned ? "boarding.saved" : "boarding.save"))
         .accessibilityValue(L10n.t(isPinned ? "common.selected" : "common.notSelected"))
         .sensoryFeedback(.selection, trigger: isPinned)
     }

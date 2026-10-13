@@ -229,6 +229,8 @@ struct BusActivityCountdown: View {
             // The bounded system timer owns ticking; there is no extension Timer.
             Text(.currentDate, format: SystemMinuteCountdown.style(updatedAt: state.updatedAt, arrival: arrival))
                 .environment(\.locale, target.locale)
+                .accessibilityValue(Text(.currentDate, format: SystemMinuteCountdown.style(
+                    updatedAt: state.updatedAt, arrival: arrival)))
         } else if let minutes = state.remainingMinutes(at: state.updatedAt) {
             // Custom DiscreteFormatStyle types cannot be decoded by the remote
             // WidgetKit renderer (verified in CI). Use a timestamped snapshot on
