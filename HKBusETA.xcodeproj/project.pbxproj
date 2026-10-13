@@ -56,7 +56,7 @@
 		B05A00000000000000000002 /* BusArrivalWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (B05A00000000000000000003,); path = BusArrivalWidget; sourceTree = "<group>"; };
 		B05A00000000000000000003 /* Widget Info */ = {isa = PBXFileSystemSynchronizedBuildFileExceptionSet; membershipExceptions = (Info.plist,); target = B05A00000000000000000006; };
 		B05A00000000000000000004 /* Shared */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Shared; sourceTree = "<group>"; };
-		B05A00000000000000000005 /* Host Info */ = {isa = PBXFileSystemSynchronizedBuildFileExceptionSet; membershipExceptions = (Info.plist,); target = DEADBEEF0000000000000006; };
+		B05A00000000000000000005 /* Host Info */ = {isa = PBXFileSystemSynchronizedBuildFileExceptionSet; membershipExceptions = (Info.plist, HKBusETA.entitlements,); target = DEADBEEF0000000000000006; };
 		B05A00000000000000000006 /* BusArrivalWidget */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B05A00000000000000000007;
@@ -79,11 +79,12 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BusArrivalWidget/Info.plist;
+                SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) BUS_WIDGET_EXTENSION";
 				INFOPLIST_KEY_CFBundleDisplayName = "Bus Arrivals";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks",);
@@ -102,11 +103,12 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BusArrivalWidget/Info.plist;
+                SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) BUS_WIDGET_EXTENSION";
 				INFOPLIST_KEY_CFBundleDisplayName = "Bus Arrivals";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks",);
@@ -210,6 +212,7 @@
 				TargetAttributes = {
 					DEADBEEF0000000000000006 = {
 						CreatedOnToolsVersion = 16.0;
+                        SystemCapabilities = { com.apple.Push = { enabled = 1; }; };
 					};
 				};
 			};
@@ -382,11 +385,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HKBusETA/Info.plist;
+                CODE_SIGN_ENTITLEMENTS = HKBusETA/HKBusETA.entitlements;
+                APNS_ENVIRONMENT = development;
                 INFOPLIST_KEY_CFBundleDisplayName = "Where My Bus Now";
 				INFOPLIST_KEY_AMAP_WEB_SERVICE_KEY = "$(AMAP_WEB_SERVICE_KEY)";
 				INFOPLIST_KEY_CHELAILE_API_BASE_URL = "$(CHELAILE_API_BASE_URL)";
@@ -422,11 +427,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HKBusETA/Info.plist;
+                CODE_SIGN_ENTITLEMENTS = HKBusETA/HKBusETA.entitlements;
+                APNS_ENVIRONMENT = production;
                 INFOPLIST_KEY_CFBundleDisplayName = "Where My Bus Now";
 				INFOPLIST_KEY_AMAP_WEB_SERVICE_KEY = "$(AMAP_WEB_SERVICE_KEY)";
 				INFOPLIST_KEY_CHELAILE_API_BASE_URL = "$(CHELAILE_API_BASE_URL)";
