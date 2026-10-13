@@ -59,7 +59,7 @@ The SQL schema and client are supplied; the session issuer, registration handler
 ## Required deployment/device gates
 
 1. Sign the host and extension under the same team, retaining the host bundle ID and a prefixed extension bundle ID; confirm embedded extension installation.
-2. On iOS 18 and iOS 26, start/replace/end/restore/dismiss activities and test device settings disabling activities.
+2. On iOS 26 and newer, start/replace/end/restore/dismiss activities and test device settings disabling activities.
 3. On hardware with and without Dynamic Island, inspect locked, expanded, compact, minimal, Always-On and stale presentations; test the end intent and cold-start regional deep link.
 4. Suspend/terminate the app: the current implementation must become stale and must not claim updated predictions.
 5. After the server is deployed, test token rotation, APNs sandbox/production separation, changed ETA, cancelled service, upstream failure, expiry, throttling and revocation. Remote updates cannot be marked complete before these pass.

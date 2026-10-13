@@ -33,36 +33,6 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-  compatibility:
-    name: iOS 18 compatibility (Xcode 16.4)
-    needs: build
-    if: ${{ !inputs.preview_only }}
-    runs-on: macos-15
-    timeout-minutes: 40
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
-    steps:
-      - uses: actions/checkout@v5
-      - name: Show compatibility SDK
-        run: xcodebuild -version
-      - name: Install iOS 18.5 runtime when absent
-        timeout-minutes: 10
-        run: |
-          if ! xcrun simctl list runtimes available | grep -q 'iOS 18'; then
-            xcodebuild -downloadPlatform iOS -buildVersion 18.5
-          fi
-      - name: Build, launch and test on iOS 18
-        run: bash scripts/validate_ios18.sh
-      - name: Upload iOS 18 evidence
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: iOS-18-compatibility
-          path: |
-            ${{ runner.temp }}/ios18-screenshots
-            ${{ runner.temp }}/iOS18Tests.xcresult
-          if-no-files-found: warn
-
   build:
     name: Build iOS app
     if: ${{ !inputs.preview_only }}
