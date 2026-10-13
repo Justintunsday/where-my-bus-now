@@ -228,10 +228,7 @@ jobs:
 
       - name: Collect ActivityKit rendering diagnostics
         if: always()
-        run: |
-          xcrun simctl spawn booted log show --last 10m --style compact \
-            --predicate '(subsystem CONTAINS[c] "activity") OR (process CONTAINS[c] "widget") OR (eventMessage CONTAINS[c] "BusArrival")' \
-            > "$RUNNER_TEMP/activity-rendering.log" 2>&1 || true
+        run: python3 scripts/collect_activity_diagnostics.py
       - name: Upload ActivityKit rendering diagnostics
         if: always()
         uses: actions/upload-artifact@v5
