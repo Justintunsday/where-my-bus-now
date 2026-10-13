@@ -38,6 +38,10 @@ struct RouteDepartureBoard: View {
                     }.frame(maxWidth: .infinity, alignment: .leading)
                     primary(state: state, at: context.date)
                 }
+                if !state.message.isEmpty, state.status != .scheduled {
+                    Text(state.message).font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 if !following(at: context.date).isEmpty {
                     Divider()
                     VStack(spacing: 0) {
@@ -89,10 +93,12 @@ struct RouteDepartureBoard: View {
     }
 
     private func following(at date: Date) -> [Eta] {
-        session.etas.filter { eta in
-            guard let arrival = eta.date else { return false }
-            return arrival > date && arrival != session.activityState.arrival
-        }.sorted { $0.date! < $1.date! }.prefix(3).map { $0 }
+        var upcoming = session.etas.filter { ($0.date ?? .distantFuture) > date }
+            .sorted { ($0.date ?? .distantFuture) < ($1.date ?? .distantFuture) }
+        if let first = upcoming.firstIndex(where: { $0.date == session.activityState.arrival && $0.date != nil }) {
+            upcoming.remove(at: first) // Retain other services at the same timestamp.
+        }
+        return Array(upcoming.prefix(3))
     }
 
     private func departure(_ eta: Eta, at date: Date, fresh: Bool) -> some View {
@@ -100,17 +106,23 @@ struct RouteDepartureBoard: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 3))
             : AnyLayout(HStackLayout(spacing: 12))
         return layout {
-            Text(RegionClock.timeString(eta.eta)).font(.subheadline.monospacedDigit())
-                .frame(minWidth: 48, alignment: .leading)
+            if app.settings.etaFormat != .diff || !fresh {
+                Text(RegionClock.timeString(eta.eta)).font(.subheadline.monospacedDigit())
+                    .frame(minWidth: 48, alignment: .leading)
+            }
             VStack(alignment: .leading, spacing: 2) {
                 if eta.co == "mtr", !eta.dest.name(L10n.language).isEmpty {
                     Text(eta.dest.name(L10n.language)).font(.subheadline)
                 }
-                Text(L10n.t(eta.isScheduled ? "eta.scheduled" : (fresh ? "arrival.live" : "arrival.cached")))
+                Text(L10n.t(eta.date == nil ? "eta.noEta" : (eta.isScheduled ? "eta.scheduled" : (fresh ? "arrival.live" : "arrival.cached"))))
                     .font(.caption).foregroundStyle(.secondary)
+                if !eta.remark.name(L10n.language).isEmpty, !eta.isScheduled {
+                    Text(eta.remark.name(L10n.language)).font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             if !typeSize.isAccessibilitySize { Spacer(minLength: 4) }
-            if fresh, let arrival = eta.date,
+            if fresh, app.settings.etaFormat != .exact, let arrival = eta.date,
                let minutes = BusArrivalState.remainingMinutes(arrival: arrival, now: date) {
                 Text("\(minutes) \(L10n.t("unit.minutes"))")
                     .font(.subheadline.weight(.semibold).monospacedDigit())
