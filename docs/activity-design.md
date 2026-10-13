@@ -17,7 +17,7 @@ The Lock Screen adapts warm white/charcoal surfaces to appearance. The Island's 
 
 | Incoming evidence | State / visible response | Lifecycle |
 | --- | --- | --- |
-| Valid future predictions | Next and optional second arrival; actual clock and system countdown | Update the existing activity |
+| Valid future predictions | Next and optional second arrival; actual clock and timestamped whole minutes | Update the existing activity |
 | Next arrival within a minute | “Arriving soon”, same restrained hierarchy | No alert or loop |
 | New prediction differs by at least 15 seconds | “ETA revised”, replace the absolute clock and countdown | Native content update |
 | A new snapshot replaces a past prediction | “Next departure selected” | Keep the same route/stop identity |
