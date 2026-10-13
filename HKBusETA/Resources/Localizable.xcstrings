@@ -165,19 +165,19 @@
     "localizations": {
       "en": {
         "stringUnit": {
-          "value": "Arrival predictions refresh while this app is open. In the background, the countdown uses the last prediction. After 90 seconds, or when that bus is due, open the app to refresh. Background push updates are not connected yet.",
+          "value": "Arrival predictions refresh while this app is open. Live Activity minutes are a snapshot at the marked update time, not a ticking clock. After 90 seconds, or when that bus is due, open the app to refresh. Background push updates are not connected yet.",
           "state": "translated"
         }
       },
       "zh-Hans": {
         "stringUnit": {
-          "value": "到站预测会在 App 打开时更新。进入后台后，倒计时使用最后的预测；90 秒后或预计到站时，请打开 App 更新。目前尚未连接后台推送。",
+          "value": "到站预测会在 App 打开时更新。实时活动的分钟数是所示更新时间的快照，不会持续倒计时；90 秒后或预计到站时，请打开 App 更新。目前尚未连接后台推送。",
           "state": "translated"
         }
       },
       "zh-Hant": {
         "stringUnit": {
-          "value": "到站預測會在 App 開啟時更新。進入背景後，倒數使用最後的預測；90 秒後或預計到站時，請開啟 App 更新。目前尚未連接背景推送。",
+          "value": "到站預測會在 App 開啟時更新。實時活動的分鐘數是所示更新時間的快照，不會持續倒數；90 秒後或預計到站時，請開啟 App 更新。目前尚未連接背景推送。",
           "state": "translated"
         }
       }

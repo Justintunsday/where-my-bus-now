@@ -155,8 +155,8 @@ private struct BoardingArrivalSummary: View {
                 let state = session.activityState
                 HStack(spacing: 8) {
                     Image(systemName: state.isFresh(at: context.date) ? "clock.fill" : "clock.badge.exclamationmark")
-                    if state.isFresh(at: context.date), let arrival = state.arrival {
-                        Text(arrival, style: .relative).monospacedDigit()
+                    if let minutes = state.remainingMinutes(at: context.date), let arrival = state.arrival {
+                        Text("\(minutes) \(L10n.t("unit.minutes"))").monospacedDigit()
                         Text("·")
                         Text(arrival, style: .time).monospacedDigit()
                     } else { Text(L10n.t(session.isRefreshing ? "status.loading" : "arrival.stale")) }
