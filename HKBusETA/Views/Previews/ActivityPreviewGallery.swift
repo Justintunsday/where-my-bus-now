@@ -45,7 +45,7 @@ struct ActivityPreviewGallery: View {
                         HStack(spacing: 60) {
                             BusIslandRoute(target: target, compact: true).frame(maxWidth: 60)
                             BusActivityCountdown(target: target, state: state, isStale: scenario == .stale)
-                                .font(.headline).frame(maxWidth: 60)
+                                .font(.headline).frame(maxWidth: 100)
                         }.padding(.horizontal, 14).frame(height: 38)
                             .background(.black, in: Capsule())
                         Spacer(minLength: 8)

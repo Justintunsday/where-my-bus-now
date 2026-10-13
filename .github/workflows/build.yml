@@ -60,7 +60,7 @@ jobs:
             HKBusETA/Services/BusActivityPushRegistration.swift scripts/activity_push_self_test.swift \
             -o "$RUNNER_TEMP/activity_push_test"
           "$RUNNER_TEMP/activity_push_test"
-          xcrun swiftc -parse-as-library -O scripts/system_countdown_self_test.swift -o "$RUNNER_TEMP/system_countdown_test"
+          xcrun swiftc -parse-as-library -O Shared/SystemMinuteCountdown.swift scripts/system_countdown_self_test.swift -o "$RUNNER_TEMP/system_countdown_test"
           "$RUNNER_TEMP/system_countdown_test"
 
       - name: Offline mainland provider self-test

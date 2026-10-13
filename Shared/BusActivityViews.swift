@@ -92,7 +92,7 @@ struct BusLockScreenView: View {
                         else { Text(display.copy("asOf")).font(.caption2).foregroundStyle(.secondary) }
                     }
                 }
-                .frame(maxWidth: typeSize.isAccessibilitySize ? 130 : 110, alignment: .trailing)
+                .frame(maxWidth: 132, alignment: .trailing)
             }
             .accessibilityElement(children: .combine)
             BusActivityFooter(display: display, activityID: activityID)
@@ -227,9 +227,7 @@ struct BusActivityCountdown: View {
         if #available(iOS 18.0, *), let arrival = state.arrival {
             // Built-in style types can be decoded in WidgetKit's remote renderer.
             // The bounded system timer owns ticking; there is no extension Timer.
-            (Text(.currentDate, format: .timer(countingDownIn: state.updatedAt..<arrival,
-                                             showsHours: false, maxFieldCount: 1, maxPrecision: .seconds(60)))
-             + Text(" \(display.copy("minutes"))"))
+            Text(.currentDate, format: SystemMinuteCountdown.style(updatedAt: state.updatedAt, arrival: arrival))
                 .environment(\.locale, target.locale)
         } else if let minutes = state.remainingMinutes(at: state.updatedAt) {
             // Custom DiscreteFormatStyle types cannot be decoded by the remote
