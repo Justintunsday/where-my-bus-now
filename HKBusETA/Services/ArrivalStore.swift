@@ -20,7 +20,9 @@ extension BusTrackingTarget {
                   stopName: app.data.stopName(stopID, L10n.language), stopSequence: seq,
                   lineID: entry.gtfsId?.value, mode: metadata?.mode.rawValue,
                   source: metadata?.source.rawValue, language: L10n.language.rawValue,
-                  timeZoneIdentifier: app.region.timeZone.identifier)
+                  timeZoneIdentifier: app.region.timeZone.identifier,
+                  theme: .resolve(route: entry.route, operators: entry.co,
+                                  providerHex: app.provider.routeColorHex(entry: entry)))
     }
 
     func matches(entry: RouteEntry, providerID: String, source: String?, mode: String?) -> Bool {

@@ -8,15 +8,12 @@ struct RouteColorInfo {
 enum RouteStyle {
     static func info(for entry: RouteEntry, provider: any TransitProvider) -> RouteColorInfo {
         let hex = provider.routeColorHex(entry: entry)
-        return RouteColorInfo(background: Color(hex: hex), foreground: textColor(for: hex))
+        let theme = RouteTheme.resolve(route: entry.route, operators: entry.co, providerHex: hex)
+        return RouteColorInfo(background: theme.identity, foreground: theme.onIdentity)
     }
 
     static func textColor(for hex: UInt32) -> Color {
-        let red = Double((hex >> 16) & 0xFF) / 255
-        let green = Double((hex >> 8) & 0xFF) / 255
-        let blue = Double(hex & 0xFF) / 255
-        let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
-        return luminance > 0.6 ? .black : .white
+        RouteTheme(identifier: "badge", colorHex: hex).onIdentity
     }
 }
 
@@ -35,7 +32,7 @@ struct RouteBadge: View {
         if let entry {
             return RouteStyle.info(for: entry, provider: app.provider)
         }
-        return RouteColorInfo(background: Color(hex: 0xFF4747), foreground: .white)
+        return RouteColorInfo(background: RouteTheme.global.identity, foreground: RouteTheme.global.onIdentity)
     }
 
     var body: some View {

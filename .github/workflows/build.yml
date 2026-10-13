@@ -52,14 +52,16 @@ jobs:
         run: |
           python3 scripts/check_transit_resources.py
           xcrun swiftc -parse-as-library -O -D BUS_CONTRACT_TESTS \
-            Shared/BusActivityAttributes.swift Shared/BusActivityPreviewData.swift \
+            Shared/RouteTheme.swift Shared/BusActivityAttributes.swift Shared/BusActivityPreviewData.swift \
             scripts/activity_contract_self_test.swift -o "$RUNNER_TEMP/activity_contract_test"
           "$RUNNER_TEMP/activity_contract_test"
           xcrun swiftc -parse-as-library -O -D BUS_CONTRACT_TESTS \
-            Shared/BusActivityAttributes.swift Shared/BusActivityPreviewData.swift \
+            Shared/RouteTheme.swift Shared/BusActivityAttributes.swift Shared/BusActivityPreviewData.swift \
             HKBusETA/Services/BusActivityPushRegistration.swift scripts/activity_push_self_test.swift \
             -o "$RUNNER_TEMP/activity_push_test"
           "$RUNNER_TEMP/activity_push_test"
+          xcrun swiftc -parse-as-library -O scripts/system_countdown_self_test.swift -o "$RUNNER_TEMP/system_countdown_test"
+          "$RUNNER_TEMP/system_countdown_test"
 
       - name: Offline mainland provider self-test
         run: |

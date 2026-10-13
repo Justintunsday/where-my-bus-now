@@ -3,6 +3,29 @@ import Foundation
 @main enum ActivityContractSelfTest {
     static func main() throws {
         let target = BusTrackingTarget.preview
+        let eal = RouteTheme.resolve(route: "EAL", operators: ["mtr"])
+        precondition(eal.colorHex == 0x5EB7E8)
+        precondition(RouteTheme.resolve(route: "TWL", operators: ["mtr"]).colorHex == 0xE60012)
+        precondition(RouteTheme.resolve(route: "1A", operators: ["kmb"]).colorHex == 0xFF4747)
+        precondition(RouteTheme.resolve(route: "A21", operators: ["ctb"]).colorHex == 0xFFE15E)
+        precondition(RouteTheme.resolve(route: "unknown", operators: []).colorHex == RouteTheme.global.colorHex)
+        precondition(RouteTheme.resolve(route: "1", operators: [], providerHex: 0x123456).colorHex == 0x123456)
+        for hex in [0x5EB7E8, 0xE60012, 0xFFE15E, 0x9C2E00, 0x7E3C93, 0x00A040, 0xE85D3A] as [UInt32] {
+            let theme = RouteTheme(identifier: "test", colorHex: hex)
+            for background in [0xFFFFFF, 0x2C2C2E, 0] as [UInt32] {
+                precondition(RouteTheme.contrast(theme.readableHex(on: background), background) >= 4.5)
+            }
+            precondition(RouteTheme.contrast(theme.colorHex, theme.foregroundHex) >= 4.5)
+        }
+        var themedTarget = target
+        themedTarget.theme = eal
+        let themedRoundTrip = try JSONDecoder().decode(BusTrackingTarget.self, from: JSONEncoder().encode(themedTarget))
+        precondition(themedRoundTrip.resolvedTheme == eal, "Widget theme survives attribute serialization")
+        precondition(themedTarget.id == target.id, "Presentation theme never changes boarding identity")
+        var legacyFields = try JSONSerialization.jsonObject(with: JSONEncoder().encode(target)) as! [String: Any]
+        legacyFields.removeValue(forKey: "theme")
+        let legacyTarget = try JSONDecoder().decode(BusTrackingTarget.self, from: JSONSerialization.data(withJSONObject: legacyFields))
+        precondition(legacyTarget.resolvedTheme.colorHex == 0xFF4747, "Legacy activities use known operator metadata")
         precondition(target.timeZone.secondsFromGMT(for: Date(timeIntervalSince1970: 0)) == 28_800,
                      "Legacy boarding records retain their transit time zone")
         var regional = target

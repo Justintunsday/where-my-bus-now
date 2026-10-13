@@ -1,6 +1,140 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+
+  "arrival.live": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Live"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "實時"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "实时"
+        }
+      }
+    }
+  },
+  "arrival.journey": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Journey details"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "行程資料"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "行程信息"
+        }
+      }
+    }
+  },
+  "arrival.trackingActive": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Tracking on Lock Screen"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "正在鎖定畫面追蹤"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "正在锁定屏幕跟踪"
+        }
+      }
+    }
+  },
+  "arrival.lastKnown": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Last ETA"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "上次預測"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "上次预测"
+        }
+      }
+    }
+  },
+  "common.selected": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Selected"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已選取"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已选取"
+        }
+      }
+    }
+  },
+  "common.notSelected": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Not selected"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "未選取"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "未选取"
+        }
+      }
+    }
+  }
+,
     "tracking.remoteNotice" : {
       "extractionState": "manual",
       "localizations": {
@@ -165,19 +299,19 @@
     "localizations": {
       "en": {
         "stringUnit": {
-          "value": "Arrival predictions refresh while this app is open. Live Activity minutes are a snapshot at the marked update time, not a ticking clock. After 90 seconds, or when that bus is due, open the app to refresh. Background push updates are not connected yet.",
+          "value": "Arrival predictions refresh while this app is open. The countdown uses the last received prediction. A * marks minutes at the displayed update time. After 90 seconds, or when that bus is due, open the app to refresh. Background push updates are not connected yet.",
           "state": "translated"
         }
       },
       "zh-Hans": {
         "stringUnit": {
-          "value": "到站预测会在 App 打开时更新。实时活动的分钟数是所示更新时间的快照，不会持续倒计时；90 秒后或预计到站时，请打开 App 更新。目前尚未连接后台推送。",
+          "value": "到站预测会在 App 打开时更新。倒计时使用最后收到的预测。* 表示所示更新时间的分钟数；90 秒后或预计到站时，请打开 App 更新。目前尚未连接后台推送。",
           "state": "translated"
         }
       },
       "zh-Hant": {
         "stringUnit": {
-          "value": "到站預測會在 App 開啟時更新。實時活動的分鐘數是所示更新時間的快照，不會持續倒數；90 秒後或預計到站時，請開啟 App 更新。目前尚未連接背景推送。",
+          "value": "到站預測會在 App 開啟時更新。倒數使用最後收到的預測。* 表示所示更新時間的分鐘數；90 秒後或預計到站時，請開啟 App 更新。目前尚未連接背景推送。",
           "state": "translated"
         }
       }

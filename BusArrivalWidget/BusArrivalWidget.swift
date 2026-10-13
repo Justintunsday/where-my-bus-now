@@ -35,15 +35,16 @@ struct BusArrivalWidget: Widget {
             } compactTrailing: {
                 BusActivityCountdown(target: context.attributes.target, state: context.state, isStale: context.isStale)
                     .font(.headline.monospacedDigit())
+                    .foregroundStyle(context.attributes.target.resolvedTheme.islandAccent)
                     .dynamicTypeSize(...DynamicTypeSize.large)
                     .environment(\.locale, context.attributes.target.locale)
             } minimal: {
-                Image(systemName: display.symbol).foregroundStyle(TransitBrand.coral)
+                Image(systemName: display.symbol).foregroundStyle(display.theme.islandAccent)
                     .font(.body).dynamicTypeSize(...DynamicTypeSize.large)
                     .accessibilityLabel("\(context.attributes.target.route) · \(display.copy(display.statusKey))")
             }
             .widgetURL(context.attributes.target.deepLink)
-            .keylineTint(TransitBrand.coral)
+            .keylineTint(display.theme.identity)
         }
     }
 }

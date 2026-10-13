@@ -22,6 +22,10 @@ struct BusTrackingTarget: Codable, Hashable, Identifiable, Sendable {
     let source: String?
     let language: String
     var timeZoneIdentifier: String? = nil
+    // Optional to decode existing activities, bookmarks and deep links unchanged.
+    var theme: RouteTheme? = nil
+
+    var resolvedTheme: RouteTheme { theme ?? .resolve(route: route, operators: operators) }
 
     var timeZone: TimeZone {
         TimeZone(identifier: timeZoneIdentifier ?? "Asia/Hong_Kong") ?? TimeZone(secondsFromGMT: 28_800)!

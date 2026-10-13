@@ -7,6 +7,7 @@ struct BusActivityDisplay {
     let state: BusArrivalState
     let isStale: Bool
     var now = Date()
+    var theme: RouteTheme { target.resolvedTheme }
 
     var fresh: Bool { !isStale && state.isFresh(at: now) }
     var statusKey: String {
@@ -36,7 +37,7 @@ struct BusActivityDisplay {
         case "networkError": return "wifi.slash"
         case "stale", "unavailable": return "clock.badge.exclamationmark"
         case "adjusted": return "clock.arrow.2.circlepath"
-        default: return "bus.fill"
+        default: return target.operators.contains("mtr") || target.operators.contains("lightRail") ? "tram.fill" : "bus.fill"
         }
     }
     func copy(_ key: String) -> String { BusActivityCopy.text(key, language: target.language) }
@@ -52,7 +53,7 @@ struct BusLockScreenView: View {
     @Environment(\.transitLuminanceReduced) private var dimmed
     @Environment(\.colorSchemeContrast) private var contrast
     private var display: BusActivityDisplay { .init(target: target, state: state, isStale: isStale) }
-    private var accent: Color { dimmed || contrast == .increased ? .primary : TransitBrand.coral }
+    private var accent: Color { dimmed ? .primary : target.resolvedTheme.accent }
 
     var body: some View {
         if typeSize.isAccessibilitySize {
@@ -62,18 +63,24 @@ struct BusLockScreenView: View {
 
     private var standardBoard: some View {
         VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(target.route).font(.headline).fontDesign(.rounded)
+                    .foregroundStyle(accent).lineLimit(1).minimumScaleFactor(0.7)
+                Text("\(display.copy("to")) \(target.destination)")
+                    .font(.subheadline.weight(.medium)).lineLimit(1)
+                    .accessibilityLabel("\(display.copy("to")) \(target.destination)")
+            }
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 5) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(target.route).font(.title3.bold()).fontDesign(.rounded)
-                            .foregroundStyle(accent).lineLimit(1).minimumScaleFactor(0.7)
-                        Text("\(display.copy("to")) \(target.destination)")
-                            .font(.headline).lineLimit(1)
-                            .accessibilityLabel("\(display.copy("to")) \(target.destination)")
-                    }
                     Label(target.stopName, systemImage: "mappin.circle.fill")
-                        .font(.subheadline).lineLimit(1)
+                        .font(.headline).lineLimit(1)
                         .accessibilityLabel("\(display.copy("boarding")) \(target.stopName)")
+                    if let second = state.secondArrival {
+                        HStack(spacing: 4) {
+                            Text(display.copy(display.fresh ? "following" : "lastKnown"))
+                            Text(second, style: .time).monospacedDigit()
+                        }.font(.caption).foregroundStyle(.secondary)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 VStack(alignment: .trailing, spacing: 2) {
@@ -81,15 +88,13 @@ struct BusLockScreenView: View {
                         .font(typeSize.isAccessibilitySize ? .title2.bold() : .largeTitle.bold())
                         .fontDesign(.rounded).foregroundStyle(accent)
                     if display.fresh {
-                        Text(display.copy("asOf")).font(.caption2).foregroundStyle(.secondary)
+                        if #available(iOS 18.0, *) { Text(display.copy("remaining")).font(.caption2).foregroundStyle(.secondary) }
+                        else { Text(display.copy("asOf")).font(.caption2).foregroundStyle(.secondary) }
                     }
                 }
                 .frame(maxWidth: typeSize.isAccessibilitySize ? 130 : 110, alignment: .trailing)
             }
             .accessibilityElement(children: .combine)
-            if !typeSize.isAccessibilitySize {
-                BusDepartureClocks(display: display)
-            }
             BusActivityFooter(display: display, activityID: activityID)
         }
         .padding(14)
@@ -123,7 +128,7 @@ struct BusActivityAccessibleBoard: View {
                     Spacer(minLength: 4)
                     BusActivityCountdown(target: display.target, state: display.state, isStale: display.isStale)
                         .font(.caption.bold()).fontDesign(.rounded)
-                }.foregroundStyle(dimmed ? Color.primary : TransitBrand.coral)
+                }.foregroundStyle(dimmed ? Color.primary : display.theme.accent)
             }
             Text(display.target.stopName).font(.caption2.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
                 .accessibilityLabel("\(display.copy("boarding")) \(display.target.stopName)")
@@ -180,7 +185,8 @@ struct BusActivityFooter: View {
                 Text(display.copy(display.statusKey)).fontWeight(.medium)
                     .contentTransition(reduceMotion || dimmed ? .identity : .opacity)
                 HStack(spacing: 4) {
-                    Text("* \(display.copy("asOf"))")
+                    if #available(iOS 18.0, *) { Text(display.copy("updated")) }
+                    else { Text("* \(display.copy("asOf"))") }
                     Text(display.state.updatedAt, style: .time).monospacedDigit()
                 }.foregroundStyle(.secondary)
             }
@@ -210,7 +216,7 @@ struct BusActivityCountdown: View {
         if display.fresh {
             countdown
                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.75)
-                .contentTransition(reduceMotion || dimmed ? .identity : .numericText(countsDown: true))
+                .contentTransition(.identity)
                 .accessibilityLabel(display.copy("remaining"))
         } else {
             Image(systemName: display.symbol).accessibilityLabel(display.copy(display.statusKey))
@@ -218,7 +224,14 @@ struct BusActivityCountdown: View {
     }
 
     @ViewBuilder private var countdown: some View {
-        if let minutes = state.remainingMinutes(at: state.updatedAt) {
+        if #available(iOS 18.0, *), let arrival = state.arrival {
+            // Built-in style types can be decoded in WidgetKit's remote renderer.
+            // The bounded system timer owns ticking; there is no extension Timer.
+            (Text(.currentDate, format: .timer(countingDownIn: state.updatedAt..<arrival,
+                                             showsHours: false, maxFieldCount: 1, maxPrecision: .seconds(60)))
+             + Text(" \(display.copy("minutes"))"))
+                .environment(\.locale, target.locale)
+        } else if let minutes = state.remainingMinutes(at: state.updatedAt) {
             // Custom DiscreteFormatStyle types cannot be decoded by the remote
             // WidgetKit renderer (verified in CI). Use a timestamped snapshot on
             // every OS; context.isStale replaces it when the prediction expires.
@@ -240,7 +253,7 @@ struct BusIslandRoute: View {
             Text(target.route).font(.caption2.bold()).fontDesign(.rounded).fixedSize()
             Image(systemName: "bus.fill").font(.headline)
         }
-        .foregroundStyle(TransitBrand.coral)
+        .foregroundStyle(target.resolvedTheme.islandAccent)
         .accessibilityLabel("\(target.route) · \(BusActivityCopy.text("to", language: target.language)) \(target.destination)")
     }
 }
@@ -252,6 +265,7 @@ struct BusIslandExpandedArrival: View {
         VStack(alignment: .trailing, spacing: 2) {
             BusActivityCountdown(target: display.target, state: display.state, isStale: display.isStale)
                 .font(typeSize.isAccessibilitySize ? .caption.bold() : .title.bold()).fontDesign(.rounded)
+                .foregroundStyle(display.theme.islandAccent)
             if !typeSize.isAccessibilitySize, let arrival = display.state.arrival {
                 HStack(spacing: 4) {
                     Text(display.copy(display.fresh ? "arrival" : "lastKnown"))

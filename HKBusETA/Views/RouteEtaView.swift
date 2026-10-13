@@ -29,93 +29,75 @@ struct ArrivalScreen: View {
         MainlandRealtimePolicy.allowsRequest(modeHint: target.mode.flatMap(MainlandTransitMode.init(rawValue:)))
     }
 
-    private var hasFreshPrediction: Bool { session.error == nil && session.activityState.isFresh(at: Date()) }
-
-    private var followingArrivals: [Eta] {
-        var upcoming = session.etas.filter { ($0.date ?? .distantFuture) > Date() }
-        if session.activityState.isFresh(at: Date()), let arrival = session.activityState.arrival,
-           let next = upcoming.firstIndex(where: { $0.date == arrival }) {
-            upcoming.remove(at: next)
-        }
-        return upcoming
-    }
+    private var theme: RouteTheme { target.resolvedTheme }
+    private var isPinned: Bool { app.boarding.targets.contains { $0.id == target.id } }
+    private var isFavorite: Bool { app.bookmarks.isFavoriteRoute(target.routeKey) }
 
     var body: some View {
         List {
-            Section { RouteIdentityHeader(entry: entry, stopName: target.stopName) }
             Section {
-                if !realtimeAllowed { Label(L10n.t("mainland.metroNoRealtime"), systemImage: "tram.fill") }
-                else if session.updatedAt == nil && session.error == nil {
-                    ArrivalLoadingState()
-                } else { ArrivalHero(state: session.activityState) }
-            }
-            if !followingArrivals.isEmpty {
-                Section(L10n.t(hasFreshPrediction ? "arrival.upcoming" : "arrival.cached")) {
-                    ForEach(ArrivalSlot.make(followingArrivals)) { slot in
-                        ETALineView(eta: slot.eta, language: L10n.language,
-                            format: hasFreshPrediction ? app.settings.etaFormat : .exact, annotateScheduled: app.settings.annotateScheduled,
-                            highlight: false, showCompany: entry.co.count > 1).padding(.vertical, 8)
+                RouteDepartureBoard(entry: entry, target: target, session: session, realtimeAllowed: realtimeAllowed)
+                    .listRowInsets(EdgeInsets(top: 14, leading: 16, bottom: 10, trailing: 16))
+                if realtimeAllowed {
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 12) { trackingAction; pinAction }
+                        VStack(alignment: .leading, spacing: 8) { trackingAction; pinAction }
                     }
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 12, trailing: 16))
+                    .listRowSeparator(.hidden)
                 }
             }
-            if realtimeAllowed {
-                Section {
-                    Button { showsTracking = true } label: {
-                        Label(L10n.t(app.activities.isTracking(target) ? "tracking.manage" : "tracking.start"),
-                              systemImage: "wave.3.right.circle.fill").frame(maxWidth: .infinity, minHeight: 44)
-                    }
-                    .transitPrimaryAction().listRowBackground(Color.clear).listRowInsets(EdgeInsets())
-                    .accessibilityIdentifier("tracking.open")
-                    .accessibilityFocused($trackingFocused)
-                    Button {
-                        if !app.bookmarks.isFavoriteRoute(target.routeKey) {
-                            app.bookmarks.toggleFavoriteRoute(entry: entry, routeKey: target.routeKey, modeRawValue: target.mode)
-                        }
-                        app.boarding.save(target)
-                    } label: {
-                        Label(L10n.t(app.boarding.targets.contains { $0.id == target.id } ? "boarding.saved" : "boarding.save"),
-                              systemImage: "pin.fill").frame(minHeight: 44)
-                    }
-                    .sensoryFeedback(.success, trigger: app.boarding.targets.contains { $0.id == target.id })
+            Section(L10n.t("arrival.journey")) {
+                NavigationLink(value: RouteDetailTarget(routeKey: target.routeKey)) {
+                    Label(L10n.t("route.section.stops"), systemImage: "point.topleft.down.curvedto.point.bottomright.up")
                 }
-            }
-            if let metadata = app.data.mainlandMetadata(for: target.routeKey) {
-                Section { MainlandRouteOverview(metadata: metadata) }
-            } else {
-                Section {
+                if let metadata = app.data.mainlandMetadata(for: target.routeKey) {
+                    MainlandRouteOverview(metadata: metadata)
+                } else {
                     if let hours = app.provider.serviceHoursToday(entry: entry, db: app.data.db ?? .empty, at: Date()) {
                         Label(hours, systemImage: "clock")
                     }
                     if let fare = app.provider.fare(entry: entry, at: target.stopSequence, db: app.data.db ?? .empty, at: Date()) {
                         LabeledContent(L10n.t("route.fare"), value: "$\(fare)")
                     }
-                    NavigationLink(value: RouteDetailTarget(routeKey: target.routeKey)) {
-                        Label(L10n.t("route.section.stops"), systemImage: "point.topleft.down.curvedto.point.bottomright.up")
-                    }
                 }
             }
-            Section { FreshnessLabel(updatedAt: session.updatedAt, error: session.error) }.listRowBackground(Color.clear)
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--eta-motion-test") {
+                Button("Revise fixture ETA") {
+                    withAnimation(.spring()) {
+                        session.seed(etas: [180, 540].map { seconds in
+                            Eta(eta: RegionClock.isoString(from: Date().addingTimeInterval(Double(seconds))),
+                                remark: Terminal(en: "", zh: ""), dest: entry.dest, co: entry.co.first ?? "kmb")
+                        }, updatedAt: Date())
+                    }
+                }.accessibilityIdentifier("eta.test.revise")
+            }
+            #endif
         }
         .listStyle(.insetGrouped).transitListSurface()
+        .environment(\.routeTheme, theme).tint(theme.accent)
         .navigationTitle(target.route).navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
                 Button { Task { await refresh() } } label: {
-                    Image(systemName: "arrow.clockwise").symbolEffect(.bounce, value: session.updatedAt)
-                        .symbolEffectsRemoved(reduceMotion).frame(minWidth: 44, minHeight: 44)
+                    Image(systemName: "arrow.clockwise")
                 }
                 .disabled(session.isRefreshing).accessibilityLabel(L10n.t("common.retry"))
-                .transitCircularToolbarControl()
+                .accessibilityIdentifier("eta.refresh")
+                Button {
+                    app.bookmarks.toggleFavoriteRoute(entry: entry, routeKey: target.routeKey, modeRawValue: target.mode)
+                } label: {
+                    Image(systemName: isFavorite ? "star.fill" : "star")
+                }
+                .accessibilityLabel(L10n.t(isFavorite ? "common.unfavorite" : "common.favorite"))
+                .accessibilityIdentifier("eta.favorite")
             }
-            .transitIndependentToolbarItem()
-            ToolbarItem(placement: .topBarTrailing) {
-                FavoriteRouteButton(routeKey: target.routeKey, entry: entry)
-            }
-            .transitIndependentToolbarItem()
         }
         .refreshable { await refresh() }
         .sheet(isPresented: $showsTracking, onDismiss: { trackingFocused = true }) {
             TrackingSheet(target: target, session: session)
+                .environment(\.routeTheme, theme).tint(theme.accent)
                 .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
         }
         .task(id: "\(target.id)|\(target.language)|\(scenePhase)") {
@@ -130,6 +112,32 @@ struct ArrivalScreen: View {
                 do { try await Task.sleep(for: .seconds(30)) } catch { break }
             }
         }
+    }
+
+    private var trackingAction: some View {
+        Button { showsTracking = true } label: {
+            Label(L10n.t(app.activities.isTracking(target) ? "arrival.trackingActive" : "tracking.start"),
+                  systemImage: app.activities.isTracking(target) ? "checkmark.circle.fill" : "wave.3.right.circle")
+                .font(.subheadline.weight(.semibold))
+                .padding(.vertical, 4)
+        }
+        .transitPrimaryAction().controlSize(.regular)
+        .foregroundStyle(theme.onAccent)
+        .accessibilityIdentifier("tracking.open").accessibilityFocused($trackingFocused)
+    }
+
+    private var pinAction: some View {
+        Button {
+            if isPinned { app.boarding.remove(target) }
+            else { app.boarding.save(target) }
+        } label: {
+            Label(L10n.t(isPinned ? "boarding.saved" : "boarding.save"), systemImage: isPinned ? "pin.fill" : "pin")
+                .font(.subheadline).padding(.vertical, 4)
+        }
+        .buttonStyle(.borderless).frame(minHeight: 44)
+        .accessibilityIdentifier("eta.pin")
+        .accessibilityValue(L10n.t(isPinned ? "common.selected" : "common.notSelected"))
+        .sensoryFeedback(.selection, trigger: isPinned)
     }
 
     private func refresh() async {

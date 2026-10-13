@@ -6,13 +6,14 @@ import SwiftUI
 struct ActivityPreviewGallery: View {
     var initialScenario: BusArrivalPreview = .normal
     var initialLongRoute = false
+    var initialTarget: BusTrackingTarget = .preview
     @State private var scenario: BusArrivalPreview = .normal
     @State private var referenceDate = Date()
     @State private var longRoute = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     private var target: BusTrackingTarget {
-        var fields = BusTrackingTarget.preview
+        var fields = initialTarget
         if longRoute {
             fields = BusTrackingTarget(regionID: "cl-040", providerID: "chelaile", routeKey: "preview-long-route",
                 route: "機場快線 A29P", destination: "Hong Kong–Zhuhai–Macao Bridge Port",
@@ -48,7 +49,7 @@ struct ActivityPreviewGallery: View {
                         }.padding(.horizontal, 14).frame(height: 38)
                             .background(.black, in: Capsule())
                         Spacer(minLength: 8)
-                        Image(systemName: display.symbol).foregroundStyle(TransitBrand.coral)
+                        Image(systemName: display.symbol).foregroundStyle(target.resolvedTheme.islandAccent)
                             .frame(width: 38, height: 38).background(.black, in: Circle())
                     }.foregroundStyle(.white).environment(\.colorScheme, .dark)
                         // Match the finite system compact surface; expanded and

@@ -71,7 +71,15 @@ import XCTest
     }
 
     func testSystemActivityCanStartAndEndWhenAuthorized() throws {
-        let app = launch("eta")
+        try exerciseSystemActivity(screen: "eta", route: "1A", stop: "彌敦道")
+    }
+
+    func testEastRailSystemActivityRendersItsRouteAndBoardingStop() throws {
+        try exerciseSystemActivity(screen: "eta-eal", route: "EAL", stop: "紅磡")
+    }
+
+    private func exerciseSystemActivity(screen: String, route: String, stop: String) throws {
+        let app = launch(screen)
         let open = app.buttons["tracking.open"]
         for _ in 0..<4 where !open.isHittable { app.swipeUp() }
         XCTAssertTrue(open.waitForExistence(timeout: 5))
@@ -93,10 +101,10 @@ import XCTest
         // Home's closing animation outlives the accessibility foreground event.
         Thread.sleep(forTimeInterval: 2)
         let renderedRoute = springboard.descendants(matching: .any).matching(NSPredicate(
-            format: "label BEGINSWITH %@", "1A")).firstMatch
+            format: "label BEGINSWITH %@", route)).firstMatch
         XCTAssertTrue(renderedRoute.waitForExistence(timeout: 20),
                       "ActivityKit must render the route in the actual system Island")
-        screenshot("activity-system-compact")
+        screenshot("activity-system-compact-\(route)")
         let hierarchy = XCTAttachment(string: springboard.debugDescription)
         hierarchy.name = "system-activity-accessibility-tree"
         hierarchy.lifetime = .keepAlways
@@ -106,10 +114,10 @@ import XCTest
         XCTAssertTrue(island.exists)
         island.press(forDuration: 1.2)
         let renderedStop = springboard.descendants(matching: .any).matching(NSPredicate(
-            format: "label CONTAINS %@", "彌敦道")).firstMatch
+            format: "label CONTAINS %@", stop)).firstMatch
         XCTAssertTrue(renderedStop.waitForExistence(timeout: 10),
                       "Expanded Island must show the selected boarding stop")
-        screenshot("activity-system-expanded")
+        screenshot("activity-system-expanded-\(route)")
         app.activate()
         open.tap()
         let end = app.buttons["tracking.end"]
@@ -120,6 +128,30 @@ import XCTest
         open.tap()
         XCTAssertTrue(app.buttons["tracking.start"].waitForExistence(timeout: 5), "System activity ended and reconciled")
         screenshot("activity-start-end")
+    }
+
+    func testDepartureBoardControlsAndRevisedDigitsStayStable() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-snapshot", "eta", "--eta-motion-test"]
+        app.launch()
+        let digits = app.staticTexts["eta.primary-minutes"]
+        XCTAssertTrue(digits.waitForExistence(timeout: 10))
+        XCTAssertEqual(digits.label, "7")
+        let pin = app.buttons["eta.pin"]
+        XCTAssertEqual(pin.value as? String, "已選取")
+        pin.tap()
+        XCTAssertEqual(pin.value as? String, "未選取")
+        pin.tap()
+        app.buttons["eta.favorite"].tap()
+        app.buttons["eta.favorite"].tap()
+        let revise = app.buttons["eta.test.revise"]
+        for _ in 0..<3 where !revise.isHittable { app.swipeUp() }
+        revise.tap()
+        let revised = expectation(for: NSPredicate(format: "label == %@", "3"), evaluatedWith: digits)
+        wait(for: [revised], timeout: 5)
+        XCTAssertEqual(app.staticTexts.matching(identifier: "eta.primary-minutes").count, 1,
+                       "A revised ETA retains one stable digit view")
+        screenshot("eta-revised-digits")
     }
 
     func testArrivalHasAccessibleDescriptionsAndUnclippedText() throws {

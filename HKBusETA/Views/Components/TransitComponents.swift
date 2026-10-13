@@ -133,8 +133,8 @@ struct ArrivalHero: View {
         Text("\(minutes)")
             .font(.system(size: numeralSize, weight: .bold, design: .rounded)).monospacedDigit()
             .foregroundStyle(DesignTokens.accent)
-            .contentTransition(reduceMotion ? .identity : .numericText(countsDown: true))
-            .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: minutes)
+            .contentTransition(.identity)
+            .transaction { $0.animation = nil; $0.disablesAnimations = true }
     }
 }
 

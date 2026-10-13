@@ -9,8 +9,7 @@ struct TrackingSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    Text(L10n.t("tracking.preview")).font(.title2.bold())
+                VStack(alignment: .leading, spacing: 16) {
                     BusLockScreenView(target: target, state: session.activityState,
                                       isStale: !session.activityState.isFresh(at: Date()))
                         .background(DesignTokens.surface, in: RoundedRectangle(cornerRadius: 24))
@@ -40,12 +39,13 @@ struct TrackingSheet: View {
                         .accessibilityIdentifier("tracking.start")
                     }
                 }
-                .padding(24).frame(maxWidth: 640).frame(maxWidth: .infinity)
+                .padding(16).frame(maxWidth: 640).frame(maxWidth: .infinity)
             }
             .background(DesignTokens.background)
             .navigationTitle(L10n.t("tracking.title")).navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.t("common.done")) { dismiss() }.accessibilityIdentifier("tracking.done") } }
             .sensoryFeedback(.success, trigger: app.activities.isTracking(target))
+            .tint(target.resolvedTheme.accent)
         }
     }
 

@@ -8,21 +8,21 @@ mkdir -p "$output"
 bash scripts/prepare_simulator.sh "$kind"
 device=$(cat "$RUNNER_TEMP/bus-simulator-id")
 if [ "$kind" = ipad ]; then
-  for screen in home route eta activity; do
+  for screen in eta eta-eal eta-ctb activity-eal; do
     capture_transit_screen "$device" "$screen" "$output/$screen-ipad.png"
   done
 else
   xcrun simctl ui "$device" appearance light
-  for screen in home search search-results nearby saved route stop eta loading settings region empty error activity activity-stale activity-unavailable activity-networkError activity-cancelled activity-long; do
+  for screen in eta eta-eal eta-twl eta-ctb eta-nlb loading error activity activity-eal activity-twl activity-ctb activity-stale activity-unavailable activity-networkError activity-cancelled activity-long; do
     capture_transit_screen "$device" "$screen" "$output/$screen-light.png"
   done
   xcrun simctl ui "$device" appearance dark
-  for screen in home search search-results nearby saved route stop eta loading settings region activity activity-stale activity-unavailable activity-cancelled; do
+  for screen in eta eta-eal eta-twl eta-ctb eta-nlb loading error activity activity-eal activity-twl activity-ctb activity-stale activity-unavailable activity-cancelled; do
     capture_transit_screen "$device" "$screen" "$output/$screen-dark.png"
   done
   capture_transit_screen "$device" activity "$output/activity-dimmed.png" --dimmed --reduce-effects
   xcrun simctl ui "$device" content_size accessibility-extra-extra-extra-large
-  for screen in eta activity; do
+  for screen in eta eta-eal activity-eal; do
     capture_transit_screen "$device" "$screen" "$output/$screen-accessibility-reduced.png" --reduce-effects
   done
   xcrun simctl ui "$device" content_size large
