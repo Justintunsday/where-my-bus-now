@@ -6,13 +6,20 @@ struct HomeView: View {
     @Namespace private var trackingIdentity
     let openSearch: () -> Void
 
+    private var boardingTargets: [BusTrackingTarget] {
+        app.boarding.targets.filter { !app.activities.isTracking($0) }
+    }
+
     var body: some View {
         NavigationStack {
             List {
                 Section {
                     Button(action: openSearch) {
-                        Label(L10n.t("search.placeholder"), systemImage: "magnifyingglass")
-                            .foregroundStyle(.secondary).frame(minHeight: 44)
+                        HStack(spacing: 8) {
+                            Image(systemName: "magnifyingglass").accessibilityHidden(true)
+                            Text(L10n.t("search.placeholder")).fixedSize(horizontal: false, vertical: true)
+                        }
+                        .foregroundStyle(.secondary).frame(minHeight: 44)
                     }
                 }
                 if !app.activities.activeTargets.isEmpty {
@@ -24,6 +31,7 @@ struct HomeView: View {
                         }
                     }
                 }
+                if !boardingTargets.isEmpty || app.boarding.targets.isEmpty {
                 Section {
                     if app.boarding.targets.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
@@ -34,9 +42,10 @@ struct HomeView: View {
                         }
                         .padding(.vertical, 16)
                     } else {
-                        ForEach(app.boarding.targets) { target in
+                        ForEach(boardingTargets) { target in
                             BoardingTripRow(target: target)
                                 .environment(\.routeTheme, target.resolvedTheme)
+                                .tint(target.resolvedTheme.accent)
                                 .swipeActions {
                                     Button(role: .destructive) { app.boarding.remove(target) } label: {
                                         Label(L10n.t("common.remove"), systemImage: "pin.slash")
@@ -46,6 +55,7 @@ struct HomeView: View {
                     }
                 } header: {
                     HStack { Text(L10n.t("home.boarding")); Spacer(); Image(systemName: "pin.fill") }
+                }
                 }
                 if !app.bookmarks.favoriteRoutes.isEmpty {
                     Section(L10n.t("favorites.routes")) {
@@ -144,8 +154,11 @@ private struct BoardingTripRow: View {
                     }
             }
             NavigationLink(value: target) {
-                Label(L10n.t("route.fullEta"), systemImage: "arrow.up.right")
-                    .font(.subheadline.weight(.semibold)).frame(minHeight: 44)
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.up.right").accessibilityHidden(true)
+                    Text(L10n.t("route.fullEta")).fixedSize(horizontal: false, vertical: true)
+                }
+                .font(.subheadline.weight(.semibold)).frame(minHeight: 44)
             }
             .accessibilityIdentifier("boarding.open")
         }

@@ -23,7 +23,7 @@ The Lock Screen adapts warm white/charcoal surfaces to appearance. The Island's 
 | A new snapshot replaces a past prediction | “Next departure selected” | Keep the same route/stop identity |
 | Operator explicitly reports arrived/departed | Distinct check/arrow status; no live countdown | End with a short dismissal interval unless a new future service is already available |
 | Explicit cancellation | Cancellation symbol/text; remove arrival | End with a short dismissal interval |
-| Successful response has no future departures | “No further departures” | End with a short dismissal interval |
+| Successful response has no future departures | No live countdown; unavailable/empty board | Keep monitoring for subsequent departures; an empty response alone does not prove service ended |
 | Transport failure | Offline status; retain last clock times and the last successful timestamp | Mark stale; configured server retries independently of the app |
 | API/data failure | Prediction unavailable; preserve last clock history when available | Mark stale, no fabricated ETA |
 | No new snapshot before stale date / predicted arrival | “Open app to refresh”; countdown becomes invalid | No local inference that the bus physically arrived |

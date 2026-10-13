@@ -39,9 +39,11 @@ struct HomeTrackingCard: View {
                         }
                         Text(target.destination).font(.headline).foregroundStyle(.primary)
                             .fixedSize(horizontal: false, vertical: true)
-                        Label(target.stopName, systemImage: "mappin.and.ellipse")
-                            .font(.subheadline).foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        HStack(spacing: 6) {
+                            Image(systemName: "mappin.and.ellipse").accessibilityHidden(true)
+                            Text(target.stopName).fixedSize(horizontal: false, vertical: true)
+                        }
+                        .font(.subheadline).foregroundStyle(.secondary)
                     }
                     if !typeSize.isAccessibilitySize { Spacer(minLength: 0) }
                     TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -69,8 +71,11 @@ struct HomeTrackingCard: View {
             Divider()
             HStack(alignment: .center, spacing: 8) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Label(L10n.t(app.activities.remoteStatusKey(for: target)), systemImage: "wave.3.right")
-                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 6) {
+                        Image(systemName: "wave.3.right").accessibilityHidden(true)
+                        Text(L10n.t(app.activities.remoteStatusKey(for: target))).fixedSize(horizontal: false, vertical: true)
+                    }
+                        .accessibilityElement(children: .combine)
                         .accessibilityIdentifier("home.tracking.status")
                     if let state = app.activities.snapshots[target.id] {
                         HStack(spacing: 4) {
