@@ -226,6 +226,20 @@ jobs:
           path: ${{ runner.temp }}/TransitUITests.xcresult
           if-no-files-found: warn
 
+      - name: Export actual UI test screenshot attachments
+        if: always()
+        run: |
+          if test -d "$RUNNER_TEMP/TransitUITests.xcresult"; then
+            xcrun xcresulttool export attachments --path "$RUNNER_TEMP/TransitUITests.xcresult" \
+              --output-path "$RUNNER_TEMP/interaction-screenshots"
+          fi
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: Native-transit-interaction-screenshots
+          path: ${{ runner.temp }}/interaction-screenshots
+          if-no-files-found: warn
+
       - name: Collect ActivityKit rendering diagnostics
         if: always()
         run: python3 scripts/collect_activity_diagnostics.py

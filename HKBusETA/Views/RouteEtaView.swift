@@ -46,7 +46,7 @@ struct ArrivalScreen: View {
             Section {
                 if !realtimeAllowed { Label(L10n.t("mainland.metroNoRealtime"), systemImage: "tram.fill") }
                 else if session.updatedAt == nil && session.error == nil {
-                    HStack { ProgressView(); Text(L10n.t("status.loading")).foregroundStyle(.secondary) }.padding(.vertical, 24)
+                    ArrivalLoadingState()
                 } else { ArrivalHero(state: session.activityState) }
             }
             if !followingArrivals.isEmpty {

@@ -6,6 +6,17 @@ enum TransitMotion {
     }
 }
 
+struct ArrivalLoadingState: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            ProgressView()
+            Text(L10n.t("status.loading")).foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 24)
+        .accessibilityElement(children: .combine)
+    }
+}
+
 struct FavoriteRouteButton: View {
     @Environment(AppState.self) private var app
     @Environment(\.transitReduceMotion) private var reduceMotion

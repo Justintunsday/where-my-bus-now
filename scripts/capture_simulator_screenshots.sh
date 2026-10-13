@@ -13,11 +13,11 @@ if [ "$kind" = ipad ]; then
   done
 else
   xcrun simctl ui "$device" appearance light
-  for screen in home search nearby saved route stop eta settings region empty error activity activity-stale activity-unavailable activity-networkError activity-cancelled activity-long; do
+  for screen in home search search-results nearby saved route stop eta loading settings region empty error activity activity-stale activity-unavailable activity-networkError activity-cancelled activity-long; do
     capture_transit_screen "$device" "$screen" "$output/$screen-light.png"
   done
   xcrun simctl ui "$device" appearance dark
-  for screen in home search nearby saved route stop eta settings region activity activity-stale activity-unavailable activity-cancelled; do
+  for screen in home search search-results nearby saved route stop eta loading settings region activity activity-stale activity-unavailable activity-cancelled; do
     capture_transit_screen "$device" "$screen" "$output/$screen-dark.png"
   done
   capture_transit_screen "$device" activity "$output/activity-dimmed.png" --dimmed --reduce-effects

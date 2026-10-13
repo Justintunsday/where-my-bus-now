@@ -14,6 +14,10 @@ struct SearchView: View {
     @State private var searchTask: Task<Void, Never>?
     @Namespace private var routeTransition
 
+    init(initialQuery: String = "") {
+        _query = State(initialValue: initialQuery)
+    }
+
     private var language: AppLanguage { L10n.language }
 
     var body: some View {
@@ -69,6 +73,7 @@ struct SearchView: View {
             }
         }
         .onChange(of: query) { performSearch() }
+        .task { if !query.isEmpty { performSearch() } }
         .onChange(of: filter) { performSearch() }
         .onChange(of: app.settings.language) { performSearch() }
         .onDisappear { searchTask?.cancel() }
@@ -96,6 +101,7 @@ struct SearchView: View {
                                     RouteResultRow(entry: entry, language: language)
                                         .modifier(RouteZoomSource(id: key, namespace: routeTransition))
                                 }
+                                .accessibilityIdentifier("search.route.\(key)")
                             }
                         }
                     }

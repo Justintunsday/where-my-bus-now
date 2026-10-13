@@ -68,6 +68,16 @@ struct TransitPreviewGallery: View {
             case "route": NavigationStack { RouteDetailView(routeKey: TransitPreviewData.entry.routeKey).transitDestinations() }
             case "eta", "error": NavigationStack { RouteEtaView(routeKey: TransitPreviewData.entry.routeKey, seq: 2).transitDestinations() }
             case "search": SearchView()
+            case "search-results": SearchView(initialQuery: "1A")
+            case "loading":
+                NavigationStack {
+                    List {
+                        Section { RouteIdentityHeader(entry: TransitPreviewData.entry, stopName: app.data.stopName("p3", L10n.language)) }
+                        Section { ArrivalLoadingState() }
+                    }
+                    .listStyle(.insetGrouped).transitListSurface()
+                    .navigationTitle("1A").navigationBarTitleDisplayMode(.inline)
+                }
             case "nearby": NearbyView()
             case "stop": NavigationStack { StopEtaView(stopId: "p3").transitDestinations() }
             case "saved": FavoritesView()
@@ -98,6 +108,8 @@ struct TransitPreviewGallery: View {
 #Preview("ETA • Accessibility") { TransitPreviewGallery(screen: "eta").environment(\.dynamicTypeSize, .accessibility3) }
 #Preview("Empty") { TransitPreviewGallery(screen: "empty") }
 #Preview("Network error") { TransitPreviewGallery(screen: "error") }
+#Preview("ETA loading") { TransitPreviewGallery(screen: "loading") }
+#Preview("Search results") { TransitPreviewGallery(screen: "search-results") }
 #Preview("Reduced effects") {
     TransitPreviewGallery(screen: "home").environment(\.previewReducedEffects, true)
 }

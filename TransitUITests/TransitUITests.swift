@@ -60,6 +60,16 @@ import XCTest
         screenshot("network-failure")
     }
 
+    func testSearchResultOpensTheMatchingRoute() {
+        let app = launch("search-results")
+        let result = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "search.route.")).firstMatch
+        XCTAssertTrue(result.waitForExistence(timeout: 10))
+        result.tap()
+        XCTAssertTrue(app.navigationBars["1A"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["route.stop.0"].exists)
+        screenshot("search-to-route")
+    }
+
     func testSystemActivityCanStartAndEndWhenAuthorized() throws {
         let app = launch("eta")
         let open = app.buttons["tracking.open"]
