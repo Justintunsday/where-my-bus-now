@@ -70,7 +70,7 @@ struct BoardingTripCard: View {
             }
         }
         .transitCardSurface()
-        .environment(\.timeZone, TimeZone(identifier: target.timeZoneIdentifier) ?? RegionClock.timeZone)
+        .environment(\.timeZone, target.timeZone)
         .sensoryFeedback(.selection, trigger: expanded)
     }
 }

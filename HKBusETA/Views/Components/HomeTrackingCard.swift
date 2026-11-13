@@ -46,7 +46,7 @@ struct HomeTrackingCard: View {
         }
         .transitCardSurface()
         .environment(\.routeTheme, target.resolvedTheme)
-        .environment(\.timeZone, TimeZone(identifier: target.timeZoneIdentifier) ?? RegionClock.timeZone)
+        .environment(\.timeZone, target.timeZone)
         .tint(target.resolvedTheme.accent)
     }
 }
