@@ -5,20 +5,26 @@ struct SearchView: View {
     @Environment(AppState.self) private var app
     @State private var query = ""
     @State private var filter: TransportFilter = .all
-    @State private var routeKeys: [String] = []
+    @State private var routes: [TransitRouteSearchResult] = []
     @State private var stops: [StopSearchItem] = []
     @State private var mainlandLines: [MainlandLineSummary] = []
     @State private var mainlandStops: [MainlandStopSummary] = []
     @State private var mainlandError: String?
     @State private var isSearching = false
-    @State private var searchTask: Task<Void, Never>?
+    @State private var retryID = 0
     @Namespace private var routeTransition
 
     init(initialQuery: String = "") {
+        // A one-time entry/preview seed; subsequent text belongs to this screen.
         _query = State(initialValue: initialQuery)
     }
 
     private var language: AppLanguage { L10n.language }
+    private var request: TransitSearchRequest {
+        TransitSearchRequest(query: query.trimmingCharacters(in: .whitespacesAndNewlines),
+            filter: filter, language: app.settings.language, regionID: app.region.id,
+            dataRevision: app.data.lastLoaded, retryID: retryID)
+    }
 
     var body: some View {
         NavigationStack {
@@ -72,11 +78,7 @@ struct SearchView: View {
                 Text(scope.title(language)).tag(scope)
             }
         }
-        .onChange(of: query) { performSearch() }
-        .task { if !query.isEmpty { performSearch() } }
-        .onChange(of: filter) { performSearch() }
-        .onChange(of: app.settings.language) { performSearch() }
-        .onDisappear { searchTask?.cancel() }
+        .task(id: request) { await performSearch(request) }
     }
 
     @ViewBuilder
@@ -85,24 +87,27 @@ struct SearchView: View {
             SearchLandingView()
         } else if app.mainlandProvider != nil {
             mainlandContent
-        } else if routeKeys.isEmpty && stops.isEmpty {
+        } else if isSearching && routes.isEmpty && stops.isEmpty {
+            ProgressView(L10n.t("search.searching"))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .accessibilityIdentifier("search.loading")
+        } else if routes.isEmpty && stops.isEmpty {
             ContentUnavailableView {
                 Label(L10n.t("search.noResults"), systemImage: "magnifyingglass")
             } description: {
                 Text(L10n.t("search.noResults.hint"))
             }
+            .accessibilityIdentifier("search.noResults")
         } else {
             List {
-                if !routeKeys.isEmpty {
+                if !routes.isEmpty {
                     Section(L10n.t("search.section.routes")) {
-                        ForEach(routeKeys, id: \.self) { key in
-                            if let entry = app.data.entry(key) {
-                                NavigationLink(value: RouteDetailTarget(routeKey: key)) {
-                                    RouteResultRow(entry: entry, language: language)
-                                        .modifier(RouteZoomSource(id: key, namespace: routeTransition))
-                                }
-                                .accessibilityIdentifier("search.route.\(key)")
+                        ForEach(routes) { result in
+                            NavigationLink(value: RouteDetailTarget(routeKey: result.id)) {
+                                RouteResultRow(entry: result.entry, language: language)
+                                    .modifier(RouteZoomSource(id: result.id, namespace: routeTransition))
                             }
+                            .accessibilityIdentifier("search.route.\(result.id)")
                         }
                     }
                 }
@@ -115,7 +120,11 @@ struct SearchView: View {
                         }
                     }
                 }
-            }.transitListSurface()
+            }
+            .listStyle(.insetGrouped).listSectionSpacing(20)
+            .transitListSurface().transitReadableWidth()
+            .scrollDismissesKeyboard(.interactively)
+            .accessibilityIdentifier("search.results")
         }
     }
 
@@ -136,7 +145,7 @@ struct SearchView: View {
             } description: {
                 Text(mainlandError)
             } actions: {
-                Button(L10n.t("common.retry")) { performSearch() }
+                Button(L10n.t("common.retry")) { retryID += 1 }
             }
         } else if mainlandLines.isEmpty && mainlandStops.isEmpty {
             ContentUnavailableView {
@@ -186,7 +195,11 @@ struct SearchView: View {
                         }
                     }
                 }
-            }.transitListSurface()
+            }
+            .listStyle(.insetGrouped).listSectionSpacing(20)
+            .transitListSurface().transitReadableWidth()
+            .scrollDismissesKeyboard(.interactively)
+            .accessibilityIdentifier("search.results")
         }
     }
 
@@ -196,57 +209,60 @@ struct SearchView: View {
         return GeoUtils.distanceString(distance, language: language)
     }
 
-    private func routeCount(_ stopId: String) -> Int? {
-        let count = app.data.routeCount(at: stopId)
-        return count > 0 ? count : nil
-    }
-
-    private func performSearch() {
-        searchTask?.cancel()
-        let query = query
-        let filter = filter
-
-        if let provider = app.mainlandProvider {
-            searchTask = Task {
-                try? await Task.sleep(nanoseconds: 250_000_000)
-                guard !Task.isCancelled else { return }
-                isSearching = true
-                defer { if query == self.query { isSearching = false } }
-                do {
-                    guard MainlandSearchFiltering.isSupported(filter) else {
-                        mainlandLines = []
-                        mainlandStops = []
-                        mainlandError = nil
-                        return
-                    }
-                    let results = try await provider.search(keyword: query)
-                    let filtered = MainlandSearchFiltering.apply(filter, to: results)
-                    guard !Task.isCancelled else { return }
-                    mainlandError = nil
-                    mainlandLines = filtered.lines
-                    mainlandStops = filtered.stops
-                } catch {
-                    guard !Task.isCancelled else { return }
-                    mainlandLines = []
-                    mainlandStops = []
-                    mainlandError = MainlandErrorPresentation.message(for: error)
-                }
-            }
+    private func performSearch(_ request: TransitSearchRequest) async {
+        guard !request.query.isEmpty else {
+            routes = []; stops = []; mainlandLines = []; mainlandStops = []
+            mainlandError = nil; isSearching = false
             return
         }
-
-        searchTask = Task {
-            try? await Task.sleep(nanoseconds: 150_000_000)
+        let data = app.data
+        let provider = app.mainlandProvider
+        isSearching = true
+        mainlandError = nil
+        // A cancelled predecessor must not clear the replacement request's loading state.
+        defer { if !Task.isCancelled { isSearching = false } }
+        do {
+            try await Task.sleep(for: .milliseconds(provider == nil ? 150 : 250))
+            try Task.checkCancellation()
+            if let provider {
+                guard MainlandSearchFiltering.isSupported(request.filter) else {
+                    mainlandLines = []; mainlandStops = []
+                    return
+                }
+                let results = try await provider.search(keyword: request.query)
+                let filtered = MainlandSearchFiltering.apply(request.filter, to: results)
+                try Task.checkCancellation()
+                mainlandLines = filtered.lines
+                mainlandStops = filtered.stops
+            } else {
+                routes = data.searchRoutes(query: request.query, filter: request.filter).compactMap { hit in
+                    guard let entry = data.entry(hit.key) else { return nil }
+                    return TransitRouteSearchResult(id: hit.key, entry: entry)
+                }
+                stops = data.searchStops(query: request.query)
+            }
+        } catch is CancellationError {
+            return
+        } catch {
             guard !Task.isCancelled else { return }
-
-            let results = app.data.searchRoutes(query: query, filter: filter)
-            let stopResults = app.data.searchStops(query: query)
-
-            guard !Task.isCancelled else { return }
-            routeKeys = results.map(\.key)
-            stops = stopResults
+            mainlandLines = []; mainlandStops = []
+            mainlandError = MainlandErrorPresentation.message(for: error)
         }
     }
+}
+
+private struct TransitRouteSearchResult: Identifiable {
+    let id: String
+    let entry: RouteEntry
+}
+
+private struct TransitSearchRequest: Equatable {
+    let query: String
+    let filter: TransportFilter
+    let language: AppLanguage
+    let regionID: String
+    let dataRevision: Date?
+    let retryID: Int
 }
 
 struct MainlandLineRow: View {

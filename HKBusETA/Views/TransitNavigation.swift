@@ -18,17 +18,18 @@ struct TransitAppToolbar: ToolbarContent {
             Button { app.presentation = .region } label: {
                 Label(app.region.localizedName, systemImage: "location.circle")
                     .font(.subheadline.weight(.medium))
+                    .labelStyle(.titleAndIcon)
+                    .frame(minHeight: 44)
             }
             .accessibilityLabel("\(L10n.t("settings.region")) \(app.region.localizedName)")
-            .transitCircularToolbarControl()
+            .accessibilityIdentifier("app.region")
         }
-        .transitIndependentToolbarItem()
         ToolbarItem(placement: .topBarTrailing) {
-            Button { app.presentation = .settings } label: { Image(systemName: "person.crop.circle").frame(minWidth: 44, minHeight: 44) }
+            Button { app.presentation = .settings } label: { Image(systemName: "gearshape").frame(minWidth: 44, minHeight: 44) }
                 .accessibilityLabel(L10n.t("settings.title"))
-                .transitCircularToolbarControl()
+                .accessibilityIdentifier("app.settings")
+                .transitToolbarControl()
         }
-        .transitIndependentToolbarItem()
     }
 }
 

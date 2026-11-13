@@ -2,7 +2,6 @@ import SwiftUI
 
 struct RouteDetailView: View {
     @Environment(AppState.self) private var app
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.transitReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     let routeKey: String
@@ -13,19 +12,18 @@ struct RouteDetailView: View {
         DataGate {
             if let entry = app.data.entry(routeKey) {
                 let points = makePoints(entry)
-                Group {
-                    if sizeClass == .regular, !typeSize.isAccessibilitySize {
-                        HStack(spacing: 0) {
-                            map(entry, points: points).frame(maxWidth: .infinity, maxHeight: .infinity)
-                            timeline(entry, points: points).frame(minWidth: 340, idealWidth: 420, maxWidth: 480)
+                GeometryReader { geometry in
+                    let sideBySide = geometry.size.width >= DesignTokens.Layout.mapColumnBreakpoint && !typeSize.isAccessibilitySize
+                    let layout = sideBySide ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
+                    layout {
+                        if !typeSize.isAccessibilitySize {
+                            map(entry, points: points)
+                                .frame(height: sideBySide ? nil : min(max(geometry.size.height * 0.36, 140), 300))
+                                .frame(maxWidth: .infinity, maxHeight: sideBySide ? .infinity : nil)
                         }
-                    } else {
-                        VStack(spacing: 0) {
-                            if !typeSize.isAccessibilitySize {
-                                map(entry, points: points).frame(height: 240)
-                            }
-                            timeline(entry, points: points)
-                        }
+                        timeline(entry, points: points)
+                            .frame(minWidth: sideBySide ? 320 : nil,
+                                   maxWidth: sideBySide ? DesignTokens.Layout.detailColumnWidth : .infinity)
                     }
                 }
                 .background(DesignTokens.background)
@@ -36,14 +34,12 @@ struct RouteDetailView: View {
                             NavigationLink(value: RouteDetailTarget(routeKey: opposite.key)) {
                                 Image(systemName: "arrow.left.arrow.right").frame(minWidth: 44, minHeight: 44)
                             }.accessibilityLabel(L10n.t("route.reverse"))
-                                .transitCircularToolbarControl()
+                                .transitToolbarControl()
                         }
-                        .transitIndependentToolbarItem()
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         FavoriteRouteButton(routeKey: routeKey, entry: entry)
                     }
-                    .transitIndependentToolbarItem()
                 }
                 .sensoryFeedback(.selection, trigger: selectedSeq)
                 .environment(\.routeTheme, RouteTheme.resolve(route: entry.route, operators: entry.co, providerHex: app.provider.routeColorHex(entry: entry)))
@@ -94,7 +90,7 @@ struct RouteDetailView: View {
                         }
                     }
                 } header: {
-                    Text("\(L10n.t("route.section.stops")) · \(points.count)")
+                    TransitSectionHeading(title: L10n.t("route.section.stops"), count: points.count)
                 } footer: { Text(L10n.t("boarding.timelineHint")) }
             }
             .listStyle(.insetGrouped)

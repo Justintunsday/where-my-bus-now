@@ -26,7 +26,9 @@ struct RootView: View {
     var body: some View {
         @Bindable var app = app
         Group {
-            if sizeClass == .regular {
+            if #available(iOS 18.0, *) {
+                adaptiveTabs.modifier(TransitTabBarBehavior())
+            } else if sizeClass == .regular {
                 NavigationSplitView {
                     List(TransitTab.allCases, selection: Binding<TransitTab?>(get: { tab }, set: { if let value = $0 { tab = value } })) { item in
                         Label(item.title, systemImage: item.symbol).tag(item)
@@ -42,7 +44,7 @@ struct RootView: View {
                 }
             }
         }
-        .tint(DesignTokens.accent)
+        .tint(DesignTokens.action)
         .sheet(item: $app.presentation) { sheet in
             switch sheet {
             case .settings: SettingsView()
@@ -87,12 +89,48 @@ struct RootView: View {
         .onChange(of: app.settings.annotateScheduled) { app.settings.persist() }
     }
 
+    /// One container owns navigation through iPad window and size-class changes.
+    @available(iOS 18.0, *)
+    private var adaptiveTabs: some View {
+        TabView(selection: $tab) {
+            Tab(value: TransitTab.today) { destination(.today) } label: {
+                Label(TransitTab.today.title, systemImage: TransitTab.today.symbol)
+            }
+            Tab(value: TransitTab.nearby) { destination(.nearby) } label: {
+                Label(TransitTab.nearby.title, systemImage: TransitTab.nearby.symbol)
+            }
+            Tab(value: TransitTab.saved) { destination(.saved) } label: {
+                Label(TransitTab.saved.title, systemImage: TransitTab.saved.symbol)
+            }
+            Tab(value: TransitTab.search, role: .search) { destination(.search) } label: {
+                Label(TransitTab.search.title, systemImage: TransitTab.search.symbol)
+            }
+        }
+        .tabViewStyle(.sidebarAdaptable)
+    }
+
     @ViewBuilder private func destination(_ tab: TransitTab) -> some View {
         switch tab {
-        case .today: HomeView(openSearch: { self.tab = .search })
+        case .today:
+            HomeView(openSearch: { self.tab = .search },
+                     openNearby: { self.tab = .nearby },
+                     openSaved: { self.tab = .saved })
         case .search: SearchView().id(app.region.id)
         case .nearby: NearbyView().id(app.region.id)
-        case .saved: FavoritesView()
+        case .saved: FavoritesView(openSearch: { self.tab = .search })
+        }
+    }
+}
+
+private struct TransitTabBarBehavior: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.transitReduceMotion) private var reduceMotion
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.tabBarMinimizeBehavior(typeSize.isAccessibilitySize || reduceMotion ? .never : .onScrollDown)
+        } else {
+            content
         }
     }
 }

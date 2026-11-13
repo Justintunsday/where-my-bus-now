@@ -121,7 +121,7 @@ struct TransitPreviewGallery: View {
         }
         .environment(app).environment(\.locale, app.settings.language.locale)
         .environment(\.timeZone, app.region.timeZone)
-        .tint(DesignTokens.accent)
+        .tint(DesignTokens.action)
         .environment(\.previewReducedEffects, inheritedReducedEffects || ProcessInfo.processInfo.arguments.contains("--reduce-effects"))
         .environment(\.previewDimmed, ProcessInfo.processInfo.arguments.contains("--dimmed"))
         .task {
@@ -141,6 +141,11 @@ struct TransitPreviewGallery: View {
 #Preview("EAL • Activity") { TransitPreviewGallery(screen: "activity-eal") }
 #Preview("Citybus • Activity dark") { TransitPreviewGallery(screen: "activity-ctb").preferredColorScheme(.dark) }
 #Preview("Today") { TransitPreviewGallery(screen: "home") }
+#Preview("Today • Large text") { TransitPreviewGallery(screen: "home").environment(\.dynamicTypeSize, .accessibility3) }
+#Preview("Nearby • Dark") { TransitPreviewGallery(screen: "nearby").preferredColorScheme(.dark) }
+#Preview("Nearby • Large text") { TransitPreviewGallery(screen: "nearby").environment(\.dynamicTypeSize, .accessibility3) }
+#Preview("Saved") { TransitPreviewGallery(screen: "saved") }
+#Preview("Search") { TransitPreviewGallery(screen: "search") }
 #Preview("Today • EAL tracking") { TransitPreviewGallery(screen: "home-tracking-eal") }
 #Preview("Today • Citybus dark") { TransitPreviewGallery(screen: "home-tracking-ctb").preferredColorScheme(.dark) }
 #Preview("Today • Stale reduced effects") { TransitPreviewGallery(screen: "home-tracking-stale").environment(\.previewReducedEffects, true) }

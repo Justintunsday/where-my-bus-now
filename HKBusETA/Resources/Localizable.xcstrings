@@ -1,6 +1,34 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "home.overview.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your next departure starts here" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "常用車程，下一班就在這裡" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "常用车程，下一班就在这里" } }
+      }
+    },
+    "home.allSaved" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All saved routes" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "查看所有收藏路線" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "查看所有收藏线路" } }
+      }
+    },
+    "home.following" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Following departures" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "後續班次" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "后续班次" } }
+      }
+    },
+    "search.searching" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Searching…" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "搜尋中…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "搜索中…" } }
+      }
+    },
 "tracking.stale": {
     "localizations": {
       "en": {

@@ -7,6 +7,8 @@ enum DesignTokens {
 
     /// Original Warm Coral. Operator route colors remain independent.
     static let accent = TransitBrand.coral
+    /// The brand hue adjusted for readable text and filled native actions.
+    static let action = RouteTheme.global.accent
     /// Soft accent background for selections and badges.
     static let accentSoft = TransitBrand.softAccent
     /// Text/icon color on top of the accent.
@@ -64,6 +66,12 @@ enum DesignTokens {
         static let m: CGFloat = 12
         static let l: CGFloat = 16
         static let xl: CGFloat = 20
+    }
+
+    enum Layout {
+        static let readableWidth: CGFloat = 960
+        static let mapColumnBreakpoint: CGFloat = 720
+        static let detailColumnWidth: CGFloat = 400
     }
 }
 

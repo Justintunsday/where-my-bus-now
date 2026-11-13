@@ -1,91 +1,37 @@
 import SwiftUI
 
-/// In-app navigation and tracking controls. System-managed Live Activities keep their own surfaces.
+/// Departure content stays opaque; navigation bars and sheets own the system material.
 struct HomeTrackingCard: View {
     @Environment(AppState.self) private var app
-    @Environment(\.transitReduceTransparency) private var reduceTransparency
     @Environment(\.dynamicTypeSize) private var typeSize
     let target: BusTrackingTarget
 
     var body: some View {
-        surface
-            .environment(\.routeTheme, target.resolvedTheme)
-            .tint(target.resolvedTheme.accent)
-    }
-
-    @ViewBuilder private var surface: some View {
-        if #available(iOS 26, *), !reduceTransparency {
-            content.glassEffect(.regular, in: .rect(cornerRadius: 20))
-        } else if reduceTransparency {
-            content.background(DesignTokens.surface, in: RoundedRectangle(cornerRadius: 16))
-        } else {
-            content.background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-        }
-    }
-
-    private var content: some View {
         VStack(alignment: .leading, spacing: 12) {
             NavigationLink(value: target) {
-                let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(alignment: .center, spacing: 16))
+                let layout = typeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 16))
+                    : AnyLayout(HStackLayout(alignment: .top, spacing: 16))
                 layout {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 8) {
-                            Text(target.route).font(.headline.monospacedDigit())
-                                .padding(.horizontal, 9).padding(.vertical, 5)
-                                .foregroundStyle(target.resolvedTheme.onIdentity)
-                                .background(target.resolvedTheme.identity, in: RoundedRectangle(cornerRadius: 7))
-                            Text(target.operators.map { app.provider.operators.op($0)?.name(L10n.language) ?? $0.uppercased() }.joined(separator: " · "))
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
+                    VStack(alignment: .leading, spacing: 12) {
+                        BoardingRouteSign(target: target)
                         Text(target.destination).font(.headline).foregroundStyle(.primary)
                             .fixedSize(horizontal: false, vertical: true)
-                        HStack(spacing: 6) {
-                            Image(systemName: "mappin.and.ellipse").accessibilityHidden(true)
-                            Text(target.stopName).fixedSize(horizontal: false, vertical: true)
-                        }
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        Label(target.stopName, systemImage: "mappin.and.ellipse")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    if !typeSize.isAccessibilitySize { Spacer(minLength: 0) }
-                    TimelineView(.periodic(from: .now, by: 1)) { context in
-                        let state = app.activities.snapshots[target.id]
-                        VStack(alignment: .trailing, spacing: 3) {
-                            if let minutes = state?.remainingMinutes(at: context.date) {
-                                Text("\(minutes)").font(.system(.largeTitle, design: .rounded, weight: .bold)).monospacedDigit()
-                                    .foregroundStyle(target.resolvedTheme.accent)
-                                    .contentTransition(.identity)
-                                    .transaction { $0.animation = nil; $0.disablesAnimations = true }
-                                Text(L10n.t("unit.minutes")).font(.caption).foregroundStyle(.secondary)
-                            } else {
-                                Image(systemName: "clock.badge.exclamationmark").font(.title2).foregroundStyle(.secondary)
-                                Text(L10n.t("tracking.stale")).font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                        .accessibilityElement(children: .combine)
-                        .accessibilityIdentifier("home.tracking.eta")
-                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    HomeTrackingArrival(target: target, alignment: typeSize.isAccessibilitySize ? .leading : .trailing)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("home.tracking.open")
             Divider()
             HStack(alignment: .center, spacing: 8) {
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "wave.3.right").accessibilityHidden(true)
-                        Text(L10n.t(app.activities.remoteStatusKey(for: target))).fixedSize(horizontal: false, vertical: true)
-                    }
-                        .accessibilityElement(children: .combine)
-                        .accessibilityIdentifier("home.tracking.status")
-                    if let state = app.activities.snapshots[target.id] {
-                        HStack(spacing: 4) {
-                            Text(L10n.t("eta.updatedAt"))
-                            Text(state.updatedAt, style: .time).monospacedDigit()
-                        }
-                    }
-                }
-                .font(.caption).foregroundStyle(.secondary)
-                Spacer(minLength: 0)
+                HomeTrackingStatus(target: target)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Menu {
                     Button(role: .destructive) { Task { await app.activities.end(target) } } label: {
                         Label(L10n.t("tracking.end"), systemImage: "stop.circle")
@@ -98,6 +44,46 @@ struct HomeTrackingCard: View {
                 .accessibilityIdentifier("home.tracking.menu")
             }
         }
-        .padding(16)
+        .transitCardSurface()
+        .environment(\.routeTheme, target.resolvedTheme)
+        .environment(\.timeZone, TimeZone(identifier: target.timeZoneIdentifier) ?? RegionClock.timeZone)
+        .tint(target.resolvedTheme.accent)
+    }
+}
+
+private struct HomeTrackingArrival: View {
+    @Environment(AppState.self) private var app
+    let target: BusTrackingTarget
+    let alignment: HorizontalAlignment
+
+    var body: some View {
+        VStack(alignment: alignment, spacing: 8) {
+            Text(L10n.t("arrival.next")).font(.caption).foregroundStyle(.secondary)
+            BoardingArrivalValue(state: app.activities.snapshots[target.id] ?? .unavailable(at: .now),
+                                 format: app.settings.etaFormat,
+                                 annotateScheduled: app.settings.annotateScheduled, alignment: alignment)
+                .accessibilityIdentifier("home.tracking.eta")
+        }
+    }
+}
+
+private struct HomeTrackingStatus: View {
+    @Environment(AppState.self) private var app
+    let target: BusTrackingTarget
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label(L10n.t(app.activities.remoteStatusKey(for: target)), systemImage: "wave.3.right")
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("home.tracking.status")
+            if let state = app.activities.snapshots[target.id] {
+                HStack(spacing: 4) {
+                    Text(L10n.t("eta.updatedAt"))
+                    Text(state.updatedAt, style: .time).monospacedDigit()
+                }
+            }
+        }
+        .font(.caption).foregroundStyle(.secondary)
+        .accessibilityElement(children: .combine)
     }
 }

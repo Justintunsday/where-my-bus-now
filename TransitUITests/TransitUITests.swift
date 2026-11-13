@@ -184,15 +184,66 @@ import XCTest
         XCTAssertTrue(app.navigationBars["EAL"].waitForExistence(timeout: 5))
     }
 
-    func testTodayTrackingUsesNativeGlassAndShowsStaleState() {
+    func testTodayTrackingShowsReadableDepartureAndStaleState() {
         let app = launch("home-tracking-eal")
         XCTAssertTrue(app.buttons["home.tracking.open"].waitForExistence(timeout: 10))
-        screenshot("today-tracking-native-glass")
+        screenshot("today-tracking-departure-card")
         app.terminate()
         let stale = launch("home-tracking-stale")
         XCTAssertTrue(stale.buttons["home.tracking.open"].waitForExistence(timeout: 10))
         XCTAssertTrue(stale.staticTexts["預測已過期"].exists)
         screenshot("today-tracking-stale")
+    }
+
+    func testHomeNearbyShortcutOpensTheSelectedStopBoard() {
+        let app = launch("home")
+        let nearby = app.buttons["home.nearby"]
+        XCTAssertTrue(nearby.waitForExistence(timeout: 10))
+        nearby.tap()
+        let open = app.buttons["nearby.open.p3"]
+        XCTAssertTrue(open.waitForExistence(timeout: 10))
+        if !open.isHittable { app.swipeUp() }
+        open.tap()
+        XCTAssertTrue(app.navigationBars["彌敦道"].waitForExistence(timeout: 5))
+        screenshot("home-nearby-stop-board")
+    }
+
+    func testSearchClearingAndNewQueryReplaceResults() {
+        let app = launch("home")
+        let shortcut = app.buttons["home.search"]
+        XCTAssertTrue(shortcut.waitForExistence(timeout: 10))
+        shortcut.tap()
+        let field = app.searchFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText("1A")
+        let result = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "search.route.")).firstMatch
+        XCTAssertTrue(result.waitForExistence(timeout: 5))
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 2))
+        XCTAssertTrue(app.descendants(matching: .any)["search.landing"].waitForExistence(timeout: 5))
+        let miss = "zz-no-route-zz"
+        field.typeText(miss)
+        XCTAssertTrue(app.descendants(matching: .any)["search.noResults"].waitForExistence(timeout: 5))
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: miss.count))
+        field.typeText("1A")
+        XCTAssertTrue(result.waitForExistence(timeout: 5))
+        result.tap()
+        XCTAssertTrue(app.navigationBars["1A"].waitForExistence(timeout: 5))
+        screenshot("home-search-replaced-query")
+    }
+
+    func testSelectedArrivalSurvivesWindowOrientationChange() {
+        let app = launch("home")
+        let open = app.buttons["boarding.open"]
+        XCTAssertTrue(open.waitForExistence(timeout: 10))
+        if !open.isHittable { app.swipeUp() }
+        open.tap()
+        XCTAssertTrue(app.navigationBars["1A"].waitForExistence(timeout: 5))
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        XCTAssertTrue(app.navigationBars["1A"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["tracking.open"].exists)
+        screenshot("arrival-after-orientation-change")
     }
 
     private func screenshot(_ name: String) {

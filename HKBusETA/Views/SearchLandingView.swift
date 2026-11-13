@@ -6,10 +6,13 @@ struct SearchLandingView: View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label(app.region.localizedName, systemImage: "location.circle.fill").foregroundStyle(DesignTokens.accent)
+                    Image(systemName: "point.topleft.down.curvedto.point.bottomright.up")
+                        .font(.largeTitle).foregroundStyle(DesignTokens.accent).accessibilityHidden(true)
                     Text(L10n.t("search.discoveryTitle")).font(.title2.bold())
-                    Text(L10n.t("search.empty.hint")).font(.subheadline).foregroundStyle(.secondary)
-                }.padding(.vertical, 12)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(L10n.t("search.empty.hint")).font(.body).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }.padding(.vertical, 12).transitCardRow()
             }
             if !app.bookmarks.recentRoutes.isEmpty {
                 Section(L10n.t("search.recent.routes")) {
@@ -49,6 +52,8 @@ struct SearchLandingView: View {
                     }
                 }
             }
-        }.listStyle(.insetGrouped).transitListSurface()
+        }.listStyle(.insetGrouped).listSectionSpacing(20)
+            .transitListSurface().transitReadableWidth()
+            .accessibilityIdentifier("search.landing")
     }
 }

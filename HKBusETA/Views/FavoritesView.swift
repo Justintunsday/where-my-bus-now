@@ -3,8 +3,10 @@ import SwiftUI
 /// Nationwide saved routes and stops, grouped by their owning transit region.
 struct FavoritesView: View {
     @Environment(AppState.self) private var app
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var navigationPath = NavigationPath()
     @State private var showsStops = false
+    var openSearch: (() -> Void)? = nil
 
     private var language: AppLanguage { L10n.language }
 
@@ -24,20 +26,24 @@ struct FavoritesView: View {
                 } else {
                     List {
                         if showsStops { stopList } else { routeList }
-                    }.transitListSurface()
+                    }.listStyle(.insetGrouped).listSectionSpacing(20).transitListSurface()
                 }
             }
             .background(DesignTokens.background)
+            .transitReadableWidth()
             .navigationTitle(L10n.t("favorites.title"))
             .toolbar { TransitAppToolbar() }
-            .toolbar { ToolbarItem(placement: .primaryAction) { EditButton() } }
-            .safeAreaInset(edge: .top) {
-                Picker(L10n.t("favorites.title"), selection: $showsStops) {
-                    Text(L10n.t("favorites.routes")).tag(false)
-                    Text(L10n.t("favorites.stops")).tag(true)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    EditButton().disabled(showsStops ? stopSections.isEmpty : routeSections.isEmpty)
                 }
-                .pickerStyle(.segmented).padding(.horizontal, 16).padding(.vertical, 8)
-                .background(DesignTokens.background)
+            }
+            .safeAreaInset(edge: .top) {
+                kindPicker.frame(maxWidth: 480)
+                    .padding(.horizontal, 16).padding(.vertical, 12)
+                    .frame(maxWidth: .infinity)
+                    .background(DesignTokens.background)
+                    .accessibilityIdentifier("saved.kind")
             }
             .navigationDestination(for: RouteDetailTarget.self) { target in
                 RouteDetailView(routeKey: target.routeKey)
@@ -57,6 +63,21 @@ struct FavoritesView: View {
         }
     }
 
+    @ViewBuilder private var kindPicker: some View {
+        if typeSize.isAccessibilitySize {
+            picker.pickerStyle(.menu).controlSize(.large).frame(minHeight: 44)
+        } else {
+            picker.pickerStyle(.segmented)
+        }
+    }
+
+    private var picker: some View {
+        Picker(L10n.t("favorites.title"), selection: $showsStops) {
+            Text(L10n.t("favorites.routes")).tag(false)
+            Text(L10n.t("favorites.stops")).tag(true)
+        }
+    }
+
     @ViewBuilder
     private var routeList: some View {
         ForEach(routeSections) { section in
@@ -70,8 +91,9 @@ struct FavoritesView: View {
                             Image(systemName: "chevron.forward")
                                 .font(DesignTokens.captionMedium)
                                 .foregroundStyle(DesignTokens.textTertiary)
+                                .accessibilityHidden(true)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -81,7 +103,6 @@ struct FavoritesView: View {
                 }
             } header: {
                 FavoriteSectionHeader(
-                    kind: L10n.t("favorites.routes"),
                     regionID: section.regionID,
                     count: section.items.count
                 )
@@ -102,8 +123,9 @@ struct FavoritesView: View {
                             Image(systemName: "chevron.forward")
                                 .font(DesignTokens.captionMedium)
                                 .foregroundStyle(DesignTokens.textTertiary)
+                                .accessibilityHidden(true)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -113,7 +135,6 @@ struct FavoritesView: View {
                 }
             } header: {
                 FavoriteSectionHeader(
-                    kind: L10n.t("favorites.stops"),
                     regionID: section.regionID,
                     count: section.items.count
                 )
@@ -126,6 +147,10 @@ struct FavoritesView: View {
             Label(L10n.t("favorites.empty.title"), systemImage: "star")
         } description: {
             Text(L10n.t("favorites.empty.message"))
+        } actions: {
+            if let openSearch {
+                Button(L10n.t("tab.search"), action: openSearch).buttonStyle(.borderedProminent)
+            }
         }
     }
 
@@ -158,25 +183,13 @@ struct FavoriteSection<Item: Identifiable>: Identifiable {
     var id: String { regionID }
 }
 
-/// Section header: kind · region on the left, count on the right.
+/// The segmented control supplies the kind; section headings identify the owning city.
 private struct FavoriteSectionHeader: View {
-    let kind: String
     let regionID: String
     let count: Int
 
     var body: some View {
-        HStack(spacing: DesignTokens.Spacing.xs) {
-            Image(systemName: "mappin.and.ellipse")
-                .font(DesignTokens.footnote)
-            Text("\(kind) · \(regionName)")
-                .font(DesignTokens.caption)
-            Spacer()
-            Text("\(count)")
-                .font(DesignTokens.caption)
-                .monospacedDigit()
-        }
-        .foregroundStyle(DesignTokens.textTertiary)
-        .textCase(nil)
+        TransitSectionHeading(title: regionName, count: count)
     }
 
     private var regionName: String {
@@ -186,13 +199,17 @@ private struct FavoriteSectionHeader: View {
 
 private struct RouteFavoriteRow: View {
     @Environment(AppState.self) private var app
+    @Environment(\.dynamicTypeSize) private var typeSize
     let item: RegionalFavoriteRoute
 
     private var language: AppLanguage { L10n.language }
 
     var body: some View {
         let favorite = item.favorite
-        return HStack(spacing: DesignTokens.Spacing.s + DesignTokens.Spacing.xs) {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+            : AnyLayout(HStackLayout(spacing: 12))
+        return layout {
             RouteBadge(
                 route: favorite.route,
                 entry: item.regionID == app.region.id ? app.data.entry(favorite.routeKey) : nil
@@ -218,8 +235,8 @@ private struct RouteFavoriteRow: View {
                 .foregroundStyle(DesignTokens.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, DesignTokens.Spacing.s)
     }
 }

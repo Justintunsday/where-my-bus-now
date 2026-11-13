@@ -68,14 +68,12 @@ struct StopEtaView: View {
                         ) {
                             Image(systemName: "map")
                         }
-                        .transitCircularToolbarControl()
+                        .transitToolbarControl()
                     }
-                    .transitIndependentToolbarItem()
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     favoriteButton
                 }
-                .transitIndependentToolbarItem()
             }
             .refreshable { await refresh() }
             .task(id: "\(stopId)|\(scenePhase)") {
@@ -111,7 +109,7 @@ struct StopEtaView: View {
             .tint(DesignTokens.accent)
             .accessibilityLabel(L10n.t(isFavorite ? "common.unfavorite" : "common.favorite"))
             .sensoryFeedback(.selection, trigger: isFavorite)
-            .transitCircularToolbarControl()
+            .transitToolbarControl()
         }
     }
 

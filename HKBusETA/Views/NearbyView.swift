@@ -5,7 +5,6 @@ import SwiftUI
 struct NearbyView: View {
     @Environment(AppState.self) private var app
     @Environment(\.transitReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var stops: [NearbyDisplayStop] = []
     @State private var selection: String?
     @State private var camera: MapCameraPosition = .automatic
@@ -16,13 +15,16 @@ struct NearbyView: View {
 
     /// Quantized location prevents tiny GPS movements from launching overlapping network calls.
     private var requestID: String {
-        guard let location = app.location.location else { return app.region.id }
-        return "\(app.region.id)|\(Int(location.coordinate.latitude * 1000))|\(Int(location.coordinate.longitude * 1000))"
+        let locationID = app.location.location.map {
+            "\(Int($0.coordinate.latitude * 1000))|\(Int($0.coordinate.longitude * 1000))"
+        } ?? "locating"
+        return "\(app.region.id)|\(locationID)|\(app.data.lastLoaded?.timeIntervalSince1970 ?? 0)|\(app.settings.language.rawValue)"
     }
 
     var body: some View {
         NavigationStack(path: $path) {
             DataGate { content }
+                .background(DesignTokens.background)
                 .navigationTitle(L10n.t("nearby.title"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { TransitAppToolbar() }
@@ -39,7 +41,6 @@ struct NearbyView: View {
         }
         .task(id: requestID) { await load() }
         .task { app.location.startUpdating() }
-        .onChange(of: app.data.lastLoaded) { Task { await load() } }
         .sensoryFeedback(.selection, trigger: selection)
     }
 
@@ -65,68 +66,17 @@ struct NearbyView: View {
                 Button(L10n.t("common.retry")) { Task { await load() } }
             }
         } else {
-            VStack(spacing: 0) {
-                if !typeSize.isAccessibilitySize, stops.contains(where: { $0.coordinate != nil }) {
-                    Map(position: $camera, selection: $selection) {
-                        UserAnnotation()
-                        ForEach(stops) { stop in
-                            if let coordinate = stop.coordinate {
-                                Marker(stop.name, systemImage: "bus.fill", coordinate: coordinate).tag(stop.id)
-                            }
-                        }
-                    }
-                    .mapControls { MapUserLocationButton(); MapCompass() }
-                    .frame(height: 230)
-                    .accessibilityLabel(L10n.t("nearby.map"))
-                }
-                ScrollViewReader { proxy in
-                    List {
-                        if let error { Section { Label(error, systemImage: "wifi.exclamationmark").font(.caption) } }
-                        Section(L10n.t("search.section.stops")) {
-                            ForEach(stops) { stop in
-                                HStack(spacing: 8) {
-                                    Button { select(stop) } label: {
-                                        HStack(alignment: .top, spacing: 12) {
-                                            Image(systemName: stop.id == selection ? "mappin.circle.fill" : "mappin.circle")
-                                                .foregroundStyle(DesignTokens.accent).font(.title3)
-                                            VStack(alignment: .leading, spacing: 4) {
-                                                Text(stop.name).font(.headline).foregroundStyle(.primary)
-                                                    .fixedSize(horizontal: false, vertical: true)
-                                                if let subtitle = stop.subtitle {
-                                                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
-                                                }
-                                            }
-                                            Spacer(minLength: 0)
-                                            if let distance = stop.distance {
-                                                Text(GeoUtils.distanceString(distance, language: L10n.language))
-                                                    .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                                            }
-                                        }.frame(minHeight: 44).contentShape(Rectangle())
-                                    }.buttonStyle(.plain)
-                                    Button {
-                                        if app.mainlandProvider != nil {
-                                            path.append(MainlandStopTarget(stopID: stop.id, namesakeStopID: stop.namesakeID,
-                                                title: stop.name, location: stop.location))
-                                        } else { path.append(StopTarget(stopId: stop.id)) }
-                                    } label: { Image(systemName: "arrow.up.right").frame(minWidth: 44, minHeight: 44) }
-                                    .buttonStyle(.plain).foregroundStyle(DesignTokens.accent)
-                                    .accessibilityLabel("\(L10n.t("route.fullEta")) · \(stop.name)")
-                                }
-                                .accessibilityElement(children: .contain)
-                                .accessibilityAddTraits(stop.id == selection ? [.isSelected] : [])
-                                .listRowBackground(stop.id == selection ? DesignTokens.accentSoft : DesignTokens.surface)
-                                .id(stop.id)
-                            }
-                        }
-                    }
-                    .listStyle(.plain).transitListSurface()
-                    .refreshable { await load() }
-                    .onChange(of: selection) { _, id in
-                        guard let id else { return }
-                        withAnimation(TransitMotion.selection(reduced: reduceMotion)) { proxy.scrollTo(id, anchor: .center) }
-                    }
-                }
-            }
+            NearbyStopsContent(stops: stops, error: error, camera: $camera, selection: $selection,
+                               select: select, open: open, refresh: load)
+        }
+    }
+
+    private func open(_ stop: NearbyDisplayStop) {
+        if app.mainlandProvider != nil {
+            path.append(MainlandStopTarget(stopID: stop.id, namesakeStopID: stop.namesakeID,
+                title: stop.name, location: stop.location))
+        } else {
+            path.append(StopTarget(stopId: stop.id))
         }
     }
 
@@ -167,10 +117,140 @@ struct NearbyView: View {
             }
             guard !Task.isCancelled, regionID == app.region.id, generation == loadGeneration else { return }
             stops = result; error = nil
+            if let selection, !result.contains(where: { $0.id == selection }) { self.selection = nil }
         } catch {
             guard !Task.isCancelled, regionID == app.region.id, generation == loadGeneration else { return }
             self.error = MainlandErrorPresentation.message(for: error)
         }
+    }
+}
+
+/// Reflow keeps the map camera, selection and list alive while the window resizes.
+private struct NearbyStopsContent: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.transitReduceMotion) private var reduceMotion
+    let stops: [NearbyDisplayStop]
+    let error: String?
+    @Binding var camera: MapCameraPosition
+    @Binding var selection: String?
+    let select: (NearbyDisplayStop) -> Void
+    let open: (NearbyDisplayStop) -> Void
+    let refresh: () async -> Void
+    @State private var mapSelection: String?
+
+    var body: some View {
+        GeometryReader { geometry in
+            let hasMap = !typeSize.isAccessibilitySize && stops.contains { $0.coordinate != nil }
+            let sideBySide = hasMap && geometry.size.width >= DesignTokens.Layout.mapColumnBreakpoint
+            let layout = sideBySide ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
+            layout {
+                if hasMap {
+                    map
+                        .frame(height: sideBySide ? nil : min(max(geometry.size.height * 0.36, 140), 300))
+                        .frame(maxWidth: .infinity, maxHeight: sideBySide ? .infinity : nil)
+                }
+                stopList
+                    .frame(minWidth: sideBySide ? 300 : nil,
+                           maxWidth: sideBySide ? DesignTokens.Layout.detailColumnWidth : .infinity)
+            }
+        }
+    }
+
+    private var map: some View {
+        Map(position: $camera, selection: Binding(get: { selection }, set: {
+            selection = $0
+            mapSelection = $0
+        })) {
+            UserAnnotation()
+            ForEach(stops) { stop in
+                if let coordinate = stop.coordinate {
+                    Marker(stop.name, systemImage: "bus.fill", coordinate: coordinate).tag(stop.id)
+                }
+            }
+        }
+        .mapStyle(.standard(pointsOfInterest: .excludingAll))
+        .mapControls { MapUserLocationButton(); MapCompass() }
+        .tint(DesignTokens.accent)
+        .accessibilityLabel(L10n.t("nearby.map"))
+    }
+
+    private var stopList: some View {
+        ScrollViewReader { proxy in
+            List {
+                if let error {
+                    Section {
+                        Label(error, systemImage: "wifi.exclamationmark")
+                            .font(.subheadline).foregroundStyle(DesignTokens.warning)
+                    }
+                }
+                Section {
+                    ForEach(stops) { stop in
+                        NearbyStopRow(stop: stop, isSelected: selection == stop.id, select: {
+                            mapSelection = nil
+                            if stop.coordinate == nil || typeSize.isAccessibilitySize { open(stop) }
+                            else { select(stop) }
+                        }, open: { open(stop) })
+                        .listRowBackground(selection == stop.id ? DesignTokens.accentSoft : DesignTokens.surface)
+                        .id(stop.id)
+                    }
+                } header: {
+                    TransitSectionHeading(title: L10n.t("search.section.stops"), count: stops.count)
+                }
+            }
+            .listStyle(.insetGrouped).transitListSurface()
+            .refreshable { await refresh() }
+            .onChange(of: mapSelection) { _, id in
+                guard let id else { return }
+                withAnimation(TransitMotion.selection(reduced: reduceMotion)) { proxy.scrollTo(id, anchor: .center) }
+            }
+        }
+    }
+}
+
+private struct NearbyStopRow: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    let stop: NearbyDisplayStop
+    let isSelected: Bool
+    let select: () -> Void
+    let open: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 8) {
+            Button(action: select) {
+                let layout = typeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+                    : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+                layout {
+                    Image(systemName: isSelected ? "mappin.circle.fill" : "mappin.circle")
+                        .font(.title2).foregroundStyle(DesignTokens.accent).accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(stop.name).font(.headline).foregroundStyle(.primary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if let subtitle = stop.subtitle, !subtitle.isEmpty {
+                            Text(subtitle).font(.caption).foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        if let distance = stop.distance {
+                            Text(GeoUtils.distanceString(distance, language: L10n.language))
+                                .font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("nearby.stop.\(stop.id)")
+            .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+            Button(action: open) {
+                Image(systemName: "arrow.up.right").frame(minWidth: 44, minHeight: 44)
+            }
+            .buttonStyle(.borderless).foregroundStyle(DesignTokens.accent)
+            .accessibilityLabel("\(L10n.t("route.fullEta")) · \(stop.name)")
+            .accessibilityIdentifier("nearby.open.\(stop.id)")
+        }
+        .padding(.vertical, 8)
+        .accessibilityElement(children: .contain)
     }
 }
 

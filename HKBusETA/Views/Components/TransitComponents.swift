@@ -36,7 +36,7 @@ struct FavoriteRouteButton: View {
         }
         .accessibilityLabel(L10n.t(isFavorite ? "common.unfavorite" : "common.favorite"))
         .sensoryFeedback(.selection, trigger: isFavorite)
-        .transitCircularToolbarControl()
+        .transitToolbarControl()
     }
 }
 

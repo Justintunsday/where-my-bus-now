@@ -15,7 +15,7 @@ Three structural alternatives were considered: search-first (fast for unfamiliar
 - Route: fixed map above an independently scrolling timeline on iPhone; map/timeline side by side in regular width. Direction and service variant remain explicit. Selected stop expands inline; full ETA is a native push.
 - ETA: route/destination → boarding stop → next arrival → subsequent services → freshness/status. Tracking is a native sheet with a real WidgetKit layout preview and a disclosure matching the configured update capability.
 - Settings: native Form, searchable region sheet, language and arrival display preferences, data source information.
-- iPad: native NavigationSplitView sidebar; iPhone: native TabView and independent NavigationStacks. System sheets retain swipe dismissal and detents.
+- iOS 18+: one native sidebar-adaptable TabView with independent NavigationStacks and a dedicated search tab. iOS 17 keeps its NavigationSplitView/TabView fallback. System sheets retain swipe dismissal and detents.
 
 ## Design system (Warm Minimal brand)
 
@@ -26,7 +26,7 @@ Original adaptive warm backgrounds and semantic text tokens, Warm Coral #E85D3A 
 | Interaction | Motion and state owner | Reduced effects |
 | --- | --- | --- |
 | Boarding selection | Retargetable 0.32s, low-bounce spring; route detail owns selected sequence; map camera follows a list selection; only map-originated selections scroll the timeline, so tapping an expanded stop never moves its own disclosure button | Immediate selection/camera and scroll |
-| Saved trip expansion | matchedGeometryEffect within a single hierarchy; one source badge per trip; native navigation from the expanded preview to route detail/ETA | Immediate expansion |
+| Saved trip expansion | Scoped spring disclosure reveals the following departure and freshness; AnyLayout preserves card state when text size changes; explicit native navigation opens full ETA | Immediate expansion |
 | Route push on iOS 26+ | Native source-linked zoom, system interactive back | System push when Reduce Motion is enabled |
 | ETA changes | numericText + scoped smooth animation; arrival slots retain identity while timestamps change | Immediate text update |
 | Favorite / tracking commit | Discrete symbol bounce and selection/success sensory feedback | Symbol effects removed; state and labels still update |
@@ -34,7 +34,7 @@ Original adaptive warm backgrounds and semantic text tokens, Warm Coral #E85D3A 
 
 No perpetual symbol effects, phase loops, artificial animation delays or decorative gradients. Phase/keyframe animators are deliberately unnecessary for these finite interactions.
 
-Toolbar refinement: account, region, favorite, refresh and direction controls have 44 × 44pt targets. iOS 17–18 retain traditional native toolbar buttons. iOS 26 hides the bar's shared capsule before applying interactive glass in `Circle()`; Reduce Transparency on iOS 26 uses an opaque circular surface; older systems use native buttons without custom glass or circle backgrounds. Textual Done/Edit controls retain native text button treatment.
+Toolbar refinement: region, settings, favorite, refresh and direction controls have at least 44pt targets. All supported systems own their toolbar grouping, shapes and material. The app no longer suppresses shared backgrounds or adds custom glass circles over toolbar items. The region control includes its city name; textual Done/Edit controls retain native text treatment. See the [iOS 26 layout revision](ios26-layout-redesign.md) for the current card and map layouts.
 
 ## Data and lifecycle
 
