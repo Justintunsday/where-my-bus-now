@@ -74,15 +74,16 @@ jobs:
     runs-on: macos-26-intel
     timeout-minutes: 40
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.0.1.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
       BUS_IOS_MAJOR: '26'
       BUS_SIMULATOR_DEVICE_NAME: 'iPhone 16'
+      BUS_SIMULATOR_RUNTIME_ID: 'com.apple.CoreSimulator.SimRuntime.iOS-26-5'
     steps:
       - uses: actions/checkout@v5
       - name: Verify toolchain and native resources
         run: |
           xcodebuild -version
-          xcodebuild -version | head -1 | grep -E '^Xcode 26\.0\.1$'
+          xcodebuild -version | head -1 | grep -E '^Xcode 26\.6$'
           python3 scripts/check_transit_resources.py
           xcrun simctl list runtimes available
       - name: Build the iOS 26 simulator app
