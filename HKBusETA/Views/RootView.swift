@@ -54,6 +54,9 @@ struct RootView: View {
                     TrackingDestination(target: target)
                         .transitDestinations()
                         .toolbar {
+                            if #available(iOS 26.0, *) {
+                                ToolbarSpacer(.fixed, placement: .confirmationAction)
+                            }
                             ToolbarItem(placement: .confirmationAction) {
                                 Button(L10n.t("common.done")) { app.presentation = nil }
                             }

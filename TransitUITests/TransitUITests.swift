@@ -297,6 +297,23 @@ import XCTest
         XCTAssertTrue(route.buttons["route.reverse"].isHittable)
     }
 
+    func testSavedSettingsCircleStaysSeparateFromEdit() {
+        let app = launch("saved")
+        let settings = app.buttons["app.settings"]
+        let edit = app.buttons["saved.edit"]
+        assertCircular(settings)
+        assertCircular(app.buttons["app.region"])
+        XCTAssertTrue(edit.waitForExistence(timeout: 5))
+        assertSeparated(settings, edit)
+        let previousLabel = edit.label
+        edit.tap()
+        XCTAssertNotEqual(edit.label, previousLabel)
+        assertCircular(settings)
+        edit.tap()
+        recordGeometry(app, ids: ["app.settings", "saved.edit"], name: "saved-toolbar-geometry")
+        screenshot("native-saved-toolbar")
+    }
+
     func testCircularControlsRemainUsableWithReducedEffects() throws {
         let app = launch("home-tracking-eal", reduced: true)
         assertCircular(app.buttons["app.region"])

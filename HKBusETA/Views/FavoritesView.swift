@@ -35,8 +35,12 @@ struct FavoritesView: View {
             .transitRegionSubtitle()
             .toolbar { TransitAppToolbar() }
             .toolbar {
+                if #available(iOS 26.0, *) {
+                    ToolbarSpacer(.fixed, placement: .primaryAction)
+                }
                 ToolbarItem(placement: .primaryAction) {
                     EditButton().disabled(showsStops ? stopSections.isEmpty : routeSections.isEmpty)
+                        .accessibilityIdentifier("saved.edit")
                 }
             }
             .safeAreaInset(edge: .top) {

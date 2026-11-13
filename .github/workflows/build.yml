@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       preview_only:
-        description: 'Build a test IPA first (compile only; skip simulator validation)'
+        description: 'Build a preview IPA without the full compatibility matrix'
         type: boolean
         default: false
       native_ui_preview:
@@ -71,11 +71,12 @@ jobs:
   native-ui-preview:
     name: Native circular controls (iOS 26)
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.native_ui_preview }}
-    runs-on: macos-15-intel
-    timeout-minutes: 30
+    runs-on: macos-26-intel
+    timeout-minutes: 40
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.0.1.app/Contents/Developer
       BUS_IOS_MAJOR: '26'
+      BUS_SIMULATOR_DEVICE_NAME: 'iPhone 16'
     steps:
       - uses: actions/checkout@v5
       - name: Verify toolchain and native resources
@@ -92,6 +93,7 @@ jobs:
             -derivedDataPath "$RUNNER_TEMP/BusDerived" CODE_SIGNING_ALLOWED=NO
       - name: Prepare the iOS 26 simulator
         id: simulator
+        timeout-minutes: 12
         run: bash scripts/prepare_simulator.sh phone
       - name: Verify circular geometry, separation, actions and accessible labels
         run: |
@@ -103,6 +105,7 @@ jobs:
             -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO \
             -only-testing:TransitUITests/TransitUITests/testNativeToolbarCirclesAndActions \
             -only-testing:TransitUITests/TransitUITests/testStopAndRouteToolbarCircles \
+            -only-testing:TransitUITests/TransitUITests/testSavedSettingsCircleStaysSeparateFromEdit \
             -only-testing:TransitUITests/TransitUITests/testCircularControlsRemainUsableWithReducedEffects
       - name: Capture native screens in light, dark and accessibility sizes
         if: ${{ always() && steps.simulator.outcome == 'success' }}
