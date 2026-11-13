@@ -76,7 +76,7 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
       BUS_IOS_MAJOR: '26'
-      BUS_SIMULATOR_DEVICE_NAME: 'iPhone 16'
+      BUS_SIMULATOR_DEVICE_NAME: 'iPhone 17'
       BUS_SIMULATOR_RUNTIME_ID: 'com.apple.CoreSimulator.SimRuntime.iOS-26-5'
     steps:
       - uses: actions/checkout@v5
@@ -96,7 +96,7 @@ jobs:
         id: simulator
         timeout-minutes: 12
         run: bash scripts/prepare_simulator.sh phone
-      - name: Verify circular geometry, separation, actions and accessible labels
+      - name: Verify native actions, separation and accessible labels
         run: |
           device=$(cat "$RUNNER_TEMP/bus-simulator-id")
           xcodebuild test -project HKBusETA.xcodeproj -scheme HKBusETA \

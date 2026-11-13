@@ -36,6 +36,7 @@ struct HomeTrackingCard: View {
                     Button(role: .destructive) { Task { await app.activities.end(target) } } label: {
                         Label(L10n.t("tracking.end"), systemImage: "stop.circle")
                     }
+                    .accessibilityIdentifier("home.tracking.end")
                 } label: {
                     Label(L10n.t("tracking.title"), systemImage: "ellipsis")
                 }

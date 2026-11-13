@@ -20,18 +20,29 @@ struct FavoritesView: View {
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            Group {
+            List {
+                Section {
+                    kindPicker.frame(maxWidth: 480)
+                        .frame(maxWidth: .infinity)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .accessibilityIdentifier("saved.kind")
+                }
                 if showsStops ? stopSections.isEmpty : routeSections.isEmpty {
-                    emptyState
+                    Section {
+                        emptyState.listRowBackground(Color.clear)
+                    }
+                } else if showsStops {
+                    stopList
                 } else {
-                    List {
-                        if showsStops { stopList } else { routeList }
-                    }.listStyle(.insetGrouped).transitListSurface()
+                    routeList
                 }
             }
+            .listStyle(.insetGrouped).transitListSurface()
             .background(DesignTokens.background)
             .transitReadableWidth()
             .navigationTitle(L10n.t("favorites.title"))
+            .navigationBarTitleDisplayMode(.large)
             .transitRegionSubtitle()
             .toolbar { TransitAppToolbar() }
             .toolbar {
@@ -42,13 +53,6 @@ struct FavoritesView: View {
                     EditButton().disabled(showsStops ? stopSections.isEmpty : routeSections.isEmpty)
                         .accessibilityIdentifier("saved.edit")
                 }
-            }
-            .safeAreaInset(edge: .top) {
-                kindPicker.frame(maxWidth: 480)
-                    .padding(.horizontal, 16).padding(.vertical, 12)
-                    .frame(maxWidth: .infinity)
-                    .background(DesignTokens.background)
-                    .accessibilityIdentifier("saved.kind")
             }
             .navigationDestination(for: RouteDetailTarget.self) { target in
                 RouteDetailView(routeKey: target.routeKey)
