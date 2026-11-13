@@ -45,7 +45,7 @@ jobs:
   preview:
     name: Preview IPA (compile only)
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.preview_only }}
-    runs-on: macos-15
+    runs-on: macos-15-intel
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.0.1.app/Contents/Developer
     timeout-minutes: 20
