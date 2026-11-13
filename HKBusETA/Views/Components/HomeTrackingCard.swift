@@ -37,14 +37,14 @@ struct HomeTrackingCard: View {
                         Label(L10n.t("tracking.end"), systemImage: "stop.circle")
                     }
                 } label: {
-                    Image(systemName: "ellipsis").font(.headline)
-                        .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                    Label(L10n.t("tracking.title"), systemImage: "ellipsis")
                 }
+                .transitInlineIconControl()
                 .accessibilityLabel(L10n.t("tracking.title"))
                 .accessibilityIdentifier("home.tracking.menu")
             }
         }
-        .transitCardSurface()
+        .transitDepartureContent()
         .environment(\.routeTheme, target.resolvedTheme)
         .environment(\.timeZone, target.timeZone)
         .tint(target.resolvedTheme.accent)

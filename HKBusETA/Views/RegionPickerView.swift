@@ -36,7 +36,11 @@ struct RegionPickerView: View {
             .transitListSurface()
             .searchable(text: $query, prompt: Text(L10n.t("region.search")))
             .navigationTitle(L10n.t("settings.region"))
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.t("common.done")) { dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(L10n.t("common.done")) { dismiss() }.accessibilityIdentifier("region.done")
+                }
+            }
         }
     }
     private func select(_ id: String) {

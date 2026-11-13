@@ -294,7 +294,7 @@ struct MainlandStopBoardView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 if let navigationLocation, navigationLocation.isValid {
-                    StopNavigationButton(stopName: L10n.display(title), location: navigationLocation) {
+                    StopNavigationButton(stopName: L10n.display(title), location: navigationLocation, inToolbar: true) {
                         Image(systemName: "map")
                     }
                 }

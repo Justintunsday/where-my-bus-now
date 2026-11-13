@@ -84,15 +84,19 @@ struct ArrivalScreen: View {
             }
             #endif
         }
-        .listStyle(.insetGrouped).listSectionSpacing(20).transitListSurface().transitReadableWidth()
+        .listStyle(.insetGrouped).transitListSurface().transitReadableWidth()
         .navigationTitle(target.route).navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button { Task { await refresh() } } label: {
-                    Image(systemName: "arrow.clockwise")
-                }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(L10n.t("common.retry"), systemImage: "arrow.clockwise") { Task { await refresh() } }
                 .disabled(session.isRefreshing).accessibilityLabel(L10n.t("common.retry"))
                 .accessibilityIdentifier("eta.refresh")
+                .transitToolbarControl()
+            }
+            if #available(iOS 26.0, *) {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     app.bookmarks.toggleFavoriteRoute(entry: entry, routeKey: target.routeKey, modeRawValue: target.mode)
                 } label: {
@@ -100,6 +104,7 @@ struct ArrivalScreen: View {
                 }
                 .accessibilityLabel(L10n.t(isFavorite ? "common.unfavorite" : "common.favorite"))
                 .accessibilityIdentifier("eta.favorite")
+                .transitToolbarControl()
             }
         }
         .refreshable { await refresh() }

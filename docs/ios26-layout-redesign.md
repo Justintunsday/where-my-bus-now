@@ -17,7 +17,7 @@ The app, extension and UI tests retain **iOS 17.0** and **Swift 5 language mode*
 
 ## Design
 
-Keep the established Warm Minimal palette: coral `#E85D3A`, light canvas `#FAF9F7`, white surfaces, dark canvas `#1C1C1E`, dark surfaces `#2C2C2E`, and operator-specific route identity. Native SF semantic text styles and rounded tabular departure numerals supply the type hierarchy. Global actions use `RouteTheme.global.accent` for the existing contrast adjustment of coral. The distinctive element is the departure card: a route sign, destination and boarding stop beside a compact next-arrival column. Other content remains quiet native lists.
+Keep coral `#E85D3A` and operator-specific route identity, with system grouped backgrounds and semantic labels for app content. Native SF semantic text styles and rounded tabular departure numerals supply the type hierarchy. Global actions use `RouteTheme.global.accent` for the existing contrast adjustment of coral. A departure row puts its route sign, destination and boarding stop beside a compact next-arrival column. Native List owns grouped row shape, separators and section spacing.
 
 | Screen | Result |
 | --- | --- |
@@ -29,7 +29,9 @@ Keep the established Warm Minimal palette: coral `#E85D3A`, light canvas `#FAF9F
 | Route | Reflows the same map and timeline with AnyLayout instead of rebuilding containers; map height follows available height. At accessibility text sizes the full stop timeline takes priority. |
 | Saved / ETA | Readable-width grouped content, clearer city/count headings and a centered segmented picker for saved routes/stops (a native menu at accessibility text sizes). Empty saved collections can open Search. The existing compact ETA board and identity checks remain intact. |
 
-Content width is capped at 960pt. Content surfaces have no decorative shadows or glass; native bars, sheets and controls own system materials and Reduce Transparency behavior. Increase Contrast strengthens departure-card outlines. Accessibility text sizes reflow trip identity, arrival and actions vertically. Primary controls retain 44pt targets, decorative symbols are hidden where appropriate, and existing VoiceOver labels/selected values remain available.
+Content width is capped at 960pt. Content surfaces have no custom outlines, shadows or glass; system colors, native bars, sheets and controls own contrast and Reduce Transparency behavior. Accessibility text sizes reflow trip identity, arrival and actions vertically. Primary controls retain 44pt targets, decorative symbols are hidden where appropriate, and existing VoiceOver labels/selected values remain available.
+
+The native-control refinement removes padded/custom-width toolbar labels, makes region/settings actions symbol-only, and separates refresh/favorite, reverse/favorite and navigation/favorite with iOS 26 ToolbarSpacer. Navigation bars draw their own circular backgrounds; content-area icon actions use bordered circle buttons. City names move to native iOS 26 navigation subtitles. Text actions keep their native text/capsule styles. Pre-iOS-26 toolbar icons use native bordered circles.
 
 ## State and performance review
 
@@ -52,12 +54,14 @@ The implementation environment is Windows, with Python 3.14 and Node 24.15. Ther
 
 Completed locally:
 
-- `py -3 scripts/check_transit_resources.py`: all 133 literal UI keys have English, Traditional Chinese and Simplified Chinese; host/extension configuration and all six iOS 17 deployment settings pass.
+- `py -3 scripts/check_transit_resources.py`: literal UI keys have English, Traditional Chinese and Simplified Chinese; host/extension configuration and all six iOS 17 deployment settings pass.
 - `npm test` in `server/live-activities`: **10/10 passed**, including provider identity, stale predictions, durable subscriptions and APNs request contracts.
-- Swift syntax parsing with temporary `tree-sitter 0.26.1` / `tree-sitter-swift 0.7.4`: no grammar errors in 18 modified/new Swift files. This is not Swift type checking or an SDK build.
+- Swift syntax parsing with temporary `tree-sitter 0.26.1` / `tree-sitter-swift 0.7.4`: no grammar errors in the modified Swift files. This is not Swift type checking or an SDK build.
 - Property lists, entitlements and shared Xcode schemes parse; the expanded screenshot script passes Bash syntax checking.
 - `git diff --check`: passed.
 
 Added UI regression scenarios for Home → Nearby → stop board, clearing/replacing search queries, and retaining an arrival destination through rotation. Existing boarding, tracking, stale-state and accessibility tests remain. The screenshot script now includes Home, Search, Nearby, Saved and Route in light/dark, accessibility text sizes and iPad, alongside existing ETA/activity scenarios.
 
 The local checks do not establish simulator build, UI-test, screenshot, unsigned device archive, VoiceOver or Instruments results. Remote build evidence is recorded in the GitHub Actions run history. The manual Preview IPA path compiles and packages the app using Xcode 26.0.1 on the explicit `macos-15-intel` hosted image; the explicit toolchain keeps the iOS 26.0 SDK baseline and provides an alternative to the ARM runner queue. The full Build workflow separately owns simulator, UI-test and screenshot validation. Signed-device behavior and performance measurements require device testing.
+
+An opt-in `native_ui_preview` workflow job uses the same Xcode/Intel image for focused iOS 26 geometry/action/accessibility tests and actual simulator screenshots in light, dark and accessibility text sizes. It records button frames and verifies separate toolbar hit regions; screenshots are reviewed separately to verify the visible circle backgrounds. The fixture database includes both route directions to exercise the reverse control. This preview job does not replace the full compatibility matrix or a signed-device test.

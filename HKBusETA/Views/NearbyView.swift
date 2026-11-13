@@ -27,6 +27,7 @@ struct NearbyView: View {
                 .background(DesignTokens.background)
                 .navigationTitle(L10n.t("nearby.title"))
                 .navigationBarTitleDisplayMode(.inline)
+                .transitRegionSubtitle()
                 .toolbar { TransitAppToolbar() }
                 .transitDestinations()
                 .navigationDestination(for: MainlandStopTarget.self) { target in
@@ -243,9 +244,9 @@ private struct NearbyStopRow: View {
             .accessibilityIdentifier("nearby.stop.\(stop.id)")
             .accessibilityAddTraits(isSelected ? [.isSelected] : [])
             Button(action: open) {
-                Image(systemName: "arrow.up.right").frame(minWidth: 44, minHeight: 44)
+                Label(L10n.t("route.fullEta"), systemImage: "arrow.up.right")
             }
-            .buttonStyle(.borderless).foregroundStyle(DesignTokens.accent)
+            .transitInlineIconControl().tint(DesignTokens.action)
             .accessibilityLabel("\(L10n.t("route.fullEta")) · \(stop.name)")
             .accessibilityIdentifier("nearby.open.\(stop.id)")
         }

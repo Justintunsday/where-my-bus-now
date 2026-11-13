@@ -19,7 +19,7 @@ Three structural alternatives were considered: search-first (fast for unfamiliar
 
 ## Design system (Warm Minimal brand)
 
-Original adaptive warm backgrounds and semantic text tokens, Warm Coral #E85D3A for actions, and operator colors limited to route identity. SF Pro for text; SF Rounded and tabular digits for route codes and arrivals. All readable typography scales with Dynamic Type. Spacing: 4/8/16/24/32. Primary controls have 44pt minimum targets. Content has no glass backgrounds; iOS 26 uses native bars plus one glass control style, with opaque Reduce Transparency and pre-26 fallbacks.
+Native system grouped backgrounds and semantic labels, Warm Coral #E85D3A for brand/actions, and operator colors for route identity. SF Pro for text; SF Rounded and tabular digits for route codes and arrivals. Readable typography scales with Dynamic Type. Lists inherit native section spacing and grouped row shape. Primary controls have 44pt minimum targets. Content has no glass backgrounds; iOS 26 owns native bars and sheets, with system Reduce Transparency behavior and bordered pre-26 controls.
 
 ## Motion contract
 
@@ -34,7 +34,7 @@ Original adaptive warm backgrounds and semantic text tokens, Warm Coral #E85D3A 
 
 No perpetual symbol effects, phase loops, artificial animation delays or decorative gradients. Phase/keyframe animators are deliberately unnecessary for these finite interactions.
 
-Toolbar refinement: region, settings, favorite, refresh and direction controls have at least 44pt targets. All supported systems own their toolbar grouping, shapes and material. The app no longer suppresses shared backgrounds or adds custom glass circles over toolbar items. The region control includes its city name; textual Done/Edit controls retain native text treatment. See the [iOS 26 layout revision](ios26-layout-redesign.md) for the current card and map layouts.
+Toolbar refinement: symbol-only region, settings, favorite, refresh, direction and navigation controls have individual circular system platters. Natural symbol sizing avoids stretching a platter into a capsule; fixed toolbar spacers separate adjacent actions on iOS 26. No custom glass is layered over toolbar items. City subtitles retain visible context while the region button keeps its complete accessible label. Inline icon actions use native bordered circles; Done/Edit retain native text treatment. See the [iOS 26 layout revision](ios26-layout-redesign.md) for the current row and map layouts.
 
 ## Data and lifecycle
 

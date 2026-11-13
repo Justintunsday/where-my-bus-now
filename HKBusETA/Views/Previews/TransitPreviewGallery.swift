@@ -49,7 +49,13 @@ import SwiftUI
         let stops = Dictionary(uniqueKeysWithValues: names.enumerated().map { index, name in
             ("p\(index + 1)", StopEntry(location: StopLocation(lat: 22.294 + Double(index) * 0.003, lng: 114.172), name: name))
         })
-        app.data.installPreviewDatabase(EtaDB(holidays: [], routeList: [entry.routeKey: entry], stopList: stops,
+        let reverse = RouteEntry(route: entry.route, co: entry.co, orig: entry.dest, dest: entry.orig,
+            fares: entry.fares, faresHoliday: entry.faresHoliday, freq: nil, jt: entry.jt,
+            seq: entry.seq, serviceType: entry.serviceType,
+            stops: entry.stops.mapValues { Array($0.reversed()) },
+            bound: entry.bound.mapValues { $0 == "O" ? "I" : ($0 == "DT" ? "UT" : "O") },
+            gtfsId: entry.gtfsId, nlbId: entry.nlbId)
+        app.data.installPreviewDatabase(EtaDB(holidays: [], routeList: [entry.routeKey: entry, reverse.routeKey: reverse], stopList: stops,
                                              stopMap: [:], serviceDayMap: [:]))
         app.location.seedPreviewLocation()
         if !empty && !loading {

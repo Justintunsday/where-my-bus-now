@@ -16,16 +16,14 @@ struct TransitAppToolbar: ToolbarContent {
     var body: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button { app.presentation = .region } label: {
-                Label(app.region.localizedName, systemImage: "location.circle")
-                    .font(.subheadline.weight(.medium))
-                    .labelStyle(.titleAndIcon)
-                    .frame(minHeight: 44)
+                Label(app.region.localizedName, systemImage: "globe.asia.australia")
             }
             .accessibilityLabel("\(L10n.t("settings.region")) \(app.region.localizedName)")
             .accessibilityIdentifier("app.region")
+            .transitToolbarControl()
         }
         ToolbarItem(placement: .topBarTrailing) {
-            Button { app.presentation = .settings } label: { Image(systemName: "gearshape").frame(minWidth: 44, minHeight: 44) }
+            Button(L10n.t("settings.title"), systemImage: "gearshape") { app.presentation = .settings }
                 .accessibilityLabel(L10n.t("settings.title"))
                 .accessibilityIdentifier("app.settings")
                 .transitToolbarControl()

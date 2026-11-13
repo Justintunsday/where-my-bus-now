@@ -32,9 +32,13 @@ struct RouteDetailView: View {
                     if let opposite = app.data.oppositeEntry(for: entry) {
                         ToolbarItem(placement: .topBarTrailing) {
                             NavigationLink(value: RouteDetailTarget(routeKey: opposite.key)) {
-                                Image(systemName: "arrow.left.arrow.right").frame(minWidth: 44, minHeight: 44)
+                                Label(L10n.t("route.reverse"), systemImage: "arrow.left.arrow.right")
                             }.accessibilityLabel(L10n.t("route.reverse"))
+                                .accessibilityIdentifier("route.reverse")
                                 .transitToolbarControl()
+                        }
+                        if #available(iOS 26.0, *) {
+                            ToolbarSpacer(.fixed, placement: .topBarTrailing)
                         }
                     }
                     ToolbarItem(placement: .topBarTrailing) {

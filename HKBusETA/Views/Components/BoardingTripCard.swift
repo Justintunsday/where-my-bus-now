@@ -69,7 +69,7 @@ struct BoardingTripCard: View {
                 .accessibilityIdentifier("boarding.open")
             }
         }
-        .transitCardSurface()
+        .transitDepartureContent()
         .environment(\.timeZone, target.timeZone)
         .sensoryFeedback(.selection, trigger: expanded)
     }

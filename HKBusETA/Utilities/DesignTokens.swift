@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Warm Minimal colors with native, scalable typography and transit hierarchy.
+/// Native semantic surfaces with the established coral and transit identity colors.
 enum DesignTokens {
     // MARK: Colors
 
@@ -14,14 +14,14 @@ enum DesignTokens {
     /// Text/icon color on top of the accent.
     static let onAccent = Color.white
 
-    // Original adaptive warm neutrals; shared with the Lock Screen presentation.
-    static let background = TransitBrand.background
-    static let surface = TransitBrand.surface
-    static let surfaceMuted = TransitBrand.mutedSurface
-    static let textPrimary = TransitBrand.primaryText
-    static let textSecondary = TransitBrand.secondaryText
-    static let textTertiary = TransitBrand.tertiaryText
-    static let divider = TransitBrand.divider
+    // System group/label colors adapt to light, dark and accessibility contrast.
+    static let background = Color(uiColor: .systemGroupedBackground)
+    static let surface = Color(uiColor: .secondarySystemGroupedBackground)
+    static let surfaceMuted = Color(uiColor: .tertiarySystemGroupedBackground)
+    static let textPrimary = Color.primary
+    static let textSecondary = Color.secondary
+    static let textTertiary = Color(uiColor: .tertiaryLabel)
+    static let divider = Color(uiColor: .separator)
 
     // Functional status tints
     static let success = Color(light: "2E8B57", dark: "4CD07D")

@@ -10,6 +10,10 @@ on:
         description: 'Build a test IPA first (compile only; skip simulator validation)'
         type: boolean
         default: false
+      native_ui_preview:
+        description: 'Verify native circular controls and capture iOS 26 UI evidence'
+        type: boolean
+        default: false
 
 concurrency:
   group: build-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}
@@ -63,6 +67,65 @@ jobs:
           path: ${{ runner.temp }}/HKBusETA-unsigned.ipa
           if-no-files-found: error
           retention-days: 30
+
+  native-ui-preview:
+    name: Native circular controls (iOS 26)
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.native_ui_preview }}
+    runs-on: macos-15-intel
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.0.1.app/Contents/Developer
+      BUS_IOS_MAJOR: '26'
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify toolchain and native resources
+        run: |
+          xcodebuild -version
+          xcodebuild -version | head -1 | grep -E '^Xcode 26\.0\.1$'
+          python3 scripts/check_transit_resources.py
+          xcrun simctl list runtimes available
+      - name: Build the iOS 26 simulator app
+        run: |
+          xcodebuild build -project HKBusETA.xcodeproj -scheme HKBusETA \
+            -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/BusDerived" CODE_SIGNING_ALLOWED=NO
+      - name: Prepare the iOS 26 simulator
+        id: simulator
+        run: bash scripts/prepare_simulator.sh phone
+      - name: Verify circular geometry, separation, actions and accessible labels
+        run: |
+          device=$(cat "$RUNNER_TEMP/bus-simulator-id")
+          xcodebuild test -project HKBusETA.xcodeproj -scheme HKBusETA \
+            -configuration Debug -destination "platform=iOS Simulator,id=$device" \
+            -derivedDataPath "$RUNNER_TEMP/BusDerived" \
+            -resultBundlePath "$RUNNER_TEMP/NativeCircles.xcresult" \
+            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO \
+            -only-testing:TransitUITests/TransitUITests/testNativeToolbarCirclesAndActions \
+            -only-testing:TransitUITests/TransitUITests/testStopAndRouteToolbarCircles \
+            -only-testing:TransitUITests/TransitUITests/testCircularControlsRemainUsableWithReducedEffects
+      - name: Capture native screens in light, dark and accessibility sizes
+        if: ${{ always() && steps.simulator.outcome == 'success' }}
+        run: bash scripts/capture_native_controls.sh
+      - name: Export actual UI test screenshots and geometry
+        if: always()
+        run: |
+          if test -d "$RUNNER_TEMP/NativeCircles.xcresult"; then
+            xcrun xcresulttool export attachments --path "$RUNNER_TEMP/NativeCircles.xcresult" \
+              --output-path "$RUNNER_TEMP/native-controls/interaction"
+          fi
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: Native-circle-ui-evidence
+          path: ${{ runner.temp }}/native-controls
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: Native-circle-ui-tests
+          path: ${{ runner.temp }}/NativeCircles.xcresult
+          if-no-files-found: warn
 
   build:
     name: Build iOS app

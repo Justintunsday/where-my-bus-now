@@ -17,7 +17,8 @@ struct HomeView: View {
             List {
                 Section {
                     HomeOverviewHeader(region: app.region, openSearch: openSearch, openNearby: openNearby)
-                        .transitCardRow()
+                        .listRowBackground(Color.clear).listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
                 if !app.activities.activeTargets.isEmpty {
                     Section {
@@ -86,9 +87,10 @@ struct HomeView: View {
                     }
                 }
             }
-            .listStyle(.insetGrouped).listSectionSpacing(20)
+            .listStyle(.insetGrouped)
             .transitListSurface().transitReadableWidth()
             .navigationTitle(L10n.t("home.title"))
+            .transitRegionSubtitle()
             .toolbar { TransitAppToolbar() }
             .transitDestinations()
             .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: app.activities.activeTargets.map(\.id))
@@ -109,26 +111,24 @@ private struct HomeOverviewHeader: View {
                     locale: L10n.language.locale, timeZone: region.timeZone))
                     .font(.subheadline).foregroundStyle(.secondary)
             }
-            Text(L10n.t("home.overview.message"))
-                .font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true)
             let layout = typeSize.isAccessibilitySize
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
                 : AnyLayout(HStackLayout(spacing: 12))
             layout {
                 Button(action: openSearch) {
                     Label(L10n.t("tab.search"), systemImage: "magnifyingglass")
-                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .frame(maxWidth: .infinity)
                 }
                 .accessibilityIdentifier("home.search")
                 if let openNearby {
                     Button(action: openNearby) {
                         Label(L10n.t("nearby.title"), systemImage: "location")
-                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .frame(maxWidth: .infinity)
                     }
                     .accessibilityIdentifier("home.nearby")
                 }
             }
-            .buttonStyle(.bordered).buttonBorderShape(.capsule)
+            .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.large)
         }
         .padding(.vertical, 4)
     }
@@ -138,18 +138,15 @@ private struct HomeEmptyBoarding: View {
     let openSearch: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Image(systemName: "pin.circle").font(.largeTitle).foregroundStyle(DesignTokens.accent)
-                .accessibilityHidden(true)
-            Text(L10n.t("home.empty.title")).font(.title2.bold())
-            Text(L10n.t("home.empty.message")).font(.body).foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+        ContentUnavailableView {
+            Label(L10n.t("home.empty.title"), systemImage: "pin.circle")
+        } description: {
+            Text(L10n.t("home.empty.message"))
+        } actions: {
             Button(L10n.t("tab.search"), action: openSearch)
                 .buttonStyle(.borderedProminent).controlSize(.large).frame(minHeight: 44)
                 .tint(DesignTokens.action)
                 .foregroundStyle(RouteTheme.global.onAccent)
         }
-        .padding(.vertical, 8)
-        .transitCardSurface()
     }
 }

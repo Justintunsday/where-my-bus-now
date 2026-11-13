@@ -64,11 +64,15 @@ struct StopEtaView: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         StopNavigationButton(
                             stopName: stop.name.name(language),
-                            location: stop.location
+                            location: stop.location,
+                            inToolbar: true
                         ) {
                             Image(systemName: "map")
                         }
-                        .transitToolbarControl()
+                        .accessibilityIdentifier("stop.navigate")
+                    }
+                    if #available(iOS 26.0, *) {
+                        ToolbarSpacer(.fixed, placement: .topBarTrailing)
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -108,6 +112,7 @@ struct StopEtaView: View {
             }
             .tint(DesignTokens.accent)
             .accessibilityLabel(L10n.t(isFavorite ? "common.unfavorite" : "common.favorite"))
+            .accessibilityIdentifier("stop.favorite")
             .sensoryFeedback(.selection, trigger: isFavorite)
             .transitToolbarControl()
         }

@@ -12,7 +12,8 @@ struct SearchLandingView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     Text(L10n.t("search.empty.hint")).font(.body).foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-                }.padding(.vertical, 12).transitCardRow()
+                }.padding(.vertical, 12)
+                    .listRowBackground(Color.clear).listRowSeparator(.hidden)
             }
             if !app.bookmarks.recentRoutes.isEmpty {
                 Section(L10n.t("search.recent.routes")) {
@@ -52,7 +53,7 @@ struct SearchLandingView: View {
                     }
                 }
             }
-        }.listStyle(.insetGrouped).listSectionSpacing(20)
+        }.listStyle(.insetGrouped)
             .transitListSurface().transitReadableWidth()
             .accessibilityIdentifier("search.landing")
     }

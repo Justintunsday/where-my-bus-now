@@ -246,6 +246,97 @@ import XCTest
         screenshot("arrival-after-orientation-change")
     }
 
+    func testNativeToolbarCirclesAndActions() {
+        let app = launch("home")
+        assertCircular(app.buttons["app.region"])
+        assertCircular(app.buttons["app.settings"])
+        recordGeometry(app, ids: ["app.region", "app.settings"], name: "home-toolbar-geometry")
+        screenshot("native-home-toolbar")
+        app.buttons["app.settings"].tap()
+        let settingsDone = app.buttons["settings.done"]
+        XCTAssertTrue(settingsDone.waitForExistence(timeout: 5))
+        settingsDone.tap()
+        app.buttons["app.region"].tap()
+        let regionDone = app.buttons["region.done"]
+        XCTAssertTrue(regionDone.waitForExistence(timeout: 5))
+        regionDone.tap()
+        let open = app.buttons["boarding.open"]
+        for _ in 0..<4 where !open.isHittable { app.swipeUp() }
+        XCTAssertTrue(open.waitForExistence(timeout: 5))
+        open.tap()
+        let refresh = app.buttons["eta.refresh"]
+        let favorite = app.buttons["eta.favorite"]
+        assertCircular(refresh)
+        assertCircular(favorite)
+        assertSeparated(refresh, favorite)
+        let previousLabel = favorite.label
+        favorite.tap()
+        XCTAssertNotEqual(favorite.label, previousLabel)
+        favorite.tap()
+        refresh.tap()
+        recordGeometry(app, ids: ["eta.refresh", "eta.favorite"], name: "eta-toolbar-geometry")
+        screenshot("native-eta-toolbar")
+    }
+
+    func testStopAndRouteToolbarCircles() {
+        let app = launch("stop")
+        assertCircular(app.buttons["stop.navigate"])
+        assertCircular(app.buttons["stop.favorite"])
+        assertSeparated(app.buttons["stop.navigate"], app.buttons["stop.favorite"])
+        recordGeometry(app, ids: ["stop.navigate", "stop.favorite"], name: "stop-toolbar-geometry")
+        screenshot("native-stop-toolbar")
+        app.terminate()
+        let route = launch("route")
+        assertCircular(route.buttons["route.reverse"])
+        assertCircular(route.buttons["route.favorite"])
+        assertSeparated(route.buttons["route.reverse"], route.buttons["route.favorite"])
+        recordGeometry(route, ids: ["route.reverse", "route.favorite"], name: "route-toolbar-geometry")
+        screenshot("native-route-toolbar")
+        route.buttons["route.reverse"].tap()
+        XCTAssertTrue(route.buttons["route.stop.0"].waitForExistence(timeout: 5))
+        XCTAssertTrue(route.buttons["route.reverse"].isHittable)
+    }
+
+    func testCircularControlsRemainUsableWithReducedEffects() throws {
+        let app = launch("home-tracking-eal", reduced: true)
+        assertCircular(app.buttons["app.region"])
+        assertCircular(app.buttons["app.settings"])
+        let menu = app.buttons["home.tracking.menu"]
+        for _ in 0..<4 where !menu.isHittable { app.swipeUp() }
+        assertCircular(menu)
+        try app.performAccessibilityAudit(for: [.sufficientElementDescription, .textClipped])
+        recordGeometry(app, ids: ["home.tracking.menu"], name: "tracking-menu-geometry")
+        screenshot("native-circles-reduced-effects")
+    }
+
+    private func assertCircular(_ button: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(button.waitForExistence(timeout: 10), file: file, line: line)
+        guard button.exists else { return }
+        XCTAssertTrue(button.isHittable, file: file, line: line)
+        XCTAssertGreaterThanOrEqual(button.frame.width, 43.5, file: file, line: line)
+        XCTAssertGreaterThanOrEqual(button.frame.height, 43.5, file: file, line: line)
+        XCTAssertEqual(button.frame.width, button.frame.height, accuracy: 1, file: file, line: line)
+    }
+
+    private func assertSeparated(_ first: XCUIElement, _ second: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        let gap = max(first.frame.minX, second.frame.minX) - min(first.frame.maxX, second.frame.maxX)
+        XCTAssertGreaterThanOrEqual(gap, 4, "Each toolbar icon needs its own system platter", file: file, line: line)
+    }
+
+    private func recordGeometry(_ app: XCUIApplication, ids: [String], name: String) {
+        let rows: [[String: Any]] = ids.map { id in
+            let rect = app.buttons[id].frame
+            return ["id": id, "x": Double(rect.minX), "y": Double(rect.minY),
+                    "width": Double(rect.width), "height": Double(rect.height)]
+        }
+        if let data = try? JSONSerialization.data(withJSONObject: rows, options: .prettyPrinted) {
+            let attachment = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+    }
+
     private func screenshot(_ name: String) {
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name

@@ -33,6 +33,7 @@ struct SearchView: View {
             }
             .background(DesignTokens.background)
             .navigationTitle(L10n.t("search.title"))
+            .transitRegionSubtitle()
             .toolbar { TransitAppToolbar() }
             .navigationDestination(for: RouteDetailTarget.self) { target in
                 RouteDetailView(routeKey: target.routeKey)
@@ -121,7 +122,7 @@ struct SearchView: View {
                     }
                 }
             }
-            .listStyle(.insetGrouped).listSectionSpacing(20)
+            .listStyle(.insetGrouped)
             .transitListSurface().transitReadableWidth()
             .scrollDismissesKeyboard(.interactively)
             .accessibilityIdentifier("search.results")
@@ -196,7 +197,7 @@ struct SearchView: View {
                     }
                 }
             }
-            .listStyle(.insetGrouped).listSectionSpacing(20)
+            .listStyle(.insetGrouped)
             .transitListSurface().transitReadableWidth()
             .scrollDismissesKeyboard(.interactively)
             .accessibilityIdentifier("search.results")

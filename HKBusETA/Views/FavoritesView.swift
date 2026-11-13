@@ -26,12 +26,13 @@ struct FavoritesView: View {
                 } else {
                     List {
                         if showsStops { stopList } else { routeList }
-                    }.listStyle(.insetGrouped).listSectionSpacing(20).transitListSurface()
+                    }.listStyle(.insetGrouped).transitListSurface()
                 }
             }
             .background(DesignTokens.background)
             .transitReadableWidth()
             .navigationTitle(L10n.t("favorites.title"))
+            .transitRegionSubtitle()
             .toolbar { TransitAppToolbar() }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {

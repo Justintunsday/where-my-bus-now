@@ -32,9 +32,9 @@ struct FavoriteRouteButton: View {
             Image(systemName: isFavorite ? "star.fill" : "star")
                 .symbolEffect(.bounce, value: isFavorite)
                 .symbolEffectsRemoved(reduceMotion)
-                .frame(minWidth: 44, minHeight: 44)
         }
         .accessibilityLabel(L10n.t(isFavorite ? "common.unfavorite" : "common.favorite"))
+        .accessibilityIdentifier("route.favorite")
         .sensoryFeedback(.selection, trigger: isFavorite)
         .transitToolbarControl()
     }

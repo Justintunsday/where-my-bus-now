@@ -69,11 +69,12 @@ enum StopNavigationService {
 }
 
 /// Shared navigation control used by stop boards and inline route stops.
-/// The minimum frame keeps the tappable target at least 44 points in both
-/// toolbar and inline action layouts.
+/// Toolbar symbols keep the system's natural sizing. Inline actions retain an
+/// independent 44pt target so a List never hands the entire row to Maps.
 struct StopNavigationButton<Label: View>: View {
     let stopName: String
     let location: StopLocation
+    let inToolbar: Bool
     let label: () -> Label
 
     @State private var failure: StopNavigationFailure?
@@ -81,37 +82,48 @@ struct StopNavigationButton<Label: View>: View {
     init(
         stopName: String,
         location: StopLocation,
+        inToolbar: Bool = false,
         @ViewBuilder label: @escaping () -> Label
     ) {
         self.stopName = stopName
         self.location = location
+        self.inToolbar = inToolbar
         self.label = label
     }
 
     var body: some View {
+        styledButton
+            .accessibilityLabel(L10n.t("navigation.navigate"))
+            .alert(
+                L10n.t("navigation.error.title"),
+                isPresented: Binding(
+                    get: { failure != nil },
+                    set: { if !$0 { failure = nil } }
+                ),
+                presenting: failure
+            ) { _ in
+                Button(L10n.t("common.ok"), role: .cancel) { failure = nil }
+            } message: { failure in
+                Text(L10n.t(failure.localizationKey))
+            }
+    }
+
+    @ViewBuilder private var styledButton: some View {
+        if inToolbar {
+            button.transitToolbarControl()
+        } else {
+            // Explicit style keeps sibling disclosures and arrival links independent.
+            button.buttonStyle(.borderless).frame(minWidth: 44, minHeight: 44)
+        }
+    }
+
+    private var button: some View {
         Button {
             StopNavigationService.open(stopName: stopName, location: location) { failure in
                 self.failure = failure
             }
         } label: {
             label()
-        }
-        // List's automatic button style otherwise hands the entire row to Maps,
-        // including sibling controls such as the station disclosure button.
-        .buttonStyle(.plain)
-        .frame(minWidth: 44, minHeight: 44)
-        .accessibilityLabel(L10n.t("navigation.navigate"))
-        .alert(
-            L10n.t("navigation.error.title"),
-            isPresented: Binding(
-                get: { failure != nil },
-                set: { if !$0 { failure = nil } }
-            ),
-            presenting: failure
-        ) { _ in
-            Button(L10n.t("common.ok"), role: .cancel) { failure = nil }
-        } message: { failure in
-            Text(L10n.t(failure.localizationKey))
         }
     }
 }

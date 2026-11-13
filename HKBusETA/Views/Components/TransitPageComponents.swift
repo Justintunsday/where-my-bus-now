@@ -1,37 +1,19 @@
 import SwiftUI
 
-/// Opaque content surfaces keep the route and departure readable under system bars.
-private struct TransitCardSurface: ViewModifier {
-    @Environment(\.colorSchemeContrast) private var contrast
-
-    func body(content: Content) -> some View {
-        let shape = RoundedRectangle(cornerRadius: DesignTokens.Radius.xl)
-        content
-            .padding(DesignTokens.Spacing.m)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(DesignTokens.surface, in: shape)
-            .overlay {
-                shape.strokeBorder(contrast == .increased ? Color.primary : DesignTokens.divider,
-                                   lineWidth: contrast == .increased ? 1.5 : 0.5)
-            }
-    }
-}
-
 struct TransitSectionHeading: View {
     let title: String
     var count: Int? = nil
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(title).font(.title3.weight(.bold)).foregroundStyle(.primary)
+            Text(title)
             if let count {
-                Text(count, format: .number).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+                Text(count, format: .number).monospacedDigit().foregroundStyle(.secondary)
             }
         }
         .textCase(nil)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
-        .padding(.vertical, 4)
     }
 }
 
@@ -50,12 +32,13 @@ struct BoardingRouteSign: View {
 }
 
 extension View {
-    func transitCardSurface() -> some View { modifier(TransitCardSurface()) }
+    func transitDepartureContent() -> some View {
+        padding(.vertical, 4).frame(maxWidth: .infinity, alignment: .leading)
+    }
 
     func transitCardRow() -> some View {
-        listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+        listRowBackground(DesignTokens.surface)
+            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
     }
 
     func transitReadableWidth() -> some View {
