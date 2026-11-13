@@ -45,11 +45,16 @@ jobs:
   preview:
     name: Preview IPA (compile only)
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.preview_only }}
-    runs-on: macos-26
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.0.1.app/Contents/Developer
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
-      - run: xcodebuild -version
+      - name: Verify the iOS 26 build toolchain
+        run: |
+          xcodebuild -version
+          xcodebuild -version | head -1 | grep -E '^Xcode 26\.0\.1$'
       - name: Archive and package test IPA
         run: bash scripts/build_unsigned_ipa.sh
       - uses: actions/upload-artifact@v5
